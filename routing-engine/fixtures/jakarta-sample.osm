@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="GATHRA deterministic development fixture">
+  <bounds minlat="-6.2020" minlon="106.8150" maxlat="-6.1880" maxlon="106.8290"/>
+
+  <!--
+    A compact Jakarta-area graph with three connected corridors. Every edge is
+    represented by its own OSM way so GraphHopper keeps the junctions as tower
+    nodes and can deterministically exercise its alternative-route algorithm.
+  -->
+  <node id="1" lat="-6.1985" lon="106.8175" version="1"/>
+  <node id="2" lat="-6.1945" lon="106.8205" version="1"/>
+  <node id="3" lat="-6.1935" lon="106.8235" version="1"/>
+  <node id="4" lat="-6.1900" lon="106.8272" version="1"/>
+  <node id="5" lat="-6.2000" lon="106.8167" version="1"/>
+  <node id="6" lat="-6.1970" lon="106.8200" version="1"/>
+  <node id="7" lat="-6.1960" lon="106.8220" version="1"/>
+  <node id="8" lat="-6.1930" lon="106.8255" version="1"/>
+  <node id="9" lat="-6.1965" lon="106.8187" version="1"/>
+
+  <!-- Recommended central corridor: 5 -> 6 -> 3 -> 4. -->
+  <way id="100" version="1">
+    <nd ref="5"/>
+    <nd ref="6"/>
+    <tag k="highway" v="primary"/>
+    <tag k="maxspeed" v="50"/>
+    <tag k="name" v="Koridor Gathra Tengah"/>
+  </way>
+  <way id="101" version="1">
+    <nd ref="6"/>
+    <nd ref="3"/>
+    <tag k="highway" v="primary"/>
+    <tag k="maxspeed" v="50"/>
+    <tag k="name" v="Koridor Gathra Tengah"/>
+  </way>
+  <way id="102" version="1">
+    <nd ref="3"/>
+    <nd ref="4"/>
+    <tag k="highway" v="primary"/>
+    <tag k="maxspeed" v="50"/>
+    <tag k="name" v="Koridor Gathra Utara"/>
+  </way>
+
+  <!-- Eastern alternative: 5 -> 6 -> 7 -> 8 -> 4. -->
+  <way id="110" version="1">
+    <nd ref="6"/>
+    <nd ref="7"/>
+    <tag k="highway" v="primary"/>
+    <tag k="maxspeed" v="50"/>
+    <tag k="name" v="Koridor Gathra Timur"/>
+  </way>
+  <way id="111" version="1">
+    <nd ref="7"/>
+    <nd ref="8"/>
+    <tag k="highway" v="primary"/>
+    <tag k="maxspeed" v="50"/>
+    <tag k="name" v="Koridor Gathra Timur"/>
+  </way>
+  <way id="112" version="1">
+    <nd ref="8"/>
+    <nd ref="4"/>
+    <tag k="highway" v="primary"/>
+    <tag k="maxspeed" v="50"/>
+    <tag k="name" v="Koridor Gathra Timur"/>
+  </way>
+
+  <!-- Western alternative: 5 -> 1 -> 9 -> 2 -> 3 -> 4. -->
+  <way id="120" version="1">
+    <nd ref="5"/>
+    <nd ref="1"/>
+    <tag k="highway" v="primary"/>
+    <tag k="maxspeed" v="50"/>
+    <tag k="name" v="Koridor Gathra Barat"/>
+  </way>
+  <way id="121" version="1">
+    <nd ref="1"/>
+    <nd ref="9"/>
+    <tag k="highway" v="primary"/>
+    <tag k="maxspeed" v="50"/>
+    <tag k="name" v="Koridor Gathra Barat"/>
+  </way>
+  <way id="122" version="1">
+    <nd ref="9"/>
+    <nd ref="2"/>
+    <tag k="highway" v="primary"/>
+    <tag k="maxspeed" v="50"/>
+    <tag k="name" v="Koridor Gathra Barat"/>
+  </way>
+  <way id="123" version="1">
+    <nd ref="2"/>
+    <nd ref="3"/>
+    <tag k="highway" v="primary"/>
+    <tag k="maxspeed" v="50"/>
+    <tag k="name" v="Koridor Gathra Barat"/>
+  </way>
+</osm>

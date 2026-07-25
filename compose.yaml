@@ -1,0 +1,54 @@
+name: gathra-routing
+
+services:
+  routing-engine:
+    build:
+      context: ./routing-engine
+      args:
+        GRAPH_HOPPER_VERSION: "11.0"
+    environment:
+      JAVA_OPTS: >-
+        ${GRAPH_HOPPER_JAVA_OPTS:--Xms256m -Xmx1g}
+        -Ddw.graphhopper.prepare.min_network_size=${GRAPH_HOPPER_MIN_NETWORK_SIZE:-0}
+    volumes:
+      - "${GATHRA_OSM_FILE:-./routing-engine/fixtures/jakarta-sample.osm}:/data/region.osm:ro"
+      - graphhopper-cache:/data/graph-cache
+    expose:
+      - "8989"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8989/info"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      ROUTING_ENGINE_BASE_URL: "http://routing-engine:8989"
+      ROUTING_ENGINE_TIMEOUT_MS: "${ROUTING_ENGINE_TIMEOUT_MS:-8000}"
+    depends_on:
+      routing-engine:
+        condition: service_healthy
+    ports:
+      - "${GATHRA_BACKEND_PORT:-3000}:3000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/v1/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    restart: unless-stopped
+
+volumes:
+  graphhopper-cache:

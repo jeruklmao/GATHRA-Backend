@@ -1,0 +1,50 @@
+graphhopper:
+  datareader.file: /data/region.osm
+  graph.location: /data/graph-cache
+
+  # Both profiles are explicit. The motorcycle profile is GraphHopper's built-in
+  # custom costing and remains experimental until calibrated for Indonesia.
+  profiles:
+    - name: car
+      custom_model_files: [car.json]
+    - name: motorcycle
+      custom_model_files: [motorcycle.json]
+
+  profiles_ch:
+    - profile: car
+    - profile: motorcycle
+  profiles_lm: []
+
+  graph.encoded_values: >
+    car_access, car_average_speed, road_access, road_class, road_environment,
+    max_speed, surface, track_type, curvature, roundabout, country
+
+  # Zero is intentional for the tiny deterministic development fixture. Compose
+  # can override this through GRAPH_HOPPER_MIN_NETWORK_SIZE for regional data.
+  prepare.min_network_size: 0
+  prepare.subnetworks.threads: 1
+  routing.timeout_ms: 15000
+  # This is the maximum distance between consecutive request waypoints for
+  # flexible routing, not the road-snap radius. The NestJS adapter separately
+  # rejects provider geometries snapped more than 500 m from either endpoint.
+  routing.non_ch.max_waypoint_distance: 1000000
+  import.osm.ignored_highways: footway,construction,cycleway,path,steps
+  graph.dataaccess.default_type: RAM_STORE
+
+server:
+  application_connectors:
+    - type: http
+      port: 8989
+      bind_host: 0.0.0.0
+  request_log:
+    appenders: []
+  admin_connectors:
+    - type: http
+      port: 8990
+      bind_host: 127.0.0.1
+
+logging:
+  level: INFO
+  appenders:
+    - type: console
+      time_zone: Asia/Jakarta
