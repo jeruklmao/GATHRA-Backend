@@ -2,7 +2,9 @@
 
 This service owns GATHRA's route-preview contract and keeps GraphHopper private.
 It deliberately contains no authentication, database, geocoding, traffic,
-telemetry, flood logic, or turn-by-turn navigation.
+telemetry, flood logic, or active navigation-session execution. It returns
+provider-independent navigation steps so Android can calculate turn-by-turn
+progress locally.
 
 ## Runtime architecture
 
@@ -135,7 +137,39 @@ alternative. GeoJSON uses the standard `[longitude, latitude]` position order:
       "summary": {
         "distanceMeters": 1642,
         "durationSeconds": 173
-      }
+      },
+      "steps": [
+        {
+          "index": 0,
+          "instruction": "Mulai menuju Jalan A",
+          "streetName": "Jalan A",
+          "distanceMeters": 1642,
+          "durationSeconds": 173,
+          "manoeuvre": {
+            "type": "DEPART",
+            "modifier": "STRAIGHT",
+            "bearingBefore": null,
+            "bearingAfter": 93
+          },
+          "geometryStartIndex": 0,
+          "geometryEndIndex": 1
+        },
+        {
+          "index": 1,
+          "instruction": "Anda telah tiba di tujuan",
+          "streetName": "",
+          "distanceMeters": 0,
+          "durationSeconds": 0,
+          "manoeuvre": {
+            "type": "ARRIVE",
+            "modifier": "NONE",
+            "bearingBefore": 93,
+            "bearingAfter": null
+          },
+          "geometryStartIndex": 1,
+          "geometryEndIndex": 1
+        }
+      ]
     }
   ],
   "metadata": {
@@ -148,6 +182,11 @@ alternative. GeoJSON uses the standard `[longitude, latitude]` position order:
 
 The route ID is an opaque stable fingerprint of API version, travel mode, and
 canonical geometry. Clients must not infer provider details from it.
+`steps` is a backward-compatible addition: existing route fields are unchanged.
+Step intervals are inclusive indexes into the parent GeoJSON coordinates,
+ordered without gaps, and always end in `ARRIVE`. GraphHopper signs are mapped
+to GATHRA manoeuvre and modifier enums; they are never exposed to clients.
+Bearings are integer compass degrees derived from the returned LineString.
 The provider adapter rejects a result when its street-snapped start or end is
 more than 500 metres from the requested coordinate, returning `NO_ROUTE`
 instead of presenting an out-of-coverage route.

@@ -81,6 +81,21 @@ function mapRoute(
       distanceMeters: route.distanceMeters,
       durationSeconds: route.durationSeconds,
     },
+    steps: route.steps.map((step) => ({
+      index: step.index,
+      instruction: step.instruction,
+      streetName: step.streetName,
+      distanceMeters: step.distanceMeters,
+      durationSeconds: step.durationSeconds,
+      manoeuvre: {
+        type: step.manoeuvre.type,
+        modifier: step.manoeuvre.modifier,
+        bearingBefore: step.manoeuvre.bearingBefore,
+        bearingAfter: step.manoeuvre.bearingAfter,
+      },
+      geometryStartIndex: step.geometryStartIndex,
+      geometryEndIndex: step.geometryEndIndex,
+    })),
   };
 }
 

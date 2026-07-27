@@ -1,6 +1,8 @@
 import { ApiException } from '../common/api-error';
 import { TravelModeDto } from './dto/route-preview-request.dto';
 import {
+  NavigationManoeuvreType,
+  NavigationModifier,
   type RoutingProvider,
   RoutingProviderError,
 } from './routing-provider';
@@ -52,6 +54,38 @@ describe('RoutesService', () => {
     });
     expect(first.routes[0].id).toBe(second.routes[0].id);
     expect(first.routes[0].id).toMatch(/^route_[a-f0-9]{16}$/);
+    expect(first.routes[0].steps).toEqual([
+      {
+        index: 0,
+        instruction: 'Mulai',
+        streetName: 'Jalan Uji',
+        distanceMeters: 1_000,
+        durationSeconds: 120,
+        manoeuvre: {
+          type: NavigationManoeuvreType.DEPART,
+          modifier: NavigationModifier.STRAIGHT,
+          bearingBefore: null,
+          bearingAfter: 90,
+        },
+        geometryStartIndex: 0,
+        geometryEndIndex: 1,
+      },
+      {
+        index: 1,
+        instruction: 'Anda telah tiba',
+        streetName: '',
+        distanceMeters: 0,
+        durationSeconds: 0,
+        manoeuvre: {
+          type: NavigationManoeuvreType.ARRIVE,
+          modifier: NavigationModifier.NONE,
+          bearingBefore: 90,
+          bearingAfter: null,
+        },
+        geometryStartIndex: 1,
+        geometryEndIndex: 1,
+      },
+    ]);
   });
 
   it('rejects identical endpoints before calling the provider', async () => {
@@ -99,6 +133,7 @@ describe('RoutesService', () => {
 });
 
 function route(coordinates: readonly (readonly [number, number])[]) {
+  const lastIndex = coordinates.length - 1;
   return {
     geometry: {
       type: 'LineString' as const,
@@ -106,5 +141,37 @@ function route(coordinates: readonly (readonly [number, number])[]) {
     },
     distanceMeters: 1_000,
     durationSeconds: 120,
+    steps: [
+      {
+        index: 0,
+        instruction: 'Mulai',
+        streetName: 'Jalan Uji',
+        distanceMeters: 1_000,
+        durationSeconds: 120,
+        manoeuvre: {
+          type: NavigationManoeuvreType.DEPART,
+          modifier: NavigationModifier.STRAIGHT,
+          bearingBefore: null,
+          bearingAfter: 90,
+        },
+        geometryStartIndex: 0,
+        geometryEndIndex: lastIndex,
+      },
+      {
+        index: 1,
+        instruction: 'Anda telah tiba',
+        streetName: '',
+        distanceMeters: 0,
+        durationSeconds: 0,
+        manoeuvre: {
+          type: NavigationManoeuvreType.ARRIVE,
+          modifier: NavigationModifier.NONE,
+          bearingBefore: 90,
+          bearingAfter: null,
+        },
+        geometryStartIndex: lastIndex,
+        geometryEndIndex: lastIndex,
+      },
+    ],
   };
 }

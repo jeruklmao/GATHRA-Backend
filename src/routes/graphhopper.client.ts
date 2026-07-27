@@ -3,6 +3,9 @@ import { createHash } from 'node:crypto';
 import { readConfiguration } from '../configuration';
 import { TravelModeDto } from './dto/route-preview-request.dto';
 import {
+  NavigationManoeuvreType,
+  NavigationModifier,
+  type ProviderNavigationStep,
   type ProviderRoute,
   type RoutingProvider,
   RoutingProviderError,
@@ -11,6 +14,8 @@ import {
 
 const MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
 const MAX_GEOMETRY_POINTS = 50_000;
+const MAX_NAVIGATION_STEPS = 50_000;
+const MAX_INSTRUCTION_LENGTH = 1_000;
 const MAX_ENDPOINT_SNAP_DISTANCE_METERS = 500;
 const EARTH_RADIUS_METERS = 6_371_000;
 
@@ -34,7 +39,8 @@ export class GraphHopperClient implements RoutingProvider {
         [request.destination.longitude, request.destination.latitude],
       ],
       points_encoded: false,
-      instructions: false,
+      instructions: true,
+      locale: 'id',
       calc_points: true,
       timeout_ms: this.timeoutMs,
     };
@@ -155,6 +161,7 @@ function parsePath(path: unknown): ProviderRoute {
   const coordinates = path.points.coordinates.map((coordinate) =>
     parseCoordinate(coordinate),
   );
+  const steps = parseInstructions(path.instructions, coordinates);
   return {
     geometry: {
       type: 'LineString',
@@ -162,7 +169,306 @@ function parsePath(path: unknown): ProviderRoute {
     },
     distanceMeters: Math.max(1, Math.round(path.distance)),
     durationSeconds: Math.max(1, Math.ceil(path.time / 1_000)),
+    steps,
   };
+}
+
+function parseInstructions(
+  instructions: unknown,
+  coordinates: readonly (readonly [number, number])[],
+): ProviderNavigationStep[] {
+  if (
+    !Array.isArray(instructions) ||
+    instructions.length < 2 ||
+    instructions.length > MAX_NAVIGATION_STEPS
+  ) {
+    throw new RoutingProviderError('INVALID_RESPONSE');
+  }
+
+  const steps = instructions.map((instruction, index) =>
+    parseInstruction(instruction, index, coordinates),
+  );
+  const lastGeometryIndex = coordinates.length - 1;
+
+  if (
+    steps[0].geometryStartIndex !== 0 ||
+    steps[steps.length - 1].geometryStartIndex !== lastGeometryIndex ||
+    steps[steps.length - 1].geometryEndIndex !== lastGeometryIndex ||
+    steps[steps.length - 1].manoeuvre.type !== NavigationManoeuvreType.ARRIVE
+  ) {
+    throw new RoutingProviderError('INVALID_RESPONSE');
+  }
+
+  for (let index = 1; index < steps.length; index += 1) {
+    const previous = steps[index - 1];
+    const current = steps[index];
+    if (
+      current.geometryStartIndex !== previous.geometryEndIndex ||
+      (index < steps.length - 1 &&
+        current.manoeuvre.type === NavigationManoeuvreType.ARRIVE)
+    ) {
+      throw new RoutingProviderError('INVALID_RESPONSE');
+    }
+  }
+
+  return steps;
+}
+
+function parseInstruction(
+  instruction: unknown,
+  index: number,
+  coordinates: readonly (readonly [number, number])[],
+): ProviderNavigationStep {
+  if (
+    !isRecord(instruction) ||
+    !isInteger(instruction.sign) ||
+    typeof instruction.text !== 'string' ||
+    instruction.text.length === 0 ||
+    instruction.text.length > MAX_INSTRUCTION_LENGTH ||
+    typeof instruction.street_name !== 'string' ||
+    instruction.street_name.length > MAX_INSTRUCTION_LENGTH ||
+    !isNonNegativeFiniteNumber(instruction.distance) ||
+    !isNonNegativeFiniteNumber(instruction.time) ||
+    !Array.isArray(instruction.interval) ||
+    instruction.interval.length !== 2 ||
+    !isNonNegativeInteger(instruction.interval[0]) ||
+    !isNonNegativeInteger(instruction.interval[1])
+  ) {
+    throw new RoutingProviderError('INVALID_RESPONSE');
+  }
+
+  const [geometryStartIndex, geometryEndIndex] = instruction.interval;
+  if (
+    geometryStartIndex > geometryEndIndex ||
+    geometryEndIndex >= coordinates.length
+  ) {
+    throw new RoutingProviderError('INVALID_RESPONSE');
+  }
+
+  const bearingBefore = bearingBeforeIndex(coordinates, geometryStartIndex);
+  const bearingAfter = bearingAfterIndex(coordinates, geometryStartIndex);
+  const manoeuvre = mapManoeuvre(
+    instruction.sign,
+    index === 0,
+    bearingBefore,
+    bearingAfter,
+  );
+
+  return {
+    index,
+    instruction: instruction.text,
+    streetName: instruction.street_name,
+    distanceMeters: Math.max(0, Math.round(instruction.distance)),
+    durationSeconds: Math.max(0, Math.ceil(instruction.time / 1_000)),
+    manoeuvre: {
+      type: manoeuvre.type,
+      modifier: manoeuvre.modifier,
+      bearingBefore,
+      bearingAfter:
+        manoeuvre.type === NavigationManoeuvreType.ARRIVE
+          ? null
+          : bearingAfter,
+    },
+    geometryStartIndex,
+    geometryEndIndex,
+  };
+}
+
+function mapManoeuvre(
+  sign: number,
+  isFirst: boolean,
+  bearingBefore: number | null,
+  bearingAfter: number | null,
+): {
+  readonly type: NavigationManoeuvreType;
+  readonly modifier: NavigationModifier;
+} {
+  if (sign === 4 || sign === 5) {
+    return {
+      type: NavigationManoeuvreType.ARRIVE,
+      modifier: NavigationModifier.NONE,
+    };
+  }
+  if (isFirst) {
+    return {
+      type: NavigationManoeuvreType.DEPART,
+      modifier: modifierForSign(sign, bearingBefore, bearingAfter),
+    };
+  }
+
+  switch (sign) {
+    case 0:
+      return {
+        type: NavigationManoeuvreType.CONTINUE,
+        modifier: NavigationModifier.STRAIGHT,
+      };
+    case -1:
+    case 1:
+      return {
+        type: NavigationManoeuvreType.SLIGHT_TURN,
+        modifier:
+          sign < 0
+            ? NavigationModifier.SLIGHT_LEFT
+            : NavigationModifier.SLIGHT_RIGHT,
+      };
+    case -2:
+    case 2:
+      return {
+        type: NavigationManoeuvreType.TURN,
+        modifier:
+          sign < 0 ? NavigationModifier.LEFT : NavigationModifier.RIGHT,
+      };
+    case -3:
+    case 3:
+      return {
+        type: NavigationManoeuvreType.SHARP_TURN,
+        modifier:
+          sign < 0
+            ? NavigationModifier.SHARP_LEFT
+            : NavigationModifier.SHARP_RIGHT,
+      };
+    case -98:
+    case -8:
+    case 8:
+      return {
+        type: NavigationManoeuvreType.U_TURN,
+        modifier: NavigationModifier.U_TURN,
+      };
+    case 6:
+      return {
+        type: NavigationManoeuvreType.ROUNDABOUT,
+        modifier: modifierFromBearings(bearingBefore, bearingAfter),
+      };
+    case -6:
+      return {
+        type: NavigationManoeuvreType.EXIT_ROUNDABOUT,
+        modifier: modifierFromBearings(bearingBefore, bearingAfter),
+      };
+    case -7:
+    case 7:
+      return {
+        type: NavigationManoeuvreType.FORK,
+        modifier:
+          sign < 0
+            ? NavigationModifier.SLIGHT_LEFT
+            : NavigationModifier.SLIGHT_RIGHT,
+      };
+    default:
+      return {
+        type: NavigationManoeuvreType.UNKNOWN,
+        modifier: NavigationModifier.NONE,
+      };
+  }
+}
+
+function modifierForSign(
+  sign: number,
+  bearingBefore: number | null,
+  bearingAfter: number | null,
+): NavigationModifier {
+  switch (sign) {
+    case -1:
+      return NavigationModifier.SLIGHT_LEFT;
+    case -2:
+      return NavigationModifier.LEFT;
+    case -3:
+      return NavigationModifier.SHARP_LEFT;
+    case 1:
+      return NavigationModifier.SLIGHT_RIGHT;
+    case 2:
+      return NavigationModifier.RIGHT;
+    case 3:
+      return NavigationModifier.SHARP_RIGHT;
+    case -98:
+    case -8:
+    case 8:
+      return NavigationModifier.U_TURN;
+    default:
+      return modifierFromBearings(bearingBefore, bearingAfter);
+  }
+}
+
+function modifierFromBearings(
+  bearingBefore: number | null,
+  bearingAfter: number | null,
+): NavigationModifier {
+  if (bearingBefore === null || bearingAfter === null) {
+    return NavigationModifier.STRAIGHT;
+  }
+  const delta = normalizeTurnDegrees(bearingAfter - bearingBefore);
+  const magnitude = Math.abs(delta);
+  if (magnitude < 15) {
+    return NavigationModifier.STRAIGHT;
+  }
+  if (magnitude >= 165) {
+    return NavigationModifier.U_TURN;
+  }
+  if (magnitude < 45) {
+    return delta < 0
+      ? NavigationModifier.SLIGHT_LEFT
+      : NavigationModifier.SLIGHT_RIGHT;
+  }
+  if (magnitude < 135) {
+    return delta < 0 ? NavigationModifier.LEFT : NavigationModifier.RIGHT;
+  }
+  return delta < 0
+    ? NavigationModifier.SHARP_LEFT
+    : NavigationModifier.SHARP_RIGHT;
+}
+
+function normalizeTurnDegrees(degrees: number): number {
+  return ((degrees + 540) % 360) - 180;
+}
+
+function bearingBeforeIndex(
+  coordinates: readonly (readonly [number, number])[],
+  index: number,
+): number | null {
+  for (let end = index; end > 0; end -= 1) {
+    const bearing = bearingDegrees(coordinates[end - 1], coordinates[end]);
+    if (bearing !== null) {
+      return bearing;
+    }
+  }
+  return null;
+}
+
+function bearingAfterIndex(
+  coordinates: readonly (readonly [number, number])[],
+  index: number,
+): number | null {
+  for (let start = index; start < coordinates.length - 1; start += 1) {
+    const bearing = bearingDegrees(coordinates[start], coordinates[start + 1]);
+    if (bearing !== null) {
+      return bearing;
+    }
+  }
+  return null;
+}
+
+function bearingDegrees(
+  start: readonly [number, number],
+  end: readonly [number, number],
+): number | null {
+  const [startLongitude, startLatitude] = start;
+  const [endLongitude, endLatitude] = end;
+  if (
+    startLongitude === endLongitude &&
+    startLatitude === endLatitude
+  ) {
+    return null;
+  }
+  const startLatitudeRadians = toRadians(startLatitude);
+  const endLatitudeRadians = toRadians(endLatitude);
+  const longitudeDelta = toRadians(endLongitude - startLongitude);
+  const y = Math.sin(longitudeDelta) * Math.cos(endLatitudeRadians);
+  const x =
+    Math.cos(startLatitudeRadians) * Math.sin(endLatitudeRadians) -
+    Math.sin(startLatitudeRadians) *
+      Math.cos(endLatitudeRadians) *
+      Math.cos(longitudeDelta);
+  const bearing = (Math.atan2(y, x) * 180) / Math.PI;
+  return Math.round((bearing + 360) % 360) % 360;
 }
 
 function parseCoordinate(coordinate: unknown): readonly [number, number] {
@@ -276,6 +582,18 @@ function isFiniteNumber(value: unknown): value is number {
 
 function isPositiveFiniteNumber(value: unknown): value is number {
   return isFiniteNumber(value) && value > 0;
+}
+
+function isNonNegativeFiniteNumber(value: unknown): value is number {
+  return isFiniteNumber(value) && value >= 0;
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return isInteger(value) && value >= 0;
+}
+
+function isInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value);
 }
 
 function isAbortError(error: unknown): boolean {

@@ -5,6 +5,8 @@ import { AppModule } from '../src/app.module';
 import { configureApplication } from '../src/app-bootstrap';
 import { TravelModeDto } from '../src/routes/dto/route-preview-request.dto';
 import {
+  NavigationManoeuvreType,
+  NavigationModifier,
   type RoutingProvider,
   ROUTING_PROVIDER,
   RoutingProviderError,
@@ -61,6 +63,28 @@ describe('routing API (integration)', () => {
           isRecommended: true,
           geometry: { type: 'LineString' },
           summary: { distanceMeters: 1_000, durationSeconds: 120 },
+          steps: [
+            {
+              index: 0,
+              instruction: 'Mulai menuju Jalan Uji',
+              manoeuvre: {
+                type: 'DEPART',
+                modifier: 'STRAIGHT',
+              },
+              geometryStartIndex: 0,
+              geometryEndIndex: 1,
+            },
+            {
+              index: 1,
+              instruction: 'Anda telah tiba',
+              manoeuvre: {
+                type: 'ARRIVE',
+                modifier: 'NONE',
+              },
+              geometryStartIndex: 1,
+              geometryEndIndex: 1,
+            },
+          ],
         },
         {
           isRecommended: false,
@@ -76,6 +100,26 @@ describe('routing API (integration)', () => {
     expect(response.body.routes[0].geometry.coordinates[0]).toEqual([
       106.8167, -6.2,
     ]);
+    expect(response.body.routes[0].steps.at(-1).manoeuvre.type).toBe('ARRIVE');
+    for (const route of response.body.routes) {
+      const steps = route.steps as Array<{
+        index: number;
+        geometryStartIndex: number;
+        geometryEndIndex: number;
+      }>;
+      expect(steps.map((step) => step.index)).toEqual(
+        steps.map((_, index) => index),
+      );
+      expect(steps[0].geometryStartIndex).toBe(0);
+      expect(steps.at(-1)?.geometryEndIndex).toBe(
+        route.geometry.coordinates.length - 1,
+      );
+      for (let index = 1; index < steps.length; index += 1) {
+        expect(steps[index].geometryStartIndex).toBe(
+          steps[index - 1].geometryEndIndex,
+        );
+      }
+    }
   });
 
   it.each([
@@ -136,6 +180,28 @@ describe('routing API (integration)', () => {
     expect(JSON.stringify(response.body)).not.toContain('GraphHopper');
   });
 
+  it('returns a clear gateway error for malformed provider instructions', async () => {
+    provider.preview.mockRejectedValue(
+      new RoutingProviderError('INVALID_RESPONSE', {
+        cause: new Error('malformed instruction interval'),
+      }),
+    );
+
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/routes/preview')
+      .send(validRequest())
+      .expect(502);
+
+    expect(response.body.error).toEqual({
+      code: 'ROUTING_RESPONSE_INVALID',
+      message: 'The routing engine returned an invalid response.',
+      retryable: true,
+    });
+    expect(JSON.stringify(response.body)).not.toContain(
+      'malformed instruction interval',
+    );
+  });
+
   it('normalizes an unsupported route method as not found', async () => {
     const response = await request(app.getHttpServer())
       .get('/api/v1/routes/preview')
@@ -191,6 +257,7 @@ function validRequest() {
 function providerRoute(
   coordinates: readonly (readonly [number, number])[],
 ) {
+  const lastIndex = coordinates.length - 1;
   return {
     geometry: {
       type: 'LineString' as const,
@@ -198,6 +265,38 @@ function providerRoute(
     },
     distanceMeters: 1_000,
     durationSeconds: 120,
+    steps: [
+      {
+        index: 0,
+        instruction: 'Mulai menuju Jalan Uji',
+        streetName: 'Jalan Uji',
+        distanceMeters: 1_000,
+        durationSeconds: 120,
+        manoeuvre: {
+          type: NavigationManoeuvreType.DEPART,
+          modifier: NavigationModifier.STRAIGHT,
+          bearingBefore: null,
+          bearingAfter: 90,
+        },
+        geometryStartIndex: 0,
+        geometryEndIndex: lastIndex,
+      },
+      {
+        index: 1,
+        instruction: 'Anda telah tiba',
+        streetName: '',
+        distanceMeters: 0,
+        durationSeconds: 0,
+        manoeuvre: {
+          type: NavigationManoeuvreType.ARRIVE,
+          modifier: NavigationModifier.NONE,
+          bearingBefore: 90,
+          bearingAfter: null,
+        },
+        geometryStartIndex: lastIndex,
+        geometryEndIndex: lastIndex,
+      },
+    ],
   };
 }
 
