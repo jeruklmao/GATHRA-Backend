@@ -1,13 +1,16 @@
 # GATHRA routing backend
 
-This service owns GATHRA's route-preview contract and keeps GraphHopper private.
-It deliberately contains no authentication, database, geocoding, traffic,
-telemetry, flood logic, or turn-by-turn navigation.
+This service owns GATHRA's route-preview and geocoding contracts. It keeps
+GraphHopper and Pelias private. It deliberately contains no authentication,
+database, traffic, telemetry, flood logic, or active navigation-session
+execution. It returns provider-independent navigation steps and normalized
+place models.
 
 ## Runtime architecture
 
 ```text
 Android -> NestJS :3000 -> GraphHopper :8989 (Compose network only)
+                       `-> Pelias :4000 -> Elasticsearch (private profile)
 ```
 
 Only the NestJS port is published by `compose.yaml`. GraphHopper uses its own
@@ -19,6 +22,12 @@ GraphHopper itself describes this model as requiring adaptation and testing
 before production use. Treat it as experimental for this milestone: it has not
 been calibrated against Indonesian regulations, local access rules, or expected
 motorcycle travel times.
+
+Pelias is an optional Compose profile; deterministic fake geocoding is the
+default. Its runtime/import architecture, region definition, resource guidance,
+safe rebuild workflow, quality corpus, and rollback procedure are documented
+in [`geocoding/README.md`](geocoding/README.md). Android developer setup is in
+[`../docs/development-geocoding.md`](../docs/development-geocoding.md).
 
 ## Prerequisites
 
@@ -135,7 +144,39 @@ alternative. GeoJSON uses the standard `[longitude, latitude]` position order:
       "summary": {
         "distanceMeters": 1642,
         "durationSeconds": 173
-      }
+      },
+      "steps": [
+        {
+          "index": 0,
+          "instruction": "Mulai menuju Jalan A",
+          "streetName": "Jalan A",
+          "distanceMeters": 1642,
+          "durationSeconds": 173,
+          "manoeuvre": {
+            "type": "DEPART",
+            "modifier": "STRAIGHT",
+            "bearingBefore": null,
+            "bearingAfter": 93
+          },
+          "geometryStartIndex": 0,
+          "geometryEndIndex": 1
+        },
+        {
+          "index": 1,
+          "instruction": "Anda telah tiba di tujuan",
+          "streetName": "",
+          "distanceMeters": 0,
+          "durationSeconds": 0,
+          "manoeuvre": {
+            "type": "ARRIVE",
+            "modifier": "NONE",
+            "bearingBefore": 93,
+            "bearingAfter": null
+          },
+          "geometryStartIndex": 1,
+          "geometryEndIndex": 1
+        }
+      ]
     }
   ],
   "metadata": {
@@ -148,27 +189,48 @@ alternative. GeoJSON uses the standard `[longitude, latitude]` position order:
 
 The route ID is an opaque stable fingerprint of API version, travel mode, and
 canonical geometry. Clients must not infer provider details from it.
+`steps` is a backward-compatible addition: existing route fields are unchanged.
+Step intervals are inclusive indexes into the parent GeoJSON coordinates,
+ordered without gaps, and always end in `ARRIVE`. GraphHopper signs are mapped
+to GATHRA manoeuvre and modifier enums; they are never exposed to clients.
+Bearings are integer compass degrees derived from the returned LineString.
 The provider adapter rejects a result when its street-snapped start or end is
 more than 500 metres from the requested coordinate, returning `NO_ROUTE`
 instead of presenting an out-of-coverage route.
 
+### Geocoding
+
+The provider-neutral geocoding surface is:
+
+- `GET /api/v1/geocoding/autocomplete`
+- `GET /api/v1/geocoding/search`
+- `GET /api/v1/geocoding/places/:id`
+- `GET /api/v1/geocoding/reverse`
+
+Autocomplete/search accept an Indonesian query, optional proximity, and a
+bounded result limit. Lookup accepts only an opaque server-issued token.
+Reverse geocoding preserves the caller's input coordinate in the normalized
+response; returned names and addresses are display metadata. Full schemas and
+error envelopes are available in OpenAPI.
+
 ### `GET /api/v1/health`
 
 This is a readiness endpoint, not merely a process liveness endpoint. It returns
-HTTP 200 only after the private routing engine responds:
+HTTP 200 only after the private routing and selected geocoding providers
+respond:
 
 ```json
 {
   "status": "ok",
   "service": "gathra-routing-api",
   "checks": {
-    "routing": "up"
+    "routing": "up",
+    "geocoding": "up"
   }
 }
 ```
 
-It returns HTTP 503 with `status: "unavailable"` and `routing: "down"` when
-GraphHopper is unavailable.
+It returns HTTP 503 with `status: "unavailable"` when either provider is down.
 
 ## Errors
 

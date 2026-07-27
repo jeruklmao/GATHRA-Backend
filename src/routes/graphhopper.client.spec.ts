@@ -40,6 +40,24 @@ describe('GraphHopperClient', () => {
     expect(result[0]).toMatchObject({
       distanceMeters: 1_234,
       durationSeconds: 102,
+      steps: [
+        {
+          index: 0,
+          instruction: 'Mulai',
+          manoeuvre: {
+            type: 'DEPART',
+            bearingBefore: null,
+          },
+        },
+        {
+          index: 1,
+          instruction: 'Anda telah tiba',
+          manoeuvre: {
+            type: 'ARRIVE',
+            bearingAfter: null,
+          },
+        },
+      ],
     });
     const [url, init] = fetchMock.mock.calls[0];
     const parsedUrl = new URL(String(url));
@@ -51,7 +69,8 @@ describe('GraphHopperClient', () => {
         [106.82, -6.196],
       ],
       points_encoded: false,
-      instructions: false,
+      instructions: true,
+      locale: 'id',
       calc_points: true,
       timeout_ms: 8_000,
       algorithm: 'alternative_route',
@@ -61,6 +80,193 @@ describe('GraphHopperClient', () => {
       'alternative_route.max_share_factor': 0.8,
       'alternative_route.max_exploration_factor': 2.0,
       'alternative_route.min_plateau_factor': 0.05,
+    });
+  });
+
+  it('maps turn signs and derives bearings from route geometry', async () => {
+    const coordinates = [
+      [106.8167, -6.2],
+      [106.8177, -6.2],
+      [106.8177, -6.201],
+    ];
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue(
+      jsonResponse({
+        paths: [
+          graphHopperPath(1_000, 60_000, coordinates, [
+            graphHopperInstruction(0, [0, 1], 'Mulai menuju Jalan A', 'Jalan A'),
+            graphHopperInstruction(2, [1, 2], 'Belok kanan ke Jalan B', 'Jalan B'),
+            graphHopperInstruction(4, [2, 2], 'Anda telah tiba', ''),
+          ]),
+        ],
+      }),
+    );
+
+    const [route] = await new GraphHopperClient().preview({
+      origin: { latitude: -6.2, longitude: 106.8167 },
+      destination: { latitude: -6.201, longitude: 106.8177 },
+      travelMode: TravelModeDto.CAR,
+      alternatives: 0,
+    });
+
+    expect(route.steps).toEqual([
+      {
+        index: 0,
+        instruction: 'Mulai menuju Jalan A',
+        streetName: 'Jalan A',
+        distanceMeters: 100,
+        durationSeconds: 10,
+        manoeuvre: {
+          type: 'DEPART',
+          modifier: 'STRAIGHT',
+          bearingBefore: null,
+          bearingAfter: 90,
+        },
+        geometryStartIndex: 0,
+        geometryEndIndex: 1,
+      },
+      {
+        index: 1,
+        instruction: 'Belok kanan ke Jalan B',
+        streetName: 'Jalan B',
+        distanceMeters: 100,
+        durationSeconds: 10,
+        manoeuvre: {
+          type: 'TURN',
+          modifier: 'RIGHT',
+          bearingBefore: 90,
+          bearingAfter: 180,
+        },
+        geometryStartIndex: 1,
+        geometryEndIndex: 2,
+      },
+      {
+        index: 2,
+        instruction: 'Anda telah tiba',
+        streetName: '',
+        distanceMeters: 100,
+        durationSeconds: 10,
+        manoeuvre: {
+          type: 'ARRIVE',
+          modifier: 'NONE',
+          bearingBefore: 180,
+          bearingAfter: null,
+        },
+        geometryStartIndex: 2,
+        geometryEndIndex: 2,
+      },
+    ]);
+  });
+
+  it.each([
+    [-1, 'SLIGHT_TURN', 'SLIGHT_LEFT'],
+    [1, 'SLIGHT_TURN', 'SLIGHT_RIGHT'],
+    [-2, 'TURN', 'LEFT'],
+    [2, 'TURN', 'RIGHT'],
+    [-3, 'SHARP_TURN', 'SHARP_LEFT'],
+    [3, 'SHARP_TURN', 'SHARP_RIGHT'],
+    [-98, 'U_TURN', 'U_TURN'],
+    [-8, 'U_TURN', 'U_TURN'],
+    [8, 'U_TURN', 'U_TURN'],
+    [6, 'ROUNDABOUT', 'STRAIGHT'],
+    [-6, 'EXIT_ROUNDABOUT', 'STRAIGHT'],
+    [-7, 'FORK', 'SLIGHT_LEFT'],
+    [7, 'FORK', 'SLIGHT_RIGHT'],
+    [99, 'UNKNOWN', 'NONE'],
+  ])(
+    'maps provider sign %i to %s/%s',
+    async (sign, expectedType, expectedModifier) => {
+      const coordinates = [
+        [106.8167, -6.2],
+        [106.817, -6.2],
+        [106.8173, -6.2],
+      ];
+      jest.spyOn(globalThis, 'fetch').mockResolvedValue(
+        jsonResponse({
+          paths: [
+            graphHopperPath(100, 10_000, coordinates, [
+              graphHopperInstruction(0, [0, 1], 'Mulai', ''),
+              graphHopperInstruction(sign, [1, 2], 'Instruksi', 'Jalan Uji'),
+              graphHopperInstruction(4, [2, 2], 'Tiba', ''),
+            ]),
+          ],
+        }),
+      );
+
+      const [route] = await new GraphHopperClient().preview({
+        origin: { latitude: -6.2, longitude: 106.8167 },
+        destination: { latitude: -6.2, longitude: 106.8173 },
+        travelMode: TravelModeDto.CAR,
+        alternatives: 0,
+      });
+
+      expect(route.steps[1].manoeuvre).toMatchObject({
+        type: expectedType,
+        modifier: expectedModifier,
+      });
+    },
+  );
+
+  it.each([
+    ['missing instructions', undefined],
+    [
+      'a discontinuous interval',
+      [
+        graphHopperInstruction(0, [0, 1], 'Mulai', ''),
+        graphHopperInstruction(2, [2, 2], 'Belok kanan', ''),
+        graphHopperInstruction(4, [2, 2], 'Tiba', ''),
+      ],
+    ],
+    [
+      'an out-of-order interval',
+      [
+        graphHopperInstruction(0, [0, 1], 'Mulai', ''),
+        graphHopperInstruction(2, [1, 0], 'Belok kanan', ''),
+        graphHopperInstruction(4, [2, 2], 'Tiba', ''),
+      ],
+    ],
+    [
+      'an intermediate arrival',
+      [
+        graphHopperInstruction(0, [0, 1], 'Mulai', ''),
+        graphHopperInstruction(4, [1, 2], 'Tiba terlalu cepat', ''),
+        graphHopperInstruction(4, [2, 2], 'Tiba', ''),
+      ],
+    ],
+    [
+      'a non-arrival final instruction',
+      [
+        graphHopperInstruction(0, [0, 1], 'Mulai', ''),
+        graphHopperInstruction(2, [1, 2], 'Belok kanan', ''),
+        graphHopperInstruction(0, [2, 2], 'Lanjut', ''),
+      ],
+    ],
+  ])('rejects provider steps with %s', async (_label, instructions) => {
+    const path = graphHopperPath(
+      100,
+      10_000,
+      [
+        [106.8167, -6.2],
+        [106.817, -6.2],
+        [106.8173, -6.2],
+      ],
+      instructions,
+    ) as Record<string, unknown>;
+    if (instructions === undefined) {
+      delete path.instructions;
+    }
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue(
+      jsonResponse({ paths: [path] }),
+    );
+
+    await expect(
+      new GraphHopperClient().preview({
+        origin: { latitude: -6.2, longitude: 106.8167 },
+        destination: { latitude: -6.2, longitude: 106.8173 },
+        travelMode: TravelModeDto.CAR,
+        alternatives: 0,
+      }),
+    ).rejects.toMatchObject<Partial<RoutingProviderError>>({
+      kind: 'INVALID_RESPONSE',
     });
   });
 
@@ -198,6 +404,7 @@ function graphHopperPath(
   distance: number,
   time: number,
   coordinates: number[][],
+  instructions: unknown = defaultInstructions(coordinates),
 ): unknown {
   return {
     distance,
@@ -206,5 +413,30 @@ function graphHopperPath(
       type: 'LineString',
       coordinates,
     },
+    instructions,
+  };
+}
+
+function defaultInstructions(coordinates: number[][]): unknown[] {
+  const lastIndex = coordinates.length - 1;
+  return [
+    graphHopperInstruction(0, [0, lastIndex], 'Mulai', ''),
+    graphHopperInstruction(4, [lastIndex, lastIndex], 'Anda telah tiba', ''),
+  ];
+}
+
+function graphHopperInstruction(
+  sign: number,
+  interval: [number, number],
+  text: string,
+  streetName: string,
+): unknown {
+  return {
+    sign,
+    interval,
+    text,
+    street_name: streetName,
+    distance: 100.4,
+    time: 9_001,
   };
 }

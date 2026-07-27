@@ -4,6 +4,7 @@ import {
   type NestModule,
 } from '@nestjs/common';
 import { RequestIdMiddleware } from './common/request-id.middleware';
+import { GeocodingModule } from './geocoding/geocoding.module';
 import { HealthController } from './health/health.controller';
 import { GraphHopperClient } from './routes/graphhopper.client';
 import { RoutesController } from './routes/routes.controller';
@@ -11,6 +12,7 @@ import { RoutesService } from './routes/routes.service';
 import { ROUTING_PROVIDER } from './routes/routing-provider';
 
 @Module({
+  imports: [GeocodingModule],
   controllers: [RoutesController, HealthController],
   providers: [
     RoutesService,

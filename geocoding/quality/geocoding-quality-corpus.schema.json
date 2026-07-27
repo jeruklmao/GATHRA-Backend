@@ -1,0 +1,414 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gathra.local/schema/geocoding-quality-corpus-v2.json",
+  "title": "GATHRA geocoding source-derived smoke corpus",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "corpusVersion",
+    "corpusType",
+    "regionConfigVersion",
+    "sourceVerificationStatus",
+    "provenance",
+    "qualityGate",
+    "quotaRequirements",
+    "blockingThresholds",
+    "informationalTargets",
+    "cases",
+    "candidates"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 2
+    },
+    "corpusVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "corpusType": {
+      "const": "SOURCE_DERIVED_SMOKE"
+    },
+    "regionConfigVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sourceVerificationStatus": {
+      "const": "SOURCE_DERIVED"
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "source",
+        "license",
+        "sourcePbfSha256",
+        "sourceLatestObjectTimestamp",
+        "administrativePolygons",
+        "derivation",
+        "verificationCaveat"
+      ]
+    },
+    "qualityGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "requiredVerifiedCasesForAcceptance",
+        "committedVerifiedCases",
+        "acceptanceReady"
+      ],
+      "properties": {
+        "mode": {
+          "const": "SOURCE_DERIVED_SMOKE"
+        },
+        "requiredVerifiedCasesForAcceptance": {
+          "type": "integer",
+          "minimum": 100
+        },
+        "committedVerifiedCases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "acceptanceReady": {
+          "type": "boolean"
+        }
+      }
+    },
+    "quotaRequirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coreCanonical",
+        "variants",
+        "reverseCore",
+        "buffer",
+        "outsidePolicy"
+      ],
+      "properties": {
+        "coreCanonical": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ROAD",
+            "SCHOOL",
+            "HEALTH",
+            "LANDMARK",
+            "AREA"
+          ],
+          "properties": {
+            "ROAD": {
+              "type": "integer",
+              "minimum": 20
+            },
+            "SCHOOL": {
+              "type": "integer",
+              "minimum": 20
+            },
+            "HEALTH": {
+              "type": "integer",
+              "minimum": 15
+            },
+            "LANDMARK": {
+              "type": "integer",
+              "minimum": 15
+            },
+            "AREA": {
+              "type": "integer",
+              "minimum": 15
+            }
+          }
+        },
+        "variants": {
+          "type": "integer",
+          "minimum": 15
+        },
+        "reverseCore": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "buffer": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "outsidePolicy": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "blockingThresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minCanonicalTop1SuccessRate",
+        "minCanonicalTop3SuccessRate",
+        "maxCanonicalNoResultRate",
+        "maxOutsideRegionFalsePositiveRate",
+        "minReverseLabelContextCategorySuccessRate",
+        "minReverseCoordinatePreservationRate"
+      ],
+      "properties": {
+        "minCanonicalTop1SuccessRate": {
+          "$ref": "#/$defs/ratio"
+        },
+        "minCanonicalTop3SuccessRate": {
+          "$ref": "#/$defs/ratio"
+        },
+        "maxCanonicalNoResultRate": {
+          "$ref": "#/$defs/ratio"
+        },
+        "maxOutsideRegionFalsePositiveRate": {
+          "$ref": "#/$defs/ratio"
+        },
+        "minReverseLabelContextCategorySuccessRate": {
+          "$ref": "#/$defs/ratio"
+        },
+        "minReverseCoordinatePreservationRate": {
+          "$ref": "#/$defs/ratio"
+        }
+      }
+    },
+    "informationalTargets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxP95ResponseTimeMs",
+        "minVariantTop3SuccessRate"
+      ],
+      "properties": {
+        "maxP95ResponseTimeMs": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "minVariantTop3SuccessRate": {
+          "$ref": "#/$defs/ratio"
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 100,
+      "items": {
+        "$ref": "#/$defs/case"
+      }
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "description"
+        ],
+        "properties": {
+          "status": {
+            "const": "TODO_MANUAL_VERIFICATION"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "ratio": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "latitude",
+        "longitude"
+      ],
+      "properties": {
+        "latitude": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "longitude": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "insideSupportedRegion"
+      ],
+      "properties": {
+        "nameContains": {
+          "type": "string",
+          "minLength": 1
+        },
+        "contextContains": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "enum": [
+            "ROAD",
+            "SCHOOL",
+            "HEALTH",
+            "LANDMARK",
+            "AREA",
+            "COVERAGE"
+          ]
+        },
+        "maxRank": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "maxDistanceMeters": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "insideSupportedRegion": {
+          "type": "boolean"
+        },
+        "maxCoordinateDeltaMeters": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "source",
+        "verificationStatus"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verificationStatus": {
+          "enum": [
+            "SOURCE_DERIVED",
+            "VERIFIED",
+            "POLICY_SENTINEL"
+          ]
+        }
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "queryClass",
+        "category",
+        "region",
+        "coverageClass",
+        "verificationStatus",
+        "expected",
+        "provenance"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "kind": {
+          "enum": [
+            "AUTOCOMPLETE",
+            "SEARCH",
+            "REVERSE"
+          ]
+        },
+        "queryClass": {
+          "enum": [
+            "CANONICAL",
+            "VARIANT",
+            "BUFFER",
+            "NOT_APPLICABLE"
+          ]
+        },
+        "category": {
+          "enum": [
+            "ROAD",
+            "SCHOOL",
+            "HEALTH",
+            "LANDMARK",
+            "AREA",
+            "COVERAGE"
+          ]
+        },
+        "region": {
+          "enum": [
+            "JAKARTA_PUSAT",
+            "JAKARTA_SELATAN",
+            "KOTA_TANGERANG",
+            "TANGERANG_SELATAN",
+            "BUFFER",
+            "OUTSIDE"
+          ]
+        },
+        "coverageClass": {
+          "enum": [
+            "CORE",
+            "BUFFER",
+            "OUTSIDE"
+          ]
+        },
+        "verificationStatus": {
+          "enum": [
+            "SOURCE_DERIVED",
+            "VERIFIED",
+            "POLICY_SENTINEL"
+          ]
+        },
+        "query": {
+          "type": "string",
+          "minLength": 1
+        },
+        "focus": {
+          "$ref": "#/$defs/point"
+        },
+        "point": {
+          "$ref": "#/$defs/point"
+        },
+        "expected": {
+          "$ref": "#/$defs/expected"
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "REVERSE"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "point"
+            ]
+          },
+          "else": {
+            "required": [
+              "query",
+              "focus"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

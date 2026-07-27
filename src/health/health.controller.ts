@@ -13,6 +13,10 @@ import {
 } from '@nestjs/swagger';
 import type { Response } from 'express';
 import {
+  GEOCODING_PROVIDER,
+  type GeocodingProvider,
+} from '../geocoding/geocoding-provider';
+import {
   ROUTING_PROVIDER,
   type RoutingProvider,
 } from '../routes/routing-provider';
@@ -20,6 +24,9 @@ import {
 class HealthChecksDto {
   @ApiProperty({ enum: ['up', 'down'] })
   routing!: 'up' | 'down';
+
+  @ApiProperty({ enum: ['up', 'down'] })
+  geocoding!: 'up' | 'down';
 }
 
 class HealthResponseDto {
@@ -39,6 +46,8 @@ export class HealthController {
   constructor(
     @Inject(ROUTING_PROVIDER)
     private readonly routingProvider: RoutingProvider,
+    @Inject(GEOCODING_PROVIDER)
+    private readonly geocodingProvider: GeocodingProvider,
   ) {}
 
   @Get()
@@ -47,21 +56,27 @@ export class HealthController {
   async health(
     @Res({ passthrough: true }) response: Response,
   ): Promise<HealthResponseDto> {
-    try {
-      await this.routingProvider.health();
+    const [routing, geocoding] = await Promise.allSettled([
+      this.routingProvider.health(),
+      this.geocodingProvider.health(),
+    ]);
+    const checks: HealthChecksDto = {
+      routing: routing.status === 'fulfilled' ? 'up' : 'down',
+      geocoding: geocoding.status === 'fulfilled' ? 'up' : 'down',
+    };
+    if (routing.status === 'fulfilled' && geocoding.status === 'fulfilled') {
       return {
         status: 'ok',
         service: 'gathra-routing-api',
-        checks: { routing: 'up' },
-      };
-    } catch {
-      response.status(HttpStatus.SERVICE_UNAVAILABLE);
-      response.setHeader('Cache-Control', 'no-store');
-      return {
-        status: 'unavailable',
-        service: 'gathra-routing-api',
-        checks: { routing: 'down' },
+        checks,
       };
     }
+    response.status(HttpStatus.SERVICE_UNAVAILABLE);
+    response.setHeader('Cache-Control', 'no-store');
+    return {
+      status: 'unavailable',
+      service: 'gathra-routing-api',
+      checks,
+    };
   }
 }

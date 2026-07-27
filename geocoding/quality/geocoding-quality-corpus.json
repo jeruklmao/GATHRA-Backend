@@ -1,0 +1,4368 @@
+{
+  "schemaVersion": 2,
+  "corpusVersion": "gathra-geocoding-source-derived-smoke-v2-2026-07-27",
+  "corpusType": "SOURCE_DERIVED_SMOKE",
+  "regionConfigVersion": "gathra-jakarta-tangerang-v1-2026-07-27",
+  "sourceVerificationStatus": "SOURCE_DERIVED",
+  "provenance": {
+    "source": "OpenStreetMap",
+    "license": "ODbL-1.0",
+    "sourcePbfSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+    "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+    "administrativePolygons": [
+      5802438,
+      7625977,
+      7641582,
+      7641583
+    ],
+    "derivation": "Named OSM objects classified by point-in-polygon against the four pinned administrative relation geometries; no rectangular city-envelope assignment.",
+    "verificationCaveat": "Source-derived smoke cases are not independently or institutionally verified."
+  },
+  "qualityGate": {
+    "mode": "SOURCE_DERIVED_SMOKE",
+    "requiredVerifiedCasesForAcceptance": 100,
+    "committedVerifiedCases": 0,
+    "acceptanceReady": false
+  },
+  "quotaRequirements": {
+    "coreCanonical": {
+      "ROAD": 20,
+      "SCHOOL": 20,
+      "HEALTH": 16,
+      "LANDMARK": 16,
+      "AREA": 16
+    },
+    "variants": 16,
+    "reverseCore": 12,
+    "buffer": 4,
+    "outsidePolicy": 4
+  },
+  "blockingThresholds": {
+    "minCanonicalTop1SuccessRate": 0.55,
+    "minCanonicalTop3SuccessRate": 0.60,
+    "maxCanonicalNoResultRate": 0.25,
+    "maxOutsideRegionFalsePositiveRate": 0,
+    "minReverseLabelContextCategorySuccessRate": 0.6,
+    "minReverseCoordinatePreservationRate": 1
+  },
+  "informationalTargets": {
+    "maxP95ResponseTimeMs": 2500,
+    "minVariantTop3SuccessRate": 0.6
+  },
+  "cases": [
+    {
+      "id": "canonical-area-jakarta-pusat-n1308687092",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "AREA",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Bendungan Hilir",
+      "focus": {
+        "latitude": -6.2087254,
+        "longitude": 106.8086398
+      },
+      "expected": {
+        "nameContains": "Bendungan Hilir",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n1308687092",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-area-jakarta-pusat-n1308683975",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "AREA",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Cikini",
+      "focus": {
+        "latitude": -6.1913465,
+        "longitude": 106.8395502
+      },
+      "expected": {
+        "nameContains": "Cikini",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n1308683975",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-area-jakarta-pusat-n1308683633",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "AREA",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Gambir",
+      "focus": {
+        "latitude": -6.1706302,
+        "longitude": 106.8192868
+      },
+      "expected": {
+        "nameContains": "Gambir",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n1308683633",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-area-jakarta-pusat-n1308653477",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "AREA",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Kebon Kacang",
+      "focus": {
+        "latitude": -6.1902407,
+        "longitude": 106.8166009
+      },
+      "expected": {
+        "nameContains": "Kebon Kacang",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n1308653477",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-health-jakarta-pusat-w154078977",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "HEALTH",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Garuda Sentra Medika",
+      "focus": {
+        "latitude": -6.157371,
+        "longitude": 106.8413734
+      },
+      "expected": {
+        "nameContains": "Garuda Sentra Medika",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w154078977",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-health-jakarta-pusat-w784660823",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "HEALTH",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Husada",
+      "focus": {
+        "latitude": -6.1476403,
+        "longitude": 106.829491
+      },
+      "expected": {
+        "nameContains": "Husada",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w784660823",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-health-jakarta-pusat-n11878707065",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "HEALTH",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "RSUD TANAH ABANG",
+      "focus": {
+        "latitude": -6.1910555,
+        "longitude": 106.8144549
+      },
+      "expected": {
+        "nameContains": "RSUD TANAH ABANG",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n11878707065",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-health-jakarta-pusat-w155110911",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "HEALTH",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Lembaga Kesehatan Budi Kemuliaan",
+      "focus": {
+        "latitude": -6.1804337,
+        "longitude": 106.8183517
+      },
+      "expected": {
+        "nameContains": "Lembaga Kesehatan Budi Kemuliaan",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w155110911",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-landmark-jakarta-pusat-w497570486",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "LANDMARK",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Balai Kota DKI Jakarta",
+      "focus": {
+        "latitude": -6.1814516,
+        "longitude": 106.8284449
+      },
+      "expected": {
+        "nameContains": "Balai Kota DKI Jakarta",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w497570486",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-landmark-jakarta-pusat-w1159084257",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "LANDMARK",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Monumen Nasional",
+      "focus": {
+        "latitude": -6.1753974,
+        "longitude": 106.8271612
+      },
+      "expected": {
+        "nameContains": "Monumen Nasional",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1159084257",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-landmark-jakarta-pusat-a18246795",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "LANDMARK",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Museum Nasional Indonesia",
+      "focus": {
+        "latitude": -6.1761916,
+        "longitude": 106.8217368
+      },
+      "expected": {
+        "nameContains": "Museum Nasional Indonesia",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "a18246795",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-landmark-jakarta-pusat-w481723488",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "LANDMARK",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Perpustakaan Nasional Republik Indonesia",
+      "focus": {
+        "latitude": -6.1816109,
+        "longitude": 106.8269233
+      },
+      "expected": {
+        "nameContains": "Perpustakaan Nasional Republik Indonesia",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w481723488",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-road-jakarta-pusat-w1105764508",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "ROAD",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jalan Jenderal Sudirman",
+      "focus": {
+        "latitude": -6.1998688,
+        "longitude": 106.8232853
+      },
+      "expected": {
+        "nameContains": "Jalan Jenderal Sudirman",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1105764508",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-road-jakarta-pusat-w1299095343",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "ROAD",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jalan Cikini Raya",
+      "focus": {
+        "latitude": -6.195312,
+        "longitude": 106.8398258
+      },
+      "expected": {
+        "nameContains": "Jalan Cikini Raya",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1299095343",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-road-jakarta-pusat-w1242181336",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "ROAD",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jalan Kramat Raya",
+      "focus": {
+        "latitude": -6.1786648,
+        "longitude": 106.8421281
+      },
+      "expected": {
+        "nameContains": "Jalan Kramat Raya",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1242181336",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-road-jakarta-pusat-w1299095342",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "ROAD",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jalan Salemba Raya",
+      "focus": {
+        "latitude": -6.1890558,
+        "longitude": 106.8464636
+      },
+      "expected": {
+        "nameContains": "Jalan Salemba Raya",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1299095342",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-road-jakarta-pusat-w1106958128",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "ROAD",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jalan Medan Merdeka Selatan",
+      "focus": {
+        "latitude": -6.1788568,
+        "longitude": 106.8309023
+      },
+      "expected": {
+        "nameContains": "Jalan Medan Merdeka Selatan",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1106958128",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-school-jakarta-pusat-w502308631",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "SCHOOL",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "SMA Negeri 35 Jakarta",
+      "focus": {
+        "latitude": -6.2089638,
+        "longitude": 106.8139256
+      },
+      "expected": {
+        "nameContains": "SMA Negeri 35 Jakarta",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w502308631",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-school-jakarta-pusat-w501941663",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "SCHOOL",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "SMA Negeri 1 Jakarta",
+      "focus": {
+        "latitude": -6.1662194,
+        "longitude": 106.8374595
+      },
+      "expected": {
+        "nameContains": "SMA Negeri 1 Jakarta",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w501941663",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-school-jakarta-pusat-n8195758254",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "SCHOOL",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "MAN 3 JAKARTA PUSAT",
+      "focus": {
+        "latitude": -6.1846038,
+        "longitude": 106.8727636
+      },
+      "expected": {
+        "nameContains": "MAN 3 JAKARTA PUSAT",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n8195758254",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-school-jakarta-pusat-w506608907",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "SCHOOL",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Mahatma Gandhi School",
+      "focus": {
+        "latitude": -6.1536908,
+        "longitude": 106.8401359
+      },
+      "expected": {
+        "nameContains": "Mahatma Gandhi School",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w506608907",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-school-jakarta-pusat-w120555908",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "SCHOOL",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "BPK Penabur",
+      "focus": {
+        "latitude": -6.1698629,
+        "longitude": 106.8407007
+      },
+      "expected": {
+        "nameContains": "BPK Penabur",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w120555908",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        }
+      }
+    },
+    {
+      "id": "canonical-area-jakarta-selatan-n1308717622",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "AREA",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Bangka",
+      "focus": {
+        "latitude": -6.2630889,
+        "longitude": 106.8184883
+      },
+      "expected": {
+        "nameContains": "Bangka",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n1308717622",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-area-jakarta-selatan-n1308667929",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "AREA",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Bintaro",
+      "focus": {
+        "latitude": -6.2682262,
+        "longitude": 106.7648364
+      },
+      "expected": {
+        "nameContains": "Bintaro",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n1308667929",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-area-jakarta-selatan-n1308673207",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "AREA",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Cilandak Barat",
+      "focus": {
+        "latitude": -6.288078,
+        "longitude": 106.7968651
+      },
+      "expected": {
+        "nameContains": "Cilandak Barat",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n1308673207",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-area-jakarta-selatan-n12944762331",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "AREA",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Kebayoran Baru",
+      "focus": {
+        "latitude": -6.2497787,
+        "longitude": 106.7972324
+      },
+      "expected": {
+        "nameContains": "Kebayoran Baru",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n12944762331",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-health-jakarta-selatan-n11879113048",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "HEALTH",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "RSUP Fatmawati",
+      "focus": {
+        "latitude": -6.2950564,
+        "longitude": 106.7964535
+      },
+      "expected": {
+        "nameContains": "RSUP Fatmawati",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n11879113048",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-health-jakarta-selatan-w121129268",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "HEALTH",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Rumah Sakit MMC",
+      "focus": {
+        "latitude": -6.2200097,
+        "longitude": 106.8324076
+      },
+      "expected": {
+        "nameContains": "Rumah Sakit MMC",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w121129268",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-health-jakarta-selatan-n7355084686",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "HEALTH",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Rumah Sakit Pondok Indah",
+      "focus": {
+        "latitude": -6.2836316,
+        "longitude": 106.7816699
+      },
+      "expected": {
+        "nameContains": "Rumah Sakit Pondok Indah",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n7355084686",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-health-jakarta-selatan-w514464730",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "HEALTH",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "RSUD Kebayoran Baru",
+      "focus": {
+        "latitude": -6.2654975,
+        "longitude": 106.7986377
+      },
+      "expected": {
+        "nameContains": "RSUD Kebayoran Baru",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w514464730",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-landmark-jakarta-selatan-w156830022",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "LANDMARK",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Museum Satria Mandala",
+      "focus": {
+        "latitude": -6.2312788,
+        "longitude": 106.8185993
+      },
+      "expected": {
+        "nameContains": "Museum Satria Mandala",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w156830022",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-landmark-jakarta-selatan-w31805921",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "LANDMARK",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Arsip Nasional Republik Indonesia",
+      "focus": {
+        "latitude": -6.2786374,
+        "longitude": 106.8187443
+      },
+      "expected": {
+        "nameContains": "Arsip Nasional Republik Indonesia",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w31805921",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-landmark-jakarta-selatan-n4695686975",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "LANDMARK",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "ASEAN Headquarters",
+      "focus": {
+        "latitude": -6.2387737,
+        "longitude": 106.7984457
+      },
+      "expected": {
+        "nameContains": "ASEAN Headquarters",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n4695686975",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-landmark-jakarta-selatan-n6196107726",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "LANDMARK",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Blok M BCA",
+      "focus": {
+        "latitude": -6.2444643,
+        "longitude": 106.7981332
+      },
+      "expected": {
+        "nameContains": "Blok M BCA",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n6196107726",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-road-jakarta-selatan-w1072578427",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "ROAD",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jalan Ciledug Raya",
+      "focus": {
+        "latitude": -6.2379986,
+        "longitude": 106.7720001
+      },
+      "expected": {
+        "nameContains": "Jalan Ciledug Raya",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1072578427",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-road-jakarta-selatan-w1001638697",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "ROAD",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jalan Jenderal Gatot Subroto",
+      "focus": {
+        "latitude": -6.2414523,
+        "longitude": 106.8360632
+      },
+      "expected": {
+        "nameContains": "Jalan Jenderal Gatot Subroto",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1001638697",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-road-jakarta-selatan-w1157816454",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "ROAD",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jalan Hajjah R. Rasuna Said",
+      "focus": {
+        "latitude": -6.2106325,
+        "longitude": 106.8305514
+      },
+      "expected": {
+        "nameContains": "Jalan Hajjah R. Rasuna Said",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1157816454",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-road-jakarta-selatan-w1069005557",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "ROAD",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jalan Tahi Bonar Simatupang",
+      "focus": {
+        "latitude": -6.2924605,
+        "longitude": 106.7954153
+      },
+      "expected": {
+        "nameContains": "Jalan Tahi Bonar Simatupang",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1069005557",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-road-jakarta-selatan-w1038131192",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "ROAD",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jalan RS Fatmawati",
+      "focus": {
+        "latitude": -6.2983271,
+        "longitude": 106.7947373
+      },
+      "expected": {
+        "nameContains": "Jalan RS Fatmawati",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1038131192",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-school-jakarta-selatan-w120385729",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "SCHOOL",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "SMA Negeri 28 Jakarta",
+      "focus": {
+        "latitude": -6.2858902,
+        "longitude": 106.833483
+      },
+      "expected": {
+        "nameContains": "SMA Negeri 28 Jakarta",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w120385729",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-school-jakarta-selatan-w1295492657",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "SCHOOL",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "SMA Negeri 70 Jakarta",
+      "focus": {
+        "latitude": -6.241873,
+        "longitude": 106.796854
+      },
+      "expected": {
+        "nameContains": "SMA Negeri 70 Jakarta",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1295492657",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-school-jakarta-selatan-w157361783",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "SCHOOL",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Al Jabr Islamic School",
+      "focus": {
+        "latitude": -6.3082843,
+        "longitude": 106.8044548
+      },
+      "expected": {
+        "nameContains": "Al Jabr Islamic School",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w157361783",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-school-jakarta-selatan-w508069783",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "SCHOOL",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "French School Jakarta",
+      "focus": {
+        "latitude": -6.2753397,
+        "longitude": 106.8009496
+      },
+      "expected": {
+        "nameContains": "French School Jakarta",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w508069783",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-school-jakarta-selatan-a31940427",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "SCHOOL",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Highscope Indonesia",
+      "focus": {
+        "latitude": -6.2937176,
+        "longitude": 106.8041004
+      },
+      "expected": {
+        "nameContains": "Highscope Indonesia",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "a31940427",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-area-kota-tangerang-n1308707144",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "AREA",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Batuceper",
+      "focus": {
+        "latitude": -6.1576682,
+        "longitude": 106.6668198
+      },
+      "expected": {
+        "nameContains": "Batuceper",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n1308707144",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-area-kota-tangerang-n1308706738",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "AREA",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Cikokol",
+      "focus": {
+        "latitude": -6.2082303,
+        "longitude": 106.6299215
+      },
+      "expected": {
+        "nameContains": "Cikokol",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n1308706738",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-area-kota-tangerang-n1308688960",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "AREA",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Cipondoh",
+      "focus": {
+        "latitude": -6.1913218,
+        "longitude": 106.674742
+      },
+      "expected": {
+        "nameContains": "Cipondoh",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n1308688960",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-area-kota-tangerang-n1308719862",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "AREA",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Karawaci",
+      "focus": {
+        "latitude": -6.1907968,
+        "longitude": 106.6231514
+      },
+      "expected": {
+        "nameContains": "Karawaci",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n1308719862",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-health-kota-tangerang-n9731891369",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "HEALTH",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Mandaya Royal Hospital Puri",
+      "focus": {
+        "latitude": -6.1984296,
+        "longitude": 106.7041711
+      },
+      "expected": {
+        "nameContains": "Mandaya Royal Hospital Puri",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n9731891369",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-health-kota-tangerang-w230071923",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "HEALTH",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Mayapada Hospital",
+      "focus": {
+        "latitude": -6.2053847,
+        "longitude": 106.6417523
+      },
+      "expected": {
+        "nameContains": "Mayapada Hospital",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w230071923",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-health-kota-tangerang-w500982761",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "HEALTH",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Primaya Hospital Tangerang",
+      "focus": {
+        "latitude": -6.2146807,
+        "longitude": 106.6304921
+      },
+      "expected": {
+        "nameContains": "Primaya Hospital Tangerang",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w500982761",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-health-kota-tangerang-n4244121741",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "HEALTH",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "RS An-Nisa Tangerang",
+      "focus": {
+        "latitude": -6.1879717,
+        "longitude": 106.6046942
+      },
+      "expected": {
+        "nameContains": "RS An-Nisa Tangerang",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n4244121741",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-landmark-kota-tangerang-n10593879650",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "LANDMARK",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Balai Kota Tangerang",
+      "focus": {
+        "latitude": -6.1708317,
+        "longitude": 106.6406541
+      },
+      "expected": {
+        "nameContains": "Balai Kota Tangerang",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n10593879650",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-landmark-kota-tangerang-w1419183136",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "LANDMARK",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Museum Benteng Heritage",
+      "focus": {
+        "latitude": -6.1786601,
+        "longitude": 106.6296285
+      },
+      "expected": {
+        "nameContains": "Museum Benteng Heritage",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1419183136",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-landmark-kota-tangerang-a30819459",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "LANDMARK",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Pusat Pemerintahan Kota Tangerang",
+      "focus": {
+        "latitude": -6.171494,
+        "longitude": 106.6405494
+      },
+      "expected": {
+        "nameContains": "Pusat Pemerintahan Kota Tangerang",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "a30819459",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-landmark-kota-tangerang-w28981816",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "LANDMARK",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Stadion Benteng",
+      "focus": {
+        "latitude": -6.1738511,
+        "longitude": 106.6388475
+      },
+      "expected": {
+        "nameContains": "Stadion Benteng",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w28981816",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-road-kota-tangerang-w1088054839",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "ROAD",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jalan Daan Mogot",
+      "focus": {
+        "latitude": -6.1679567,
+        "longitude": 106.6374392
+      },
+      "expected": {
+        "nameContains": "Jalan Daan Mogot",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1088054839",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-road-kota-tangerang-w100163192",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "ROAD",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jalan Gatot Subroto",
+      "focus": {
+        "latitude": -6.193257,
+        "longitude": 106.5869413
+      },
+      "expected": {
+        "nameContains": "Jalan Gatot Subroto",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w100163192",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-road-kota-tangerang-w1240375494",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "ROAD",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jalan Jenderal Sudirman",
+      "focus": {
+        "latitude": -6.1762346,
+        "longitude": 106.6444713
+      },
+      "expected": {
+        "nameContains": "Jalan Jenderal Sudirman",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1240375494",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-road-kota-tangerang-w1098290849",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "ROAD",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jalan MH Thamrin",
+      "focus": {
+        "latitude": -6.135437,
+        "longitude": 106.6122524
+      },
+      "expected": {
+        "nameContains": "Jalan MH Thamrin",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1098290849",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-road-kota-tangerang-w1105075455",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "ROAD",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jalan Ciledug Raya",
+      "focus": {
+        "latitude": -6.2301951,
+        "longitude": 106.7250469
+      },
+      "expected": {
+        "nameContains": "Jalan Ciledug Raya",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1105075455",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-school-kota-tangerang-n9696016624",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "SCHOOL",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "SMA Negeri 1 Tangerang",
+      "focus": {
+        "latitude": -6.1701162,
+        "longitude": 106.6333228
+      },
+      "expected": {
+        "nameContains": "SMA Negeri 1 Tangerang",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n9696016624",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-school-kota-tangerang-w716018241",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "SCHOOL",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "SMA Negeri 2 Kota Tangerang",
+      "focus": {
+        "latitude": -6.1752906,
+        "longitude": 106.6390709
+      },
+      "expected": {
+        "nameContains": "SMA Negeri 2 Kota Tangerang",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w716018241",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-school-kota-tangerang-w716015865",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "SCHOOL",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "SMA Negeri 4 Kota Tangerang",
+      "focus": {
+        "latitude": -6.164926,
+        "longitude": 106.6175194
+      },
+      "expected": {
+        "nameContains": "SMA Negeri 4 Kota Tangerang",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w716015865",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-school-kota-tangerang-w159810699",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "SCHOOL",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "SMAN 3 Kota Tangerang",
+      "focus": {
+        "latitude": -6.2246665,
+        "longitude": 106.703625
+      },
+      "expected": {
+        "nameContains": "SMAN 3 Kota Tangerang",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w159810699",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-school-kota-tangerang-w1049862709",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "SCHOOL",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "MA Negeri 14 Kota Tangerang",
+      "focus": {
+        "latitude": -6.1484138,
+        "longitude": 106.6557745
+      },
+      "expected": {
+        "nameContains": "MA Negeri 14 Kota Tangerang",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1049862709",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        }
+      }
+    },
+    {
+      "id": "canonical-area-tangerang-selatan-a39115813",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "AREA",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Alam Sutera",
+      "focus": {
+        "latitude": -6.239555,
+        "longitude": 106.6574339
+      },
+      "expected": {
+        "nameContains": "Alam Sutera",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "a39115813",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-area-tangerang-selatan-a21518663",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "AREA",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "BSD City",
+      "focus": {
+        "latitude": -6.3043322,
+        "longitude": 106.6566896
+      },
+      "expected": {
+        "nameContains": "BSD City",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "a21518663",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-area-tangerang-selatan-n13392532048",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "AREA",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Bintaro Jaya",
+      "focus": {
+        "latitude": -6.2741143,
+        "longitude": 106.7162555
+      },
+      "expected": {
+        "nameContains": "Bintaro Jaya",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n13392532048",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-area-tangerang-selatan-n3081362093",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "AREA",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Pamulang",
+      "focus": {
+        "latitude": -6.3439512,
+        "longitude": 106.7398185
+      },
+      "expected": {
+        "nameContains": "Pamulang",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n3081362093",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-health-tangerang-selatan-w46546065",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "HEALTH",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Eka Hospital BSD",
+      "focus": {
+        "latitude": -6.2980012,
+        "longitude": 106.6697794
+      },
+      "expected": {
+        "nameContains": "Eka Hospital BSD",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w46546065",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-health-tangerang-selatan-w714481104",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "HEALTH",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "RS Pondok Indah Bintaro",
+      "focus": {
+        "latitude": -6.2715443,
+        "longitude": 106.6970199
+      },
+      "expected": {
+        "nameContains": "RS Pondok Indah Bintaro",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w714481104",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-health-tangerang-selatan-w714691758",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "HEALTH",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "RS Premier Bintaro",
+      "focus": {
+        "latitude": -6.2760537,
+        "longitude": 106.7247758
+      },
+      "expected": {
+        "nameContains": "RS Premier Bintaro",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w714691758",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-health-tangerang-selatan-n12160069752",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "HEALTH",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "RSUD Tangerang Selatan",
+      "focus": {
+        "latitude": -6.3379705,
+        "longitude": 106.7390851
+      },
+      "expected": {
+        "nameContains": "RSUD Tangerang Selatan",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n12160069752",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-landmark-tangerang-selatan-w478685243",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "LANDMARK",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "BNN Tangerang Selatan",
+      "focus": {
+        "latitude": -6.3282449,
+        "longitude": 106.6739639
+      },
+      "expected": {
+        "nameContains": "BNN Tangerang Selatan",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w478685243",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-landmark-tangerang-selatan-w1360369865",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "LANDMARK",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "City Gallery Kota Tangerang Selatan",
+      "focus": {
+        "latitude": -6.3215385,
+        "longitude": 106.7081635
+      },
+      "expected": {
+        "nameContains": "City Gallery Kota Tangerang Selatan",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1360369865",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-landmark-tangerang-selatan-n10295138860",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "LANDMARK",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Dinas Kominfo Kota Tangerang Selatan",
+      "focus": {
+        "latitude": -6.3229879,
+        "longitude": 106.7077712
+      },
+      "expected": {
+        "nameContains": "Dinas Kominfo Kota Tangerang Selatan",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n10295138860",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-landmark-tangerang-selatan-w478699767",
+      "kind": "SEARCH",
+      "queryClass": "CANONICAL",
+      "category": "LANDMARK",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "BSD City",
+      "focus": {
+        "latitude": -6.2746894,
+        "longitude": 106.6579683
+      },
+      "expected": {
+        "nameContains": "BSD City",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w478699767",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-road-tangerang-selatan-w187426469",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "ROAD",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jalan Alam Sutera Boulevard",
+      "focus": {
+        "latitude": -6.2445593,
+        "longitude": 106.650441
+      },
+      "expected": {
+        "nameContains": "Jalan Alam Sutera Boulevard",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w187426469",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-road-tangerang-selatan-w1001388820",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "ROAD",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jalan BSD Grand Boulevard",
+      "focus": {
+        "latitude": -6.2998532,
+        "longitude": 106.6637419
+      },
+      "expected": {
+        "nameContains": "Jalan BSD Grand Boulevard",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1001388820",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-road-tangerang-selatan-w114530158",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "ROAD",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jalan HR Rasuna Said",
+      "focus": {
+        "latitude": -6.2766645,
+        "longitude": 106.7186828
+      },
+      "expected": {
+        "nameContains": "Jalan HR Rasuna Said",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w114530158",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-road-tangerang-selatan-w1034304581",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "ROAD",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jalan Pahlawan Seribu",
+      "focus": {
+        "latitude": -6.2785199,
+        "longitude": 106.6614677
+      },
+      "expected": {
+        "nameContains": "Jalan Pahlawan Seribu",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1034304581",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-road-tangerang-selatan-w1055533029",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "ROAD",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jalan Raya Serpong",
+      "focus": {
+        "latitude": -6.3045925,
+        "longitude": 106.6624723
+      },
+      "expected": {
+        "nameContains": "Jalan Raya Serpong",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1055533029",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-school-tangerang-selatan-w563570304",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "SCHOOL",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Al-Azhar BSD",
+      "focus": {
+        "latitude": -6.287885,
+        "longitude": 106.6735946
+      },
+      "expected": {
+        "nameContains": "Al-Azhar BSD",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w563570304",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-school-tangerang-selatan-w236942170",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "SCHOOL",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "BINUS SCHOOL Serpong",
+      "focus": {
+        "latitude": -6.2763668,
+        "longitude": 106.6681087
+      },
+      "expected": {
+        "nameContains": "BINUS SCHOOL Serpong",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w236942170",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-school-tangerang-selatan-w319648078",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "SCHOOL",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "British School Jakarta",
+      "focus": {
+        "latitude": -6.2720851,
+        "longitude": 106.7050566
+      },
+      "expected": {
+        "nameContains": "British School Jakarta",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w319648078",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-school-tangerang-selatan-w398189902",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "SCHOOL",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Deutsche Schule Jakarta",
+      "focus": {
+        "latitude": -6.2863601,
+        "longitude": 106.6676994
+      },
+      "expected": {
+        "nameContains": "Deutsche Schule Jakarta",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w398189902",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "canonical-school-tangerang-selatan-w981491077",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "CANONICAL",
+      "category": "SCHOOL",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "BPK Penabur Bintaro",
+      "focus": {
+        "latitude": -6.2736441,
+        "longitude": 106.7150345
+      },
+      "expected": {
+        "nameContains": "BPK Penabur Bintaro",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w981491077",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        }
+      }
+    },
+    {
+      "id": "variant-01-sman-35",
+      "kind": "SEARCH",
+      "queryClass": "VARIANT",
+      "category": "SCHOOL",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "SMAN 35",
+      "focus": {
+        "latitude": -6.2089638,
+        "longitude": 106.8139256
+      },
+      "expected": {
+        "nameContains": "SMA Negeri 35 Jakarta",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w502308631",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        },
+        "variantDerivation": "MANUALLY_AUTHORED_ABBREVIATION_OR_COMMON_TYPO"
+      }
+    },
+    {
+      "id": "variant-02-monas",
+      "kind": "SEARCH",
+      "queryClass": "VARIANT",
+      "category": "LANDMARK",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Monas",
+      "focus": {
+        "latitude": -6.1753974,
+        "longitude": 106.8271612
+      },
+      "expected": {
+        "nameContains": "Monumen Nasional",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1159084257",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        },
+        "variantDerivation": "MANUALLY_AUTHORED_ABBREVIATION_OR_COMMON_TYPO"
+      }
+    },
+    {
+      "id": "variant-03-jl-sudirman",
+      "kind": "SEARCH",
+      "queryClass": "VARIANT",
+      "category": "ROAD",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jl Sudirman",
+      "focus": {
+        "latitude": -6.1998688,
+        "longitude": 106.8232853
+      },
+      "expected": {
+        "nameContains": "Jalan Jenderal Sudirman",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1105764508",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        },
+        "variantDerivation": "MANUALLY_AUTHORED_ABBREVIATION_OR_COMMON_TYPO"
+      }
+    },
+    {
+      "id": "variant-04-rs-tanah-abang",
+      "kind": "SEARCH",
+      "queryClass": "VARIANT",
+      "category": "HEALTH",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "RS Tanah Abang",
+      "focus": {
+        "latitude": -6.1910555,
+        "longitude": 106.8144549
+      },
+      "expected": {
+        "nameContains": "RSUD TANAH ABANG",
+        "contextContains": "Jakarta Pusat",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n11878707065",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        },
+        "variantDerivation": "MANUALLY_AUTHORED_ABBREVIATION_OR_COMMON_TYPO"
+      }
+    },
+    {
+      "id": "variant-05-rs-fatmawati",
+      "kind": "SEARCH",
+      "queryClass": "VARIANT",
+      "category": "HEALTH",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "RS Fatmawati",
+      "focus": {
+        "latitude": -6.2950564,
+        "longitude": 106.7964535
+      },
+      "expected": {
+        "nameContains": "RSUP Fatmawati",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n11879113048",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        },
+        "variantDerivation": "MANUALLY_AUTHORED_ABBREVIATION_OR_COMMON_TYPO"
+      }
+    },
+    {
+      "id": "variant-06-jl-tb-simatupang",
+      "kind": "SEARCH",
+      "queryClass": "VARIANT",
+      "category": "ROAD",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jl TB Simatupang",
+      "focus": {
+        "latitude": -6.2924605,
+        "longitude": 106.7954153
+      },
+      "expected": {
+        "nameContains": "Jalan Tahi Bonar Simatupang",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1069005557",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        },
+        "variantDerivation": "MANUALLY_AUTHORED_ABBREVIATION_OR_COMMON_TYPO"
+      }
+    },
+    {
+      "id": "variant-07-museum-satriamandala",
+      "kind": "SEARCH",
+      "queryClass": "VARIANT",
+      "category": "LANDMARK",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Museum Satriamandala",
+      "focus": {
+        "latitude": -6.2312788,
+        "longitude": 106.8185993
+      },
+      "expected": {
+        "nameContains": "Museum Satria Mandala",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w156830022",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        },
+        "variantDerivation": "MANUALLY_AUTHORED_ABBREVIATION_OR_COMMON_TYPO"
+      }
+    },
+    {
+      "id": "variant-08-kebayoran-baru-jaksel",
+      "kind": "SEARCH",
+      "queryClass": "VARIANT",
+      "category": "AREA",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Kebayoran Baru Jaksel",
+      "focus": {
+        "latitude": -6.2497787,
+        "longitude": 106.7972324
+      },
+      "expected": {
+        "nameContains": "Kebayoran Baru",
+        "contextContains": "Jakarta Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n12944762331",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        },
+        "variantDerivation": "MANUALLY_AUTHORED_ABBREVIATION_OR_COMMON_TYPO"
+      }
+    },
+    {
+      "id": "variant-09-rs-an-nisa-tanggerang",
+      "kind": "SEARCH",
+      "queryClass": "VARIANT",
+      "category": "HEALTH",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "RS An Nisa Tanggerang",
+      "focus": {
+        "latitude": -6.1879717,
+        "longitude": 106.6046942
+      },
+      "expected": {
+        "nameContains": "RS An-Nisa Tangerang",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n4244121741",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        },
+        "variantDerivation": "MANUALLY_AUTHORED_ABBREVIATION_OR_COMMON_TYPO"
+      }
+    },
+    {
+      "id": "variant-10-jl-daan-mogot-tangerang",
+      "kind": "SEARCH",
+      "queryClass": "VARIANT",
+      "category": "ROAD",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jl Daan Mogot Tangerang",
+      "focus": {
+        "latitude": -6.1679567,
+        "longitude": 106.6374392
+      },
+      "expected": {
+        "nameContains": "Jalan Daan Mogot",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1088054839",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        },
+        "variantDerivation": "MANUALLY_AUTHORED_ABBREVIATION_OR_COMMON_TYPO"
+      }
+    },
+    {
+      "id": "variant-11-benteng-heritage",
+      "kind": "SEARCH",
+      "queryClass": "VARIANT",
+      "category": "LANDMARK",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Benteng Heritage",
+      "focus": {
+        "latitude": -6.1786601,
+        "longitude": 106.6296285
+      },
+      "expected": {
+        "nameContains": "Museum Benteng Heritage",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1419183136",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        },
+        "variantDerivation": "MANUALLY_AUTHORED_ABBREVIATION_OR_COMMON_TYPO"
+      }
+    },
+    {
+      "id": "variant-12-puspem-kota-tanggerang",
+      "kind": "SEARCH",
+      "queryClass": "VARIANT",
+      "category": "LANDMARK",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Puspem Kota Tanggerang",
+      "focus": {
+        "latitude": -6.171494,
+        "longitude": 106.6405494
+      },
+      "expected": {
+        "nameContains": "Pusat Pemerintahan Kota Tangerang",
+        "contextContains": "Kota Tangerang",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "a30819459",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        },
+        "variantDerivation": "MANUALLY_AUTHORED_ABBREVIATION_OR_COMMON_TYPO"
+      }
+    },
+    {
+      "id": "variant-13-eka-hospital-tanggerang-selatan",
+      "kind": "SEARCH",
+      "queryClass": "VARIANT",
+      "category": "HEALTH",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Eka Hospital Tanggerang Selatan",
+      "focus": {
+        "latitude": -6.2980012,
+        "longitude": 106.6697794
+      },
+      "expected": {
+        "nameContains": "Eka Hospital BSD",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w46546065",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        },
+        "variantDerivation": "MANUALLY_AUTHORED_ABBREVIATION_OR_COMMON_TYPO"
+      }
+    },
+    {
+      "id": "variant-14-jl-bsd-grand-blvd",
+      "kind": "SEARCH",
+      "queryClass": "VARIANT",
+      "category": "ROAD",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Jl BSD Grand Blvd",
+      "focus": {
+        "latitude": -6.2998532,
+        "longitude": 106.6637419
+      },
+      "expected": {
+        "nameContains": "Jalan BSD Grand Boulevard",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1001388820",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        },
+        "variantDerivation": "MANUALLY_AUTHORED_ABBREVIATION_OR_COMMON_TYPO"
+      }
+    },
+    {
+      "id": "variant-15-binus-serpong",
+      "kind": "SEARCH",
+      "queryClass": "VARIANT",
+      "category": "SCHOOL",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Binus Serpong",
+      "focus": {
+        "latitude": -6.2763668,
+        "longitude": 106.6681087
+      },
+      "expected": {
+        "nameContains": "BINUS SCHOOL Serpong",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w236942170",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        },
+        "variantDerivation": "MANUALLY_AUTHORED_ABBREVIATION_OR_COMMON_TYPO"
+      }
+    },
+    {
+      "id": "variant-16-tangsel-city-gallery",
+      "kind": "SEARCH",
+      "queryClass": "VARIANT",
+      "category": "LANDMARK",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Tangsel City Gallery",
+      "focus": {
+        "latitude": -6.3215385,
+        "longitude": 106.7081635
+      },
+      "expected": {
+        "nameContains": "City Gallery Kota Tangerang Selatan",
+        "contextContains": "Kota Tangerang Selatan",
+        "maxRank": 3,
+        "maxDistanceMeters": 2500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1360369865",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        },
+        "variantDerivation": "MANUALLY_AUTHORED_ABBREVIATION_OR_COMMON_TYPO"
+      }
+    },
+    {
+      "id": "reverse-01-garuda-sentra-medika",
+      "kind": "REVERSE",
+      "queryClass": "NOT_APPLICABLE",
+      "category": "HEALTH",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "point": {
+        "latitude": -6.157371,
+        "longitude": 106.8413734
+      },
+      "expected": {
+        "nameContains": "Garuda Sentra Medika",
+        "contextContains": "Jakarta Pusat",
+        "category": "HEALTH",
+        "insideSupportedRegion": true,
+        "maxCoordinateDeltaMeters": 1
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w154078977",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        },
+        "reverseDerivation": "EXACT_SOURCE_FEATURE_FOCUS_POINT"
+      }
+    },
+    {
+      "id": "reverse-02-sma-negeri-35-jakarta",
+      "kind": "REVERSE",
+      "queryClass": "NOT_APPLICABLE",
+      "category": "SCHOOL",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "point": {
+        "latitude": -6.2089638,
+        "longitude": 106.8139256
+      },
+      "expected": {
+        "nameContains": "SMA Negeri 35 Jakarta",
+        "contextContains": "Jakarta Pusat",
+        "category": "SCHOOL",
+        "insideSupportedRegion": true,
+        "maxCoordinateDeltaMeters": 1
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w502308631",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        },
+        "reverseDerivation": "EXACT_SOURCE_FEATURE_FOCUS_POINT"
+      }
+    },
+    {
+      "id": "reverse-03-monumen-nasional",
+      "kind": "REVERSE",
+      "queryClass": "NOT_APPLICABLE",
+      "category": "LANDMARK",
+      "region": "JAKARTA_PUSAT",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "point": {
+        "latitude": -6.1753974,
+        "longitude": 106.8271612
+      },
+      "expected": {
+        "nameContains": "Monumen Nasional",
+        "contextContains": "Jakarta Pusat",
+        "category": "LANDMARK",
+        "insideSupportedRegion": true,
+        "maxCoordinateDeltaMeters": 1
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1159084257",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7625977,
+          "regionCode": "JAKARTA_PUSAT"
+        },
+        "reverseDerivation": "EXACT_SOURCE_FEATURE_FOCUS_POINT"
+      }
+    },
+    {
+      "id": "reverse-04-rsup-fatmawati",
+      "kind": "REVERSE",
+      "queryClass": "NOT_APPLICABLE",
+      "category": "HEALTH",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "point": {
+        "latitude": -6.2950564,
+        "longitude": 106.7964535
+      },
+      "expected": {
+        "nameContains": "RSUP Fatmawati",
+        "contextContains": "Jakarta Selatan",
+        "category": "HEALTH",
+        "insideSupportedRegion": true,
+        "maxCoordinateDeltaMeters": 1
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n11879113048",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        },
+        "reverseDerivation": "EXACT_SOURCE_FEATURE_FOCUS_POINT"
+      }
+    },
+    {
+      "id": "reverse-05-sma-negeri-28-jakarta",
+      "kind": "REVERSE",
+      "queryClass": "NOT_APPLICABLE",
+      "category": "SCHOOL",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "point": {
+        "latitude": -6.2858902,
+        "longitude": 106.833483
+      },
+      "expected": {
+        "nameContains": "SMA Negeri 28 Jakarta",
+        "contextContains": "Jakarta Selatan",
+        "category": "SCHOOL",
+        "insideSupportedRegion": true,
+        "maxCoordinateDeltaMeters": 1
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w120385729",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        },
+        "reverseDerivation": "EXACT_SOURCE_FEATURE_FOCUS_POINT"
+      }
+    },
+    {
+      "id": "reverse-06-museum-satria-mandala",
+      "kind": "REVERSE",
+      "queryClass": "NOT_APPLICABLE",
+      "category": "LANDMARK",
+      "region": "JAKARTA_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "point": {
+        "latitude": -6.2312788,
+        "longitude": 106.8185993
+      },
+      "expected": {
+        "nameContains": "Museum Satria Mandala",
+        "contextContains": "Jakarta Selatan",
+        "category": "LANDMARK",
+        "insideSupportedRegion": true,
+        "maxCoordinateDeltaMeters": 1
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w156830022",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 5802438,
+          "regionCode": "JAKARTA_SELATAN"
+        },
+        "reverseDerivation": "EXACT_SOURCE_FEATURE_FOCUS_POINT"
+      }
+    },
+    {
+      "id": "reverse-07-mayapada-hospital",
+      "kind": "REVERSE",
+      "queryClass": "NOT_APPLICABLE",
+      "category": "HEALTH",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "point": {
+        "latitude": -6.2053847,
+        "longitude": 106.6417523
+      },
+      "expected": {
+        "nameContains": "Mayapada Hospital",
+        "contextContains": "Kota Tangerang",
+        "category": "HEALTH",
+        "insideSupportedRegion": true,
+        "maxCoordinateDeltaMeters": 1
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w230071923",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        },
+        "reverseDerivation": "EXACT_SOURCE_FEATURE_FOCUS_POINT"
+      }
+    },
+    {
+      "id": "reverse-08-sma-negeri-1-tangerang",
+      "kind": "REVERSE",
+      "queryClass": "NOT_APPLICABLE",
+      "category": "SCHOOL",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "point": {
+        "latitude": -6.1701162,
+        "longitude": 106.6333228
+      },
+      "expected": {
+        "nameContains": "SMA Negeri 1 Tangerang",
+        "contextContains": "Kota Tangerang",
+        "category": "SCHOOL",
+        "insideSupportedRegion": true,
+        "maxCoordinateDeltaMeters": 1
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n9696016624",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        },
+        "reverseDerivation": "EXACT_SOURCE_FEATURE_FOCUS_POINT"
+      }
+    },
+    {
+      "id": "reverse-09-museum-benteng-heritage",
+      "kind": "REVERSE",
+      "queryClass": "NOT_APPLICABLE",
+      "category": "LANDMARK",
+      "region": "KOTA_TANGERANG",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "point": {
+        "latitude": -6.1786601,
+        "longitude": 106.6296285
+      },
+      "expected": {
+        "nameContains": "Museum Benteng Heritage",
+        "contextContains": "Kota Tangerang",
+        "category": "LANDMARK",
+        "insideSupportedRegion": true,
+        "maxCoordinateDeltaMeters": 1
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1419183136",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641583,
+          "regionCode": "KOTA_TANGERANG"
+        },
+        "reverseDerivation": "EXACT_SOURCE_FEATURE_FOCUS_POINT"
+      }
+    },
+    {
+      "id": "reverse-10-eka-hospital-bsd",
+      "kind": "REVERSE",
+      "queryClass": "NOT_APPLICABLE",
+      "category": "HEALTH",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "point": {
+        "latitude": -6.2980012,
+        "longitude": 106.6697794
+      },
+      "expected": {
+        "nameContains": "Eka Hospital BSD",
+        "contextContains": "Kota Tangerang Selatan",
+        "category": "HEALTH",
+        "insideSupportedRegion": true,
+        "maxCoordinateDeltaMeters": 1
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w46546065",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        },
+        "reverseDerivation": "EXACT_SOURCE_FEATURE_FOCUS_POINT"
+      }
+    },
+    {
+      "id": "reverse-11-binus-school-serpong",
+      "kind": "REVERSE",
+      "queryClass": "NOT_APPLICABLE",
+      "category": "SCHOOL",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "point": {
+        "latitude": -6.2763668,
+        "longitude": 106.6681087
+      },
+      "expected": {
+        "nameContains": "BINUS SCHOOL Serpong",
+        "contextContains": "Kota Tangerang Selatan",
+        "category": "SCHOOL",
+        "insideSupportedRegion": true,
+        "maxCoordinateDeltaMeters": 1
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w236942170",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        },
+        "reverseDerivation": "EXACT_SOURCE_FEATURE_FOCUS_POINT"
+      }
+    },
+    {
+      "id": "reverse-12-city-gallery-kota-tangerang-selatan",
+      "kind": "REVERSE",
+      "queryClass": "NOT_APPLICABLE",
+      "category": "LANDMARK",
+      "region": "TANGERANG_SELATAN",
+      "coverageClass": "CORE",
+      "verificationStatus": "SOURCE_DERIVED",
+      "point": {
+        "latitude": -6.3215385,
+        "longitude": 106.7081635
+      },
+      "expected": {
+        "nameContains": "City Gallery Kota Tangerang Selatan",
+        "contextContains": "Kota Tangerang Selatan",
+        "category": "LANDMARK",
+        "insideSupportedRegion": true,
+        "maxCoordinateDeltaMeters": 1
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1360369865",
+        "administrativeClassification": {
+          "method": "POINT_IN_OSM_RELATION_POLYGON",
+          "osmRelationId": 7641582,
+          "regionCode": "TANGERANG_SELATAN"
+        },
+        "reverseDerivation": "EXACT_SOURCE_FEATURE_FOCUS_POINT"
+      }
+    },
+    {
+      "id": "buffer-angke",
+      "kind": "SEARCH",
+      "queryClass": "BUFFER",
+      "category": "AREA",
+      "region": "BUFFER",
+      "coverageClass": "BUFFER",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Angke",
+      "focus": {
+        "latitude": -6.1454245,
+        "longitude": 106.7952794
+      },
+      "expected": {
+        "nameContains": "Angke",
+        "contextContains": "Indonesia",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n1308672858",
+        "administrativeClassification": {
+          "method": "OUTSIDE_CORE_POLYGONS_INSIDE_CONFIGURED_BUFFER",
+          "osmRelationId": null,
+          "regionCode": "BUFFER"
+        }
+      }
+    },
+    {
+      "id": "buffer-bali-mester",
+      "kind": "SEARCH",
+      "queryClass": "BUFFER",
+      "category": "AREA",
+      "region": "BUFFER",
+      "coverageClass": "BUFFER",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Bali Mester",
+      "focus": {
+        "latitude": -6.2204721,
+        "longitude": 106.8667169
+      },
+      "expected": {
+        "nameContains": "Bali Mester",
+        "contextContains": "Indonesia",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "n1308670299",
+        "administrativeClassification": {
+          "method": "OUTSIDE_CORE_POLYGONS_INSIDE_CONFIGURED_BUFFER",
+          "osmRelationId": null,
+          "regionCode": "BUFFER"
+        }
+      }
+    },
+    {
+      "id": "buffer-bethsaida-hospital",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "BUFFER",
+      "category": "HEALTH",
+      "region": "BUFFER",
+      "coverageClass": "BUFFER",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Bethsaida Hospital",
+      "focus": {
+        "latitude": -6.2552356,
+        "longitude": 106.62283195
+      },
+      "expected": {
+        "nameContains": "Bethsaida Hospital",
+        "contextContains": "Indonesia",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w1157038838",
+        "administrativeClassification": {
+          "method": "OUTSIDE_CORE_POLYGONS_INSIDE_CONFIGURED_BUFFER",
+          "osmRelationId": null,
+          "regionCode": "BUFFER"
+        }
+      }
+    },
+    {
+      "id": "buffer-al-fityan-school",
+      "kind": "AUTOCOMPLETE",
+      "queryClass": "BUFFER",
+      "category": "SCHOOL",
+      "region": "BUFFER",
+      "coverageClass": "BUFFER",
+      "verificationStatus": "SOURCE_DERIVED",
+      "query": "Al-Fityan School Tangerang",
+      "focus": {
+        "latitude": -6.2534813,
+        "longitude": 106.60264875
+      },
+      "expected": {
+        "nameContains": "Al-Fityan School Tangerang",
+        "contextContains": "Indonesia",
+        "maxRank": 3,
+        "maxDistanceMeters": 3500,
+        "insideSupportedRegion": true
+      },
+      "provenance": {
+        "source": "OpenStreetMap",
+        "license": "ODbL-1.0",
+        "sourcePbf": "backend/routing-data/gathra-jakarta-tangerang.osm.pbf",
+        "sourceSha256": "133c3f444741ce873caa0c8838e1c345c67c32204355e989a7ac893709caa52a",
+        "sourceLatestObjectTimestamp": "2026-07-24T15:55:59Z",
+        "verificationStatus": "SOURCE_DERIVED",
+        "osmFeatureId": "w649218591",
+        "administrativeClassification": {
+          "method": "OUTSIDE_CORE_POLYGONS_INSIDE_CONFIGURED_BUFFER",
+          "osmRelationId": null,
+          "regionCode": "BUFFER"
+        }
+      }
+    },
+    {
+      "id": "outside-west",
+      "kind": "REVERSE",
+      "queryClass": "NOT_APPLICABLE",
+      "category": "COVERAGE",
+      "region": "OUTSIDE",
+      "coverageClass": "OUTSIDE",
+      "verificationStatus": "POLICY_SENTINEL",
+      "point": {
+        "latitude": -6.2202,
+        "longitude": 106.45
+      },
+      "expected": {
+        "insideSupportedRegion": false,
+        "maxCoordinateDeltaMeters": 1
+      },
+      "provenance": {
+        "source": "GATHRA_REGION_CONFIG",
+        "regionConfigVersion": "gathra-jakarta-tangerang-v1-2026-07-27",
+        "verificationStatus": "POLICY_SENTINEL",
+        "derivation": "POINT_OUTSIDE_BUFFERED_BOUNDING_BOX"
+      }
+    },
+    {
+      "id": "outside-east",
+      "kind": "REVERSE",
+      "queryClass": "NOT_APPLICABLE",
+      "category": "COVERAGE",
+      "region": "OUTSIDE",
+      "coverageClass": "OUTSIDE",
+      "verificationStatus": "POLICY_SENTINEL",
+      "point": {
+        "latitude": -6.2202,
+        "longitude": 106.98
+      },
+      "expected": {
+        "insideSupportedRegion": false,
+        "maxCoordinateDeltaMeters": 1
+      },
+      "provenance": {
+        "source": "GATHRA_REGION_CONFIG",
+        "regionConfigVersion": "gathra-jakarta-tangerang-v1-2026-07-27",
+        "verificationStatus": "POLICY_SENTINEL",
+        "derivation": "POINT_OUTSIDE_BUFFERED_BOUNDING_BOX"
+      }
+    },
+    {
+      "id": "outside-north",
+      "kind": "REVERSE",
+      "queryClass": "NOT_APPLICABLE",
+      "category": "COVERAGE",
+      "region": "OUTSIDE",
+      "coverageClass": "OUTSIDE",
+      "verificationStatus": "POLICY_SENTINEL",
+      "point": {
+        "latitude": -5.99,
+        "longitude": 106.75
+      },
+      "expected": {
+        "insideSupportedRegion": false,
+        "maxCoordinateDeltaMeters": 1
+      },
+      "provenance": {
+        "source": "GATHRA_REGION_CONFIG",
+        "regionConfigVersion": "gathra-jakarta-tangerang-v1-2026-07-27",
+        "verificationStatus": "POLICY_SENTINEL",
+        "derivation": "POINT_OUTSIDE_BUFFERED_BOUNDING_BOX"
+      }
+    },
+    {
+      "id": "outside-south",
+      "kind": "REVERSE",
+      "queryClass": "NOT_APPLICABLE",
+      "category": "COVERAGE",
+      "region": "OUTSIDE",
+      "coverageClass": "OUTSIDE",
+      "verificationStatus": "POLICY_SENTINEL",
+      "point": {
+        "latitude": -6.47,
+        "longitude": 106.75
+      },
+      "expected": {
+        "insideSupportedRegion": false,
+        "maxCoordinateDeltaMeters": 1
+      },
+      "provenance": {
+        "source": "GATHRA_REGION_CONFIG",
+        "regionConfigVersion": "gathra-jakarta-tangerang-v1-2026-07-27",
+        "verificationStatus": "POLICY_SENTINEL",
+        "derivation": "POINT_OUTSIDE_BUFFERED_BOUNDING_BOX"
+      }
+    }
+  ],
+  "candidates": [
+    {
+      "status": "TODO_MANUAL_VERIFICATION",
+      "description": "Independently verify at least 100 cases against authoritative local sources before promoting this smoke corpus to an acceptance corpus. Source-derived cases remain useful for regression smoke checks."
+    }
+  ]
+}

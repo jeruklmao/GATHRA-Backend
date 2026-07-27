@@ -6,3 +6,5 @@ coverage
 *.log
 test
 src/**/*.spec.ts
+geocoding/data
+geocoding/quality/results
