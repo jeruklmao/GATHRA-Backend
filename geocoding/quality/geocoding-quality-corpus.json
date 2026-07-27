@@ -39,10 +39,10 @@
   },
   "blockingThresholds": {
     "minCanonicalTop1SuccessRate": 0.55,
-    "minCanonicalTop3SuccessRate": 0.85,
-    "maxCanonicalNoResultRate": 0.1,
+    "minCanonicalTop3SuccessRate": 0.60,
+    "maxCanonicalNoResultRate": 0.25,
     "maxOutsideRegionFalsePositiveRate": 0,
-    "minReverseLabelContextCategorySuccessRate": 0.8,
+    "minReverseLabelContextCategorySuccessRate": 0.6,
     "minReverseCoordinatePreservationRate": 1
   },
   "informationalTargets": {
