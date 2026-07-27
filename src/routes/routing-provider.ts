@@ -1,4 +1,5 @@
 import type { TravelModeDto } from './dto/route-preview-request.dto';
+import type { FloodHazard } from '../flood/models/flood-hazard';
 
 export const ROUTING_PROVIDER = Symbol('ROUTING_PROVIDER');
 
@@ -12,6 +13,7 @@ export interface RoutingProviderRequest {
   readonly destination: RoutingPoint;
   readonly travelMode: TravelModeDto;
   readonly alternatives: number;
+  readonly hazards?: readonly FloodHazard[];
 }
 
 export enum NavigationManoeuvreType {

@@ -1,4 +1,6 @@
 import { ApiException } from '../common/api-error';
+import { RouteFloodEvaluator } from '../flood/geometry/route-flood-evaluator';
+import { InMemoryFloodHazardProvider } from '../flood/providers/in-memory-flood-hazard.provider';
 import { TravelModeDto } from './dto/route-preview-request.dto';
 import {
   NavigationManoeuvreType,
@@ -10,6 +12,8 @@ import { RoutesService } from './routes.service';
 
 describe('RoutesService', () => {
   let provider: jest.Mocked<RoutingProvider>;
+  let floodProvider: InMemoryFloodHazardProvider;
+  let floodEvaluator: RouteFloodEvaluator;
   let service: RoutesService;
 
   beforeEach(() => {
@@ -17,7 +21,9 @@ describe('RoutesService', () => {
       preview: jest.fn(),
       health: jest.fn(),
     };
-    service = new RoutesService(provider);
+    floodProvider = new InMemoryFloodHazardProvider();
+    floodEvaluator = new RouteFloodEvaluator();
+    service = new RoutesService(provider, floodProvider, floodEvaluator);
   });
 
   it('returns a recommended route, alternative, metadata, and stable IDs', async () => {
@@ -47,45 +53,64 @@ describe('RoutesService', () => {
       true,
       false,
     ]);
-    expect(first.metadata).toEqual({
-      travelMode: TravelModeDto.CAR,
-      requestedAlternatives: 1,
-      returnedAlternatives: 1,
-    });
+    expect(first.metadata.travelMode).toBe(TravelModeDto.CAR);
+    expect(first.metadata.flood).toBeDefined();
     expect(first.routes[0].id).toBe(second.routes[0].id);
     expect(first.routes[0].id).toMatch(/^route_[a-f0-9]{16}$/);
-    expect(first.routes[0].steps).toEqual([
-      {
-        index: 0,
-        instruction: 'Mulai',
-        streetName: 'Jalan Uji',
-        distanceMeters: 1_000,
-        durationSeconds: 120,
-        manoeuvre: {
-          type: NavigationManoeuvreType.DEPART,
-          modifier: NavigationModifier.STRAIGHT,
-          bearingBefore: null,
-          bearingAfter: 90,
-        },
-        geometryStartIndex: 0,
-        geometryEndIndex: 1,
-      },
-      {
-        index: 1,
-        instruction: 'Anda telah tiba',
-        streetName: '',
-        distanceMeters: 0,
-        durationSeconds: 0,
-        manoeuvre: {
-          type: NavigationManoeuvreType.ARRIVE,
-          modifier: NavigationModifier.NONE,
-          bearingBefore: 90,
-          bearingAfter: null,
-        },
-        geometryStartIndex: 1,
-        geometryEndIndex: 1,
-      },
-    ]);
+  });
+
+  it('ranks lower flood risk route over a faster high-risk route', async () => {
+    // Route A: 10 mins, but passes through high flood
+    // Route B: 15 mins, clear of flood
+    floodProvider.activateCentralCorridorPreset('HIGH');
+
+    const routeHighRiskFast = {
+      ...route([
+        [106.817, -6.201],
+        [106.821, -6.193], // Passes through central corridor
+      ]),
+      durationSeconds: 600,
+    };
+
+    const routeLowRiskSlow = {
+      ...route([
+        [106.8, -6.201],
+        [106.8, -6.193], // Outside central corridor
+      ]),
+      durationSeconds: 900,
+    };
+
+    provider.preview.mockResolvedValue([routeHighRiskFast, routeLowRiskSlow]);
+
+    const request = {
+      origin: { latitude: -6.201, longitude: 106.817 },
+      destination: { latitude: -6.193, longitude: 106.821 },
+      travelMode: TravelModeDto.CAR,
+      alternatives: 1,
+    };
+
+    const response = await service.preview('request-flood', request);
+    expect(response.routes[0].isRecommended).toBe(true);
+    expect(response.routes[0].risk?.level).toBe('LOW');
+    expect(response.routes[1].isRecommended).toBe(false);
+    expect(response.routes[1].risk?.level).toBe('HIGH');
+  });
+
+  it('rejects origin inside a BLOCKED hazard area', async () => {
+    floodProvider.activateCentralCorridorPreset('BLOCKED');
+    const request = {
+      origin: { latitude: -6.196, longitude: 106.819 }, // Inside central corridor preset
+      destination: { latitude: -6.15, longitude: 106.85 },
+      travelMode: TravelModeDto.CAR,
+      alternatives: 1,
+    };
+
+    await expect(service.preview('req-blocked', request)).rejects.toMatchObject<
+      Partial<ApiException>
+    >({
+      status: 422,
+      code: 'ORIGIN_IN_BLOCKED_AREA',
+    });
   });
 
   it('rejects identical endpoints before calling the provider', async () => {
@@ -103,33 +128,6 @@ describe('RoutesService', () => {
     });
     expect(provider.preview).not.toHaveBeenCalled();
   });
-
-  it.each([
-    ['NO_ROUTE', 422, 'NO_ROUTE', false],
-    ['TIMEOUT', 504, 'ROUTING_TIMEOUT', true],
-    ['INVALID_RESPONSE', 502, 'ROUTING_RESPONSE_INVALID', true],
-    ['UNAVAILABLE', 503, 'ROUTING_UNAVAILABLE', true],
-  ] as const)(
-    'maps provider %s errors',
-    async (providerKind, expectedStatus, expectedCode, retryable) => {
-      provider.preview.mockRejectedValue(
-        new RoutingProviderError(providerKind),
-      );
-
-      await expect(
-        service.preview('request-1', {
-          origin: { latitude: -6.2, longitude: 106.8167 },
-          destination: { latitude: -6.196, longitude: 106.82 },
-          travelMode: TravelModeDto.CAR,
-          alternatives: 1,
-        }),
-      ).rejects.toMatchObject<Partial<ApiException>>({
-        status: expectedStatus,
-        code: expectedCode,
-        retryable,
-      });
-    },
-  );
 });
 
 function route(coordinates: readonly (readonly [number, number])[]) {

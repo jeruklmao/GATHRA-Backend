@@ -38,6 +38,10 @@ export interface AppConfiguration {
     readonly fallbackLatitude: number;
     readonly fallbackLongitude: number;
   };
+  readonly floodProvider: 'in-memory';
+  readonly enableDevFloodEndpoints: boolean;
+  readonly maxActiveFloodHazards: number;
+  readonly maxFloodPolygonVertices: number;
 }
 
 export function readConfiguration(
@@ -95,6 +99,17 @@ export function readConfiguration(
     geocodingTokenSecret:
       environment.GEOCODING_TOKEN_SECRET?.trim() || undefined,
     geocodingRegion: readGeocodingRegion(environment),
+    floodProvider: 'in-memory',
+    enableDevFloodEndpoints:
+      environment.ENABLE_DEV_FLOOD_ENDPOINTS?.toLowerCase() === 'true',
+    maxActiveFloodHazards: parsePositiveInteger(
+      environment.MAX_ACTIVE_FLOOD_HAZARDS,
+      50,
+    ),
+    maxFloodPolygonVertices: parsePositiveInteger(
+      environment.MAX_FLOOD_POLYGON_VERTICES,
+      2000,
+    ),
   };
 }
 

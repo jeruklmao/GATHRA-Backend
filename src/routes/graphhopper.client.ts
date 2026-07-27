@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { createHash } from 'node:crypto';
 import { readConfiguration } from '../configuration';
+import { generateSafeAreaId } from '../flood/geometry/flood-geometry.validator';
+import type { FloodHazard, FloodRiskLevel } from '../flood/models/flood-hazard';
 import { TravelModeDto } from './dto/route-preview-request.dto';
 import {
   NavigationManoeuvreType,
@@ -44,6 +46,15 @@ export class GraphHopperClient implements RoutingProvider {
       calc_points: true,
       timeout_ms: this.timeoutMs,
     };
+
+    if (request.hazards && request.hazards.length > 0) {
+      const customModel = buildCustomModel(request.hazards);
+      if (customModel) {
+        payload.custom_model = customModel;
+        payload['ch.disable'] = true;
+      }
+    }
+
     if (request.alternatives > 0) {
       payload.algorithm = 'alternative_route';
       payload['ch.disable'] = true;
@@ -601,4 +612,42 @@ function isAbortError(error: unknown): boolean {
     error instanceof Error &&
     (error.name === 'AbortError' || error.name === 'TimeoutError')
   );
+}
+
+const PRIORITY_MULTIPLIER_BY_LEVEL: Record<FloodRiskLevel, number> = {
+  LOW: 0.8,
+  MEDIUM: 0.35,
+  HIGH: 0.05,
+  BLOCKED: 0.0,
+};
+
+function buildCustomModel(hazards: readonly FloodHazard[]) {
+  if (hazards.length === 0) return undefined;
+
+  const features = hazards.map((h) => {
+    const areaId = generateSafeAreaId(h.id);
+    return {
+      type: 'Feature',
+      id: areaId,
+      properties: {},
+      geometry: h.geometry,
+    };
+  });
+
+  const priorityRules = hazards.map((h) => {
+    const areaId = generateSafeAreaId(h.id);
+    const multiplier = PRIORITY_MULTIPLIER_BY_LEVEL[h.level];
+    return {
+      if: `in_${areaId}`,
+      multiply_by: String(multiplier),
+    };
+  });
+
+  return {
+    areas: {
+      type: 'FeatureCollection',
+      features,
+    },
+    priority: priorityRules,
+  };
 }
