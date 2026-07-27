@@ -1,0 +1,42 @@
+{
+  "type": "FeatureCollection",
+  "name": "gathra-supported-region-buffered",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "regionConfigVersion": "gathra-jakarta-tangerang-v1-2026-07-27",
+        "bufferMeters": 8000,
+        "shape": "buffered administrative envelope",
+        "source": "OpenStreetMap administrative relation bounds; see region-config.json"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              106.479,
+              -6.437
+            ],
+            [
+              106.955,
+              -6.437
+            ],
+            [
+              106.955,
+              -6.025
+            ],
+            [
+              106.479,
+              -6.025
+            ],
+            [
+              106.479,
+              -6.437
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

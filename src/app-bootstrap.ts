@@ -31,9 +31,9 @@ export function configureApplication(app: INestApplication): void {
   expressApplication.disable?.('x-powered-by');
 
   const swaggerConfiguration = new DocumentBuilder()
-    .setTitle('GATHRA Routing API')
+    .setTitle('GATHRA Backend API')
     .setDescription(
-      'Backend-owned route previews. The routing provider is intentionally private.',
+      'Provider-neutral route previews and geocoding. Private providers are never exposed directly.',
     )
     .setVersion('1.0')
     .build();

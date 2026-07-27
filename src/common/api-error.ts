@@ -8,6 +8,14 @@ export type ApiErrorCode =
   | 'ROUTING_RESPONSE_INVALID'
   | 'ROUTING_UNAVAILABLE'
   | 'ROUTING_TIMEOUT'
+  | 'INVALID_QUERY'
+  | 'INVALID_COORDINATES'
+  | 'OUTSIDE_SUPPORTED_REGION'
+  | 'PLACE_NOT_FOUND'
+  | 'GEOCODER_TIMEOUT'
+  | 'GEOCODER_UNAVAILABLE'
+  | 'INVALID_PROVIDER_RESPONSE'
+  | 'GEOCODING_RATE_LIMITED'
   | 'INTERNAL_ERROR';
 
 export interface ApiErrorDetail {
@@ -31,7 +39,7 @@ export class ApiException extends Error {
     return new ApiException(
       HttpStatus.BAD_REQUEST,
       'VALIDATION_ERROR',
-      'The route preview request is invalid.',
+      'The request is invalid.',
       false,
       details,
     );
