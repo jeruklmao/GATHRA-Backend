@@ -16,6 +16,7 @@ export const NOW_FN = Symbol('NOW_FN');
 @Injectable()
 export class InMemoryFloodHazardProvider implements FloodHazardProvider {
   private hazardsMap = new Map<string, FloodHazard>();
+  private version = 0;
 
   constructor(
     @Optional()
@@ -39,7 +40,7 @@ export class InMemoryFloodHazardProvider implements FloodHazardProvider {
       }
     }
 
-    const snapshotId = `snapshot_${currentNow.getTime()}_${activeHazards.length}`;
+    const snapshotId = `snapshot_v${this.version}_${activeHazards.length}`;
 
     return {
       snapshotId,
@@ -61,15 +62,23 @@ export class InMemoryFloodHazardProvider implements FloodHazardProvider {
       );
     }
     this.hazardsMap.set(hazard.id, hazard);
+    this.version++;
     return hazard;
   }
 
   removeHazard(id: string): boolean {
-    return this.hazardsMap.delete(id);
+    const removed = this.hazardsMap.delete(id);
+    if (removed) {
+      this.version++;
+    }
+    return removed;
   }
 
   clearHazards(): void {
-    this.hazardsMap.clear();
+    if (this.hazardsMap.size > 0) {
+      this.hazardsMap.clear();
+      this.version++;
+    }
   }
 
   listHazards(): readonly FloodHazard[] {
@@ -108,12 +117,14 @@ export class InMemoryFloodHazardProvider implements FloodHazardProvider {
     };
 
     this.hazardsMap.set(hazard.id, hazard);
+    this.version++;
 
+    const activeHazards = Array.from(this.hazardsMap.values());
     return {
-      snapshotId: `snapshot_preset_${currentNow.getTime()}`,
+      snapshotId: `snapshot_v${this.version}_${activeHazards.length}`,
       generatedAt: currentNow,
       validUntil,
-      hazards: Array.from(this.hazardsMap.values()),
+      hazards: activeHazards,
       source: 'SIMULATED',
     };
   }
