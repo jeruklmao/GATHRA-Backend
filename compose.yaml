@@ -50,6 +50,7 @@ services:
       GEOCODING_RATE_LIMIT: "${GEOCODING_RATE_LIMIT:-180}"
       GEOCODING_RATE_WINDOW_MS: "${GEOCODING_RATE_WINDOW_MS:-60000}"
       GEOCODING_REGION_CONFIG: "/app/geocoding/region/region-config.json"
+      ENABLE_DEV_FLOOD_ENDPOINTS: "${ENABLE_DEV_FLOOD_ENDPOINTS:-true}"
     depends_on:
       routing-engine:
         condition: service_healthy

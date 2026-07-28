@@ -101,6 +101,38 @@ export class RouteStepDto {
   geometryEndIndex!: number;
 }
 
+export class RouteRiskDto {
+  @ApiProperty({
+    enum: ['LOW', 'MEDIUM', 'HIGH', 'BLOCKED', 'UNKNOWN'],
+    example: 'LOW',
+  })
+  level!: string;
+
+  @ApiProperty({ example: 0.12, minimum: 0, maximum: 1.0 })
+  score!: number;
+
+  @ApiProperty({ example: false })
+  intersectsBlockedArea!: boolean;
+
+  @ApiProperty({ example: 0, minimum: 0 })
+  affectedDistanceMeters!: number;
+
+  @ApiProperty({ example: 0.84, nullable: true, minimum: 0, maximum: 1.0 })
+  confidence!: number | null;
+
+  @ApiProperty({ example: ['NO_ACTIVE_FLOOD_INTERSECTION'], type: [String] })
+  reasonCodes!: string[];
+
+  @ApiProperty({ example: '2026-07-27T12:00:00.000Z' })
+  evaluatedAt!: string;
+
+  @ApiProperty({ example: '2026-07-27T12:05:00.000Z', nullable: true })
+  validUntil!: string | null;
+
+  @ApiProperty({ example: 'snapshot_20260727_001', nullable: true })
+  hazardSnapshotId!: string | null;
+}
+
 export class RouteDto {
   @ApiProperty({
     description: 'Opaque, deterministic fingerprint of this route.',
@@ -110,6 +142,9 @@ export class RouteDto {
 
   @ApiProperty({ example: true })
   isRecommended!: boolean;
+
+  @ApiProperty({ type: RouteRiskDto, required: false })
+  risk?: RouteRiskDto;
 
   @ApiProperty({ type: GeoJsonLineStringDto })
   geometry!: GeoJsonLineStringDto;
@@ -126,6 +161,23 @@ export class RouteDto {
   steps!: RouteStepDto[];
 }
 
+export class FloodMetadataDto {
+  @ApiProperty({ example: 'SIMULATED' })
+  source!: string;
+
+  @ApiProperty({ example: 'snapshot_20260727_001' })
+  snapshotId!: string;
+
+  @ApiProperty({ example: '2026-07-27T12:00:00.000Z' })
+  evaluatedAt!: string;
+
+  @ApiProperty({ example: '2026-07-27T12:05:00.000Z', nullable: true })
+  validUntil!: string | null;
+
+  @ApiProperty({ example: 1, minimum: 0 })
+  activeHazardCount!: number;
+}
+
 export class RouteMetadataDto {
   @ApiProperty({ enum: TravelModeDto })
   travelMode!: TravelModeDto;
@@ -135,6 +187,9 @@ export class RouteMetadataDto {
 
   @ApiProperty({ enum: [0, 1], example: 1 })
   returnedAlternatives!: number;
+
+  @ApiProperty({ type: FloodMetadataDto, required: false })
+  flood?: FloodMetadataDto;
 }
 
 export class RoutePreviewResponseDto {
