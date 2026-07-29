@@ -122,6 +122,27 @@ describe('routing API (integration)', () => {
     }
   });
 
+  it('returns active flood hazard GeoJSON collection matching route preview snapshot', async () => {
+    const floodRes = await request(app.getHttpServer())
+      .get('/api/v1/flood-hazards')
+      .expect(200);
+
+    expect(floodRes.body).toMatchObject({
+      type: 'FeatureCollection',
+      source: 'SIMULATED',
+      features: expect.any(Array),
+    });
+
+    const routeRes = await request(app.getHttpServer())
+      .post('/api/v1/routes/preview')
+      .send(validRequest())
+      .expect(200);
+
+    expect(routeRes.body.routes[0].risk.hazardSnapshotId).toBe(
+      floodRes.body.snapshotId,
+    );
+  });
+
   it.each([
     ['numeric strings', { origin: { latitude: '-6.2', longitude: 106.8167 } }],
     ['unknown properties', { unexpected: true }],
@@ -230,6 +251,7 @@ describe('routing API (integration)', () => {
       .get('/api/docs-json')
       .expect(200);
     expect(docs.body.paths).toHaveProperty('/api/v1/routes/preview');
+    expect(docs.body.paths).toHaveProperty('/api/v1/flood-hazards');
   });
 
   it('returns 503 when GraphHopper is not ready', async () => {

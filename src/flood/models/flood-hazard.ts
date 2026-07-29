@@ -27,7 +27,7 @@ export interface FloodHazardSnapshot {
 }
 
 export interface FloodHazardQueryInput {
-  readonly origin: RoutingPoint;
-  readonly destination: RoutingPoint;
-  readonly observedAt: Date;
+  readonly origin?: RoutingPoint;
+  readonly destination?: RoutingPoint;
+  readonly observedAt?: Date;
 }
