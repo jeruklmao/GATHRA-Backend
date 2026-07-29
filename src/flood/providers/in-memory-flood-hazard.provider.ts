@@ -105,6 +105,19 @@ export class InMemoryFloodHazardProvider implements FloodHazardProvider {
       ],
     };
 
+    const userCustomPolygon = {
+      type: 'Polygon' as const,
+      coordinates: [
+        [
+          [106.81694487382944, -6.203061448721073],
+          [106.81489279253424, -6.203244130378491],
+          [106.81620979047918, -6.207232917350129],
+          [106.81841502206832, -6.206974105601998],
+          [106.81694487382944, -6.203061448721073],
+        ] as [number, number][],
+      ],
+    };
+
     const hazard: FloodHazard = {
       id: `preset_central_corridor_${level.toLowerCase()}`,
       level,
@@ -116,7 +129,19 @@ export class InMemoryFloodHazardProvider implements FloodHazardProvider {
       description: `Simulated ${level} flood hazard blocking/penalizing central corridor`,
     };
 
+    const userHazard: FloodHazard = {
+      id: `preset_user_custom_${level.toLowerCase()}`,
+      level,
+      geometry: userCustomPolygon,
+      confidence: 0.95,
+      observedAt: currentNow,
+      validUntil,
+      sourceNodeIds: ['node_user_01', 'node_user_02'],
+      description: `Simulated ${level} flood hazard requested polygon`,
+    };
+
     this.hazardsMap.set(hazard.id, hazard);
+    this.hazardsMap.set(userHazard.id, userHazard);
     this.version++;
 
     const activeHazards = Array.from(this.hazardsMap.values());
