@@ -3,6 +3,7 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { configureApplication } from '../src/app-bootstrap';
+import { InMemoryFloodHazardProvider } from '../src/flood/providers/in-memory-flood-hazard.provider';
 import { TravelModeDto } from '../src/routes/dto/route-preview-request.dto';
 import {
   NavigationManoeuvreType,
@@ -199,6 +200,56 @@ describe('routing API (integration)', () => {
       retryable: false,
     });
     expect(JSON.stringify(response.body)).not.toContain('GraphHopper');
+  });
+
+  it('returns NO_ROUTE_DUE_TO_FLOOD when every provider result independently intersects BLOCKED geometry', async () => {
+    const floodProvider = app.get(InMemoryFloodHazardProvider);
+    floodProvider.addHazard({
+      id: 'integration-blocked-crossing',
+      level: 'BLOCKED',
+      confidence: 0.95,
+      observedAt: '2026-07-30T00:00:00.000Z',
+      validUntil: '2030-07-30T00:00:00.000Z',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [106.81, -6.2],
+            [106.83, -6.2],
+            [106.83, -6.18],
+            [106.81, -6.18],
+            [106.81, -6.2],
+          ],
+        ],
+      },
+    });
+    provider.preview.mockResolvedValue([
+      providerRoute([
+        [106.8, -6.19],
+        [106.84, -6.19],
+      ]),
+      providerRoute([
+        [106.8, -6.195],
+        [106.82, -6.185],
+        [106.84, -6.195],
+      ]),
+    ]);
+
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/routes/preview')
+      .send({
+        origin: { latitude: -6.19, longitude: 106.8 },
+        destination: { latitude: -6.19, longitude: 106.84 },
+        travelMode: TravelModeDto.CAR,
+        alternatives: 1,
+      })
+      .expect(422);
+
+    expect(response.body.error).toEqual({
+      code: 'NO_ROUTE_DUE_TO_FLOOD',
+      message: 'No route could be found that avoids blocked flood areas.',
+      retryable: false,
+    });
   });
 
   it('returns a clear gateway error for malformed provider instructions', async () => {

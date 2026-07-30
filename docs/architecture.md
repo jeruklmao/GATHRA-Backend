@@ -8,7 +8,9 @@ Android app
   | normalized HTTP/JSON :3000
   v
 NestJS
-  |-- Route provider ------> GraphHopper :8989
+  |-- FloodHazardProvider --+-> GraphHopper custom model :8989
+  |                         `-> independent route/polygon evaluation
+  |-- read-only flood GeoJSON endpoint
   `-- Geocoding provider --> Pelias API :4000
                                |-- Elasticsearch :9200
                                |-- Placeholder :4100
@@ -31,10 +33,12 @@ The app is a single Gradle module under package
 - `core/location`, `core/map`, `core/navigation`: stable platform/map
   abstractions and shared helpers.
 - `domain/route`: `RouteRepository`.
+- `domain/flood`: `FloodHazardRepository`.
 - `domain/geocoding`: `GeocodingRepository`.
 - `domain/navigation`: `NavigationRepository`, session/progress/status models,
   and the explicit state machine.
 - `data/route`: deterministic fake and Retrofit remote implementations.
+- `data/flood`: deterministic fake and strict Retrofit/GeoJSON mapping.
 - `data/geocoding`: deterministic fake and Retrofit remote implementations;
   DTO mapping stays here.
 - `data/location`: one-shot foreground location, fused navigation updates, and
@@ -50,7 +54,22 @@ The app is a single Gradle module under package
 
 `MapRouteViewModel` owns route-preview state. It cancels stale route requests,
 supports permission-denied fallback, and reverse-geocodes selected map points
-asynchronously. Reverse results modify labels only.
+asynchronously. Reverse results modify labels only. Flood polling is not
+started by construction: `ScreenStarted` creates one idempotent polling job and
+`ScreenStopped` cancels polling/fetch/debounce work. The last successful
+snapshot remains available and is explicitly marked stale after refresh
+failure or lifecycle stop.
+
+The selected route and visible polygons synchronize by immutable snapshot ID.
+A mismatch enters `OUTDATED_BY_FLOOD_UPDATE`, then a debounced,
+generation-protected request enters `UPDATING`. Only a response evaluated
+against the target snapshot may replace the route. Failure retains the old
+geometry as stale guidance, removes any current LOW implication, and exposes a
+retry. The same visible snapshot is sent to the active navigation foreground
+service, which reuses its guarded reroute path with a cooldown. A newer target
+snapshot immediately invalidates an older in-flight flood reroute; both
+generation and target-snapshot checks prevent a late response from replacing
+newer guidance.
 
 `PlaceSearchViewModel` keeps the query across Activity recreation, requires
 three characters for autocomplete, debounces about 400 ms, uses
@@ -75,6 +94,7 @@ markers.
 - `RouteStep`, `RouteManeuver`, `ManeuverType`, `ManeuverModifier`.
 - `RouteSelectionPoint`: coordinate, source, and optional display metadata.
 - `PlaceSuggestion`, `SelectedPlace`, `PlaceCategory`.
+- `FloodHazardSnapshot`, `FloodHazardPolygon`, `RouteFloodRisk`.
 - `NavigationSession`, `NavigationProgress`, `NavigationStatus`,
   `NavigationLocation`.
 - `RouteRepository.getRoutes`.
@@ -83,9 +103,13 @@ markers.
 
 ## NestJS
 
-`AppModule` contains three provider-neutral surfaces:
+`AppModule` contains four provider-neutral surfaces:
 
-- `routes`: validation/controller/service plus `GraphHopperClient`.
+- `routes`: validation/controller/service plus `GraphHopperClient`; only
+  independently evaluated non-blocked routes are returned.
+- `flood`: the simulation-only `FloodHazardProvider`, read-only GeoJSON API,
+  optional development mutation controller, configured limits, and independent
+  route evaluator.
 - `geocoding`: controller/service/provider token, fake/Pelias adapters,
   response mapper, bounded TTL cache, concurrency limiter, rate guard,
   supported-region classifier, and signed opaque place tokens.
@@ -104,6 +128,13 @@ manoeuvres, and ensures ordered intervals ending with `ARRIVE`.
 
 Routes never expose GraphHopper response types. The Android remote repository
 maps normalized DTOs into domain models.
+
+Flood polygons are converted to request-scoped GraphHopper custom-model areas.
+LOW, MEDIUM, HIGH, and BLOCKED priority multipliers remain `0.8`, `0.35`,
+`0.05`, and `0.0`; custom models require `ch.disable=true`. NestJS then checks
+the returned LineStrings independently. If all returned routes intersect a
+BLOCKED polygon, it returns `NO_ROUTE_DUE_TO_FLOOD` instead of recommending a
+blocked route. Hazard snapshots are in-memory and not production durable.
 
 ### Geocoding
 
@@ -162,5 +193,7 @@ alias target.
 - No production secret in source or BuildConfig.
 - No normal startup import/index rebuild.
 - No hosted geocoder fallback.
-- No database/auth/traffic/flood/telemetry in the current architecture.
-
+- Flood data is simulated and in-memory: no database, sensor ingestion,
+  authentication, multi-instance consistency, traffic, or telemetry.
+- Development flood mutation endpoints are unauthenticated and disabled by
+  default; local opt-in must never be exposed publicly.

@@ -113,6 +113,113 @@ describe('RoutesService', () => {
     });
   });
 
+  it('rejects destination inside a BLOCKED hazard area', async () => {
+    floodProvider.activateCentralCorridorPreset('BLOCKED');
+    const request = {
+      origin: { latitude: -6.15, longitude: 106.85 },
+      destination: { latitude: -6.196, longitude: 106.819 },
+      travelMode: TravelModeDto.CAR,
+      alternatives: 1,
+    };
+
+    await expect(service.preview('req-blocked-destination', request)).rejects
+      .toMatchObject<Partial<ApiException>>({
+        status: 422,
+        code: 'DESTINATION_IN_BLOCKED_AREA',
+      });
+  });
+
+  it('rejects one independently evaluated route when it intersects BLOCKED geometry', async () => {
+    addCrossingBlockedHazard(floodProvider);
+    provider.preview.mockResolvedValue([
+      route([
+        [106.8, -6.19],
+        [106.84, -6.19],
+      ]),
+    ]);
+
+    await expect(
+      service.preview('request-one-blocked', crossingRequest(0)),
+    ).rejects.toMatchObject<Partial<ApiException>>({
+      status: 422,
+      code: 'NO_ROUTE_DUE_TO_FLOOD',
+    });
+  });
+
+  it('rejects multiple independently evaluated routes when all intersect BLOCKED geometry', async () => {
+    addCrossingBlockedHazard(floodProvider);
+    provider.preview.mockResolvedValue([
+      route([
+        [106.8, -6.19],
+        [106.84, -6.19],
+      ]),
+      route([
+        [106.8, -6.195],
+        [106.82, -6.185],
+        [106.84, -6.195],
+      ]),
+    ]);
+
+    await expect(
+      service.preview('request-all-blocked', crossingRequest(1)),
+    ).rejects.toMatchObject<Partial<ApiException>>({
+      status: 422,
+      code: 'NO_ROUTE_DUE_TO_FLOOD',
+    });
+  });
+
+  it('returns only usable routes and recommends exactly one when another route is blocked', async () => {
+    addCrossingBlockedHazard(floodProvider);
+    provider.preview.mockResolvedValue([
+      route([
+        [106.8, -6.19],
+        [106.84, -6.19],
+      ]),
+      route([
+        [106.8, -6.205],
+        [106.84, -6.205],
+      ]),
+    ]);
+
+    const response = await service.preview(
+      'request-mixed-blocking',
+      crossingRequest(1),
+    );
+
+    expect(response.routes).toHaveLength(1);
+    expect(response.routes[0]).toMatchObject({
+      isRecommended: true,
+      risk: {
+        intersectsBlockedArea: false,
+      },
+    });
+    expect(response.routes.filter((item) => item.isRecommended)).toHaveLength(1);
+    expect(response.routes.some((item) => item.risk?.level === 'BLOCKED')).toBe(
+      false,
+    );
+  });
+
+  it('retains the baseline diagnostic when GraphHopper reports no route with BLOCKED hazards', async () => {
+    addCrossingBlockedHazard(floodProvider);
+    provider.preview
+      .mockRejectedValueOnce(new RoutingProviderError('NO_ROUTE'))
+      .mockResolvedValueOnce([
+        route([
+          [106.8, -6.19],
+          [106.84, -6.19],
+        ]),
+      ]);
+
+    await expect(
+      service.preview('request-baseline-diagnostic', crossingRequest(1)),
+    ).rejects.toMatchObject<Partial<ApiException>>({
+      status: 422,
+      code: 'NO_ROUTE_DUE_TO_FLOOD',
+    });
+    expect(provider.preview).toHaveBeenCalledTimes(2);
+    expect(provider.preview.mock.calls[1][0].hazards).toEqual([]);
+  });
+
   it('rejects identical endpoints before calling the provider', async () => {
     await expect(
       service.preview('request-1', {
@@ -129,6 +236,39 @@ describe('RoutesService', () => {
     expect(provider.preview).not.toHaveBeenCalled();
   });
 });
+
+function crossingRequest(alternatives: number) {
+  return {
+    origin: { latitude: -6.19, longitude: 106.8 },
+    destination: { latitude: -6.19, longitude: 106.84 },
+    travelMode: TravelModeDto.CAR,
+    alternatives,
+  };
+}
+
+function addCrossingBlockedHazard(
+  floodProvider: InMemoryFloodHazardProvider,
+) {
+  floodProvider.addHazard({
+    id: 'blocked-crossing',
+    level: 'BLOCKED',
+    confidence: 0.95,
+    observedAt: '2026-07-30T00:00:00.000Z',
+    validUntil: '2030-07-30T00:00:00.000Z',
+    geometry: {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [106.81, -6.2],
+          [106.83, -6.2],
+          [106.83, -6.18],
+          [106.81, -6.18],
+          [106.81, -6.2],
+        ],
+      ],
+    },
+  });
+}
 
 function route(coordinates: readonly (readonly [number, number])[]) {
   const lastIndex = coordinates.length - 1;

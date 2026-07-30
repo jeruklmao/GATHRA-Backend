@@ -155,18 +155,26 @@ export class RoutesService {
           };
         });
 
-      // Rank routes:
-      // 1. Unblocked routes before blocked routes
-      // 2. Lower flood risk level
-      // 3. Lower risk score
-      // 4. Higher confidence
-      // 5. Shorter duration
-      // 6. Shorter distance
-      // 7. Stable route ID
-      evaluatedRoutes.sort((a, b) => {
-        if (a.risk.intersectsBlockedArea !== b.risk.intersectsBlockedArea) {
-          return a.risk.intersectsBlockedArea ? 1 : -1;
-        }
+      const usableRoutes = evaluatedRoutes.filter(
+        ({ risk }) => !risk.intersectsBlockedArea,
+      );
+      if (usableRoutes.length === 0) {
+        throw new ApiException(
+          422,
+          'NO_ROUTE_DUE_TO_FLOOD',
+          'No route could be found that avoids blocked flood areas.',
+          false,
+        );
+      }
+
+      // Rank usable routes only:
+      // 1. Lower flood risk level
+      // 2. Lower risk score
+      // 3. Higher confidence
+      // 4. Shorter duration
+      // 5. Shorter distance
+      // 6. Stable route ID
+      usableRoutes.sort((a, b) => {
         const aSev = RISK_LEVEL_SEVERITY[a.risk.level] ?? 5;
         const bSev = RISK_LEVEL_SEVERITY[b.risk.level] ?? 5;
         if (aSev !== bSev) {
@@ -197,7 +205,7 @@ export class RoutesService {
         return aId.localeCompare(bId);
       });
 
-      const routes: RouteDto[] = evaluatedRoutes.map(
+      const routes: RouteDto[] = usableRoutes.map(
         ({ providerRoute, risk }, index) =>
           mapRoute(
             providerRoute,
