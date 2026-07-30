@@ -3,6 +3,7 @@ import type { FloodHazardProvider } from '../flood-hazard.provider';
 import {
   validateFloodHazard,
   MAX_ACTIVE_FLOOD_HAZARDS,
+  MAX_FLOOD_POLYGON_VERTICES,
   FloodGeometryValidationError,
 } from '../geometry/flood-geometry.validator';
 import type {
@@ -12,6 +13,17 @@ import type {
 } from '../models/flood-hazard';
 
 export const NOW_FN = Symbol('NOW_FN');
+export const FLOOD_HAZARD_LIMITS = Symbol('FLOOD_HAZARD_LIMITS');
+
+export interface FloodHazardLimits {
+  readonly maxActiveHazards: number;
+  readonly maxPolygonVertices: number;
+}
+
+const DEFAULT_LIMITS: FloodHazardLimits = {
+  maxActiveHazards: MAX_ACTIVE_FLOOD_HAZARDS,
+  maxPolygonVertices: MAX_FLOOD_POLYGON_VERTICES,
+};
 
 @Injectable()
 export class InMemoryFloodHazardProvider implements FloodHazardProvider {
@@ -22,6 +34,9 @@ export class InMemoryFloodHazardProvider implements FloodHazardProvider {
     @Optional()
     @Inject(NOW_FN)
     private readonly customNowFn?: () => Date,
+    @Optional()
+    @Inject(FLOOD_HAZARD_LIMITS)
+    private readonly configuredLimits?: FloodHazardLimits,
   ) {}
 
   private get now(): Date {
@@ -52,13 +67,20 @@ export class InMemoryFloodHazardProvider implements FloodHazardProvider {
   }
 
   addHazard(hazardData: unknown): FloodHazard {
-    const hazard = validateFloodHazard(hazardData);
+    const limits = this.configuredLimits ?? DEFAULT_LIMITS;
+    const hazard = validateFloodHazard(hazardData, {
+      maxPolygonVertices: limits.maxPolygonVertices,
+    });
+    const activeHazardIds = new Set(
+      this.listHazards().map((activeHazard) => activeHazard.id),
+    );
     if (
-      this.hazardsMap.size >= MAX_ACTIVE_FLOOD_HAZARDS &&
-      !this.hazardsMap.has(hazard.id)
+      hazard.validUntil.getTime() > this.now.getTime() &&
+      !activeHazardIds.has(hazard.id) &&
+      activeHazardIds.size >= limits.maxActiveHazards
     ) {
       throw new FloodGeometryValidationError(
-        `Cannot exceed maximum active hazard limit of ${MAX_ACTIVE_FLOOD_HAZARDS}`,
+        `Cannot exceed maximum active hazard limit of ${limits.maxActiveHazards}`,
       );
     }
     this.hazardsMap.set(hazard.id, hazard);
@@ -89,6 +111,7 @@ export class InMemoryFloodHazardProvider implements FloodHazardProvider {
   }
 
   activateCentralCorridorPreset(level: 'HIGH' | 'BLOCKED'): FloodHazardSnapshot {
+    const limits = this.configuredLimits ?? DEFAULT_LIMITS;
     const currentNow = this.now;
     const validUntil = new Date(currentNow.getTime() + 24 * 60 * 60 * 1000); // 24 hours
 
@@ -118,7 +141,7 @@ export class InMemoryFloodHazardProvider implements FloodHazardProvider {
       ],
     };
 
-    const hazard: FloodHazard = {
+    const hazard = validateFloodHazard({
       id: `preset_central_corridor_${level.toLowerCase()}`,
       level,
       geometry: centralCorridorPolygon,
@@ -126,10 +149,15 @@ export class InMemoryFloodHazardProvider implements FloodHazardProvider {
       observedAt: currentNow,
       validUntil,
       sourceNodeIds: ['node_central_01', 'node_central_02'],
-      description: `Simulated ${level} flood hazard blocking/penalizing central corridor`,
-    };
+      description:
+        level === 'BLOCKED'
+          ? 'Simulasi area banjir yang tidak dapat dilalui di koridor pusat'
+          : 'Simulasi area dengan indikasi risiko banjir tinggi di koridor pusat',
+    }, {
+      maxPolygonVertices: limits.maxPolygonVertices,
+    });
 
-    const userHazard: FloodHazard = {
+    const userHazard = validateFloodHazard({
       id: `preset_user_custom_${level.toLowerCase()}`,
       level,
       geometry: userCustomPolygon,
@@ -137,18 +165,34 @@ export class InMemoryFloodHazardProvider implements FloodHazardProvider {
       observedAt: currentNow,
       validUntil,
       sourceNodeIds: ['node_user_01', 'node_user_02'],
-      description: `Simulated ${level} flood hazard requested polygon`,
-    };
+      description:
+        level === 'BLOCKED'
+          ? 'Simulasi area banjir yang tidak dapat dilalui pada poligon uji'
+          : 'Simulasi area dengan indikasi risiko banjir tinggi pada poligon uji',
+    }, {
+      maxPolygonVertices: limits.maxPolygonVertices,
+    });
+
+    const projectedActiveHazardIds = new Set(
+      this.listHazards().map((activeHazard) => activeHazard.id),
+    );
+    projectedActiveHazardIds.add(hazard.id);
+    projectedActiveHazardIds.add(userHazard.id);
+    if (projectedActiveHazardIds.size > limits.maxActiveHazards) {
+      throw new FloodGeometryValidationError(
+        `Cannot exceed maximum active hazard limit of ${limits.maxActiveHazards}`,
+      );
+    }
 
     this.hazardsMap.set(hazard.id, hazard);
     this.hazardsMap.set(userHazard.id, userHazard);
     this.version++;
 
-    const activeHazards = Array.from(this.hazardsMap.values());
+    const activeHazards = this.listHazards();
     return {
       snapshotId: `snapshot_v${this.version}_${activeHazards.length}`,
       generatedAt: currentNow,
-      validUntil,
+      validUntil: earliestValidUntil(activeHazards),
       hazards: activeHazards,
       source: 'SIMULATED',
     };

@@ -34,4 +34,26 @@ describe('readConfiguration', () => {
       'gathra-jakarta-tangerang-buffer-v1',
     );
   });
+
+  it('keeps development flood mutation endpoints disabled by default', () => {
+    expect(readConfiguration({}).enableDevFloodEndpoints).toBe(false);
+    expect(
+      readConfiguration({ ENABLE_DEV_FLOOD_ENDPOINTS: 'false' })
+        .enableDevFloodEndpoints,
+    ).toBe(false);
+    expect(
+      readConfiguration({ ENABLE_DEV_FLOOD_ENDPOINTS: 'true' })
+        .enableDevFloodEndpoints,
+    ).toBe(true);
+  });
+
+  it('parses configured flood validation limits', () => {
+    const configuration = readConfiguration({
+      MAX_ACTIVE_FLOOD_HAZARDS: '7',
+      MAX_FLOOD_POLYGON_VERTICES: '123',
+    });
+
+    expect(configuration.maxActiveFloodHazards).toBe(7);
+    expect(configuration.maxFloodPolygonVertices).toBe(123);
+  });
 });

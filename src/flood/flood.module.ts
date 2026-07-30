@@ -4,7 +4,10 @@ import { DevFloodController } from './dev/dev-flood.controller';
 import { FloodController } from './flood.controller';
 import { FLOOD_HAZARD_PROVIDER } from './flood-hazard.provider';
 import { RouteFloodEvaluator } from './geometry/route-flood-evaluator';
-import { InMemoryFloodHazardProvider } from './providers/in-memory-flood-hazard.provider';
+import {
+  FLOOD_HAZARD_LIMITS,
+  InMemoryFloodHazardProvider,
+} from './providers/in-memory-flood-hazard.provider';
 
 @Module({
   controllers: [FloodController],
@@ -28,11 +31,19 @@ export class FloodModule {
     const controllers = config.enableDevFloodEndpoints
       ? [FloodController, DevFloodController]
       : [FloodController];
+    const limitsProvider = {
+      provide: FLOOD_HAZARD_LIMITS,
+      useValue: {
+        maxActiveHazards: config.maxActiveFloodHazards,
+        maxPolygonVertices: config.maxFloodPolygonVertices,
+      },
+    };
 
     return {
       module: FloodModule,
       controllers,
       providers: [
+        limitsProvider,
         InMemoryFloodHazardProvider,
         {
           provide: FLOOD_HAZARD_PROVIDER,

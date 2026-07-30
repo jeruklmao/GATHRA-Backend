@@ -5,6 +5,10 @@ export const MAX_ACTIVE_FLOOD_HAZARDS = 50;
 export const MAX_FLOOD_POLYGON_VERTICES = 2000;
 export const MIN_RING_POINTS = 4; // closed ring: start point + at least 2 distinct points + end point (same as start)
 
+export interface FloodGeometryValidationLimits {
+  readonly maxPolygonVertices: number;
+}
+
 export class FloodGeometryValidationError extends Error {
   constructor(message: string) {
     super(message);
@@ -12,7 +16,12 @@ export class FloodGeometryValidationError extends Error {
   }
 }
 
-export function validateFloodHazard(hazard: unknown): FloodHazard {
+export function validateFloodHazard(
+  hazard: unknown,
+  limits: FloodGeometryValidationLimits = {
+    maxPolygonVertices: MAX_FLOOD_POLYGON_VERTICES,
+  },
+): FloodHazard {
   if (!isRecord(hazard)) {
     throw new FloodGeometryValidationError('Hazard must be an object');
   }
@@ -52,7 +61,10 @@ export function validateFloodHazard(hazard: unknown): FloodHazard {
     ? hazard.sourceNodeIds.filter((id): id is string => typeof id === 'string')
     : [];
 
-  const geometry = validateGeoJsonPolygon(hazard.geometry);
+  const geometry = validateGeoJsonPolygon(
+    hazard.geometry,
+    limits.maxPolygonVertices,
+  );
 
   return {
     id: hazard.id.trim(),
@@ -66,7 +78,15 @@ export function validateFloodHazard(hazard: unknown): FloodHazard {
   };
 }
 
-export function validateGeoJsonPolygon(geometry: unknown): GeoJsonPolygon {
+export function validateGeoJsonPolygon(
+  geometry: unknown,
+  maxPolygonVertices: number = MAX_FLOOD_POLYGON_VERTICES,
+): GeoJsonPolygon {
+  if (!Number.isSafeInteger(maxPolygonVertices) || maxPolygonVertices < MIN_RING_POINTS) {
+    throw new FloodGeometryValidationError(
+      `Maximum polygon vertex limit must be an integer of at least ${MIN_RING_POINTS}`,
+    );
+  }
   if (!isRecord(geometry) || geometry.type !== 'Polygon' || !Array.isArray(geometry.coordinates)) {
     throw new FloodGeometryValidationError(
       'Geometry must be a GeoJSON Polygon with a coordinates array',
@@ -125,9 +145,9 @@ export function validateGeoJsonPolygon(geometry: unknown): GeoJsonPolygon {
     validatedRings.push(validatedRing);
   }
 
-  if (totalVertices > MAX_FLOOD_POLYGON_VERTICES) {
+  if (totalVertices > maxPolygonVertices) {
     throw new FloodGeometryValidationError(
-      `Polygon exceeds maximum vertex limit of ${MAX_FLOOD_POLYGON_VERTICES} (got ${totalVertices})`,
+      `Polygon exceeds maximum vertex limit of ${maxPolygonVertices} (got ${totalVertices})`,
     );
   }
 

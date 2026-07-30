@@ -75,4 +75,23 @@ describe('flood-geometry.validator', () => {
     expect(id1).toMatch(/^flood_area_[a-f0-9]{12}$/);
     expect(id1).toBe(id2);
   });
+
+  it('honours a configured maximum polygon vertex count', () => {
+    const geometry = {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [106.8, -6.2],
+          [106.81, -6.2],
+          [106.81, -6.19],
+          [106.8, -6.19],
+          [106.8, -6.2],
+        ],
+      ],
+    };
+
+    expect(() => validateGeoJsonPolygon(geometry, 4)).toThrow(
+      /maximum vertex limit of 4/,
+    );
+  });
 });
