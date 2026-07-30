@@ -1,15 +1,17 @@
 # GATHRA routing backend
 
-This service owns GATHRA's route-preview and geocoding contracts. It keeps
-GraphHopper and Pelias private. It deliberately contains no authentication,
-database, traffic, telemetry, flood logic, or active navigation-session
-execution. It returns provider-independent navigation steps and normalized
-place models.
+This service owns GATHRA's route-preview, simulated flood-hazard, and
+geocoding contracts. It keeps GraphHopper and Pelias private. It deliberately
+contains no authentication, database, traffic, telemetry, real sensor
+ingestion, or active navigation-session execution. Flood data is currently
+development/staging-only, in-memory, and lost whenever the backend restarts.
 
 ## Runtime architecture
 
 ```text
-Android -> NestJS :3000 -> GraphHopper :8989 (Compose network only)
+Android -> NestJS :3000 -> in-memory FloodHazardProvider
+                       |       |-> GraphHopper custom_model :8989
+                       |       `-> independent geometry evaluation/ranking
                        `-> Pelias :4000 -> Elasticsearch (private profile)
 ```
 
@@ -33,7 +35,7 @@ in [`geocoding/README.md`](geocoding/README.md). Android developer setup is in
 
 - Docker Engine with the Docker Compose v2 plugin
 - `curl` and `jq` for the smoke script
-- Node.js 24 LTS and npm for host-side tests
+- Node.js 20.11 through 24 and npm for host-side tests
 
 Copy `.env.example` to `.env` only when overriding defaults. The checked-in OSM
 XML file is a tiny synthetic Jakarta-area road graph intended for deterministic
@@ -45,6 +47,17 @@ Start the stack:
 docker compose --project-directory backend -f backend/compose.yaml up \
   --build --wait
 ```
+
+Flood mutation endpoints fail closed in every checked-in configuration. Enable
+them only for an isolated local simulation:
+
+```bash
+ENABLE_DEV_FLOOD_ENDPOINTS=true \
+docker compose -f backend/compose.yaml up --build --wait
+```
+
+These endpoints have no authentication. Never publish port 3000 with
+`ENABLE_DEV_FLOOD_ENDPOINTS=true` on an untrusted network.
 
 Run the complete Compose smoke check (it tears down containers but preserves
 the graph-cache volume):
@@ -198,6 +211,37 @@ The provider adapter rejects a result when its street-snapped start or end is
 more than 500 metres from the requested coordinate, returning `NO_ROUTE`
 instead of presenting an out-of-coverage route.
 
+### Flood-aware route safety
+
+Each response route contains `risk`, and `metadata.flood` identifies the
+immutable hazard snapshot used for evaluation. GraphHopper receives flood
+polygons through a request-scoped custom model, then NestJS independently
+checks every returned LineString against the same polygons.
+
+Only routes that do not intersect a `BLOCKED` polygon are returned as usable.
+The usable routes are ranked by risk, confidence, time, and distance, and
+exactly one is recommended. If GraphHopper returns routes but independent
+evaluation marks all of them blocked, the API returns HTTP 422
+`NO_ROUTE_DUE_TO_FLOOD`; it never recommends the fastest blocked result.
+Origins and destinations inside blocked polygons return the distinct
+`ORIGIN_IN_BLOCKED_AREA` or `DESTINATION_IN_BLOCKED_AREA` errors.
+
+### Flood-hazard APIs
+
+The read-only endpoint remains available without enabling development tools:
+
+```text
+GET /api/v1/flood-hazards
+GET /api/v1/flood-hazards?minLat=...&minLon=...&maxLat=...&maxLon=...
+```
+
+With explicit local opt-in, `/api/v1/dev/flood-hazards` provides in-memory
+add/delete/clear operations and HIGH/BLOCKED central-corridor presets. Presets
+and direct mutations obey `MAX_ACTIVE_FLOOD_HAZARDS` and
+`MAX_FLOOD_POLYGON_VERTICES`. The provider is simulation-only: there is no
+database, authentication, multi-instance consistency, or durable snapshot
+history.
+
 ### Geocoding
 
 The provider-neutral geocoding surface is:
@@ -258,6 +302,9 @@ API errors never include stack traces or GraphHopper response bodies:
 | 400 | `VALIDATION_ERROR` | no |
 | 404 | `NOT_FOUND` | no |
 | 422 | `NO_ROUTE` | no |
+| 422 | `NO_ROUTE_DUE_TO_FLOOD` | no |
+| 422 | `ORIGIN_IN_BLOCKED_AREA` | no |
+| 422 | `DESTINATION_IN_BLOCKED_AREA` | no |
 | 502 | `ROUTING_RESPONSE_INVALID` | yes |
 | 503 | `ROUTING_UNAVAILABLE` | yes |
 | 504 | `ROUTING_TIMEOUT` | yes |
@@ -274,6 +321,7 @@ npm ci
 npm run build
 npm run test:unit
 npm run test:integration
+npm audit --omit=dev
 ```
 
 Unit tests cover GraphHopper request/response translation, strict upstream
