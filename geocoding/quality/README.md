@@ -31,14 +31,22 @@ The runner performs a preflight before making requests:
 - unique case IDs and explicit verification status;
 - provenance and required category quotas;
 - exact `CORE`, `BUFFER`, and `OUTSIDE` classification;
-- meaningful reverse name, context, category, and coordinate assertions.
+- meaningful reverse name, address, category, expected-context, and coordinate
+  assertions.
 
 Blocking smoke thresholds are versioned in the corpus:
 
 - canonical top-3 success at least 85%;
 - outside-region false-positive rate exactly 0%;
 - normalized reverse coordinate preservation exactly 100%;
-- the remaining ranking and reverse thresholds shown in the corpus.
+- reverse name/readable-address/category success at least the threshold shown
+  in the corpus.
+
+Exact expected administrative-context text is reported separately and remains
+informational. Photon commonly returns valid local context such as
+`DKI Jakarta` or `Jakarta` where an earlier provider returned
+`Jakarta Pusat`; the blocking gate must not encode one provider's hierarchy
+wording. The report still exposes this difference for data-quality follow-up.
 
 Median and p95 response time are reported but are informational because
 developer host load is not controlled. Variant ranking is also informational
@@ -52,16 +60,15 @@ Against the normalized NestJS API:
 backend/geocoding/scripts/run-quality-tests.sh
 ```
 
-Against a private candidate Pelias index before switching the read alias:
+Against the private raw Photon service:
 
 ```bash
-backend/geocoding/scripts/run-quality-tests.sh \
-  --candidate gathra-geocoder-v202607270900
+backend/geocoding/scripts/run-quality-tests.sh --raw-photon
 ```
 
-Raw Pelias mode skips the four NestJS outside-policy sentinels and cannot assert
+Raw Photon mode skips the four NestJS outside-policy sentinels and cannot assert
 that reverse responses preserve the user's original coordinate. Always run the
-normalized mode after an alias switch.
+normalized mode before accepting a replacement data volume.
 
 To make independent verification a hard prerequisite in a future acceptance
 pipeline, set:

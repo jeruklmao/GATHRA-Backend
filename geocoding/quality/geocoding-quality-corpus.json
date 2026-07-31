@@ -42,7 +42,7 @@
     "minCanonicalTop3SuccessRate": 0.60,
     "maxCanonicalNoResultRate": 0.25,
     "maxOutsideRegionFalsePositiveRate": 0,
-    "minReverseLabelContextCategorySuccessRate": 0.6,
+    "minReverseLabelAddressCategorySuccessRate": 0.6,
     "minReverseCoordinatePreservationRate": 1
   },
   "informationalTargets": {

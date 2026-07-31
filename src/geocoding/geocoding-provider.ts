@@ -8,7 +8,7 @@ import type {
 export const GEOCODING_PROVIDER = Symbol('GEOCODING_PROVIDER');
 
 export interface GeocodingProvider {
-  readonly name: 'fake' | 'pelias';
+  readonly name: 'fake' | 'photon';
   autocomplete(
     input: GeocodingSearchInput,
   ): Promise<readonly ProviderPlaceSuggestion[]>;

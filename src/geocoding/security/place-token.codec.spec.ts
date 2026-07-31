@@ -3,12 +3,12 @@ import { PlaceTokenCodec } from './place-token.codec';
 describe('PlaceTokenCodec', () => {
   it('round-trips a safe provider ID as an opaque token', () => {
     const codec = new PlaceTokenCodec();
-    const token = codec.encode('pelias', 'openstreetmap:venue:node/123');
+    const token = codec.encode('photon', 'N:123');
 
-    expect(token).not.toContain('openstreetmap');
+    expect(token).not.toContain('N:123');
     expect(codec.decode(token)).toEqual({
-      provider: 'pelias',
-      id: 'openstreetmap:venue:node/123',
+      provider: 'photon',
+      id: 'N:123',
     });
   });
 
@@ -18,10 +18,10 @@ describe('PlaceTokenCodec', () => {
     expect(codec.decode(`${token.slice(0, -1)}x`)).toBeNull();
     expect(codec.decode('not-a-token')).toBeNull();
     expect(() =>
-      codec.encode('pelias', 'http:venue://internal/path'),
+      codec.encode('photon', 'http:venue://internal/path'),
     ).toThrow();
     expect(() =>
-      codec.encode('pelias', 'openstreetmap:venue:../secret'),
+      codec.encode('photon', 'N:../secret'),
     ).toThrow();
   });
 });

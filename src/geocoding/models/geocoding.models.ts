@@ -12,7 +12,6 @@ export enum PlaceCategory {
 
 export enum GeocodingSource {
   OPENSTREETMAP = 'OPENSTREETMAP',
-  WHOSONFIRST = 'WHOSONFIRST',
   GATHRA_CSV = 'GATHRA_CSV',
   OTHER = 'OTHER',
 }

@@ -158,9 +158,9 @@ describe('geocoding API (integration)', () => {
       category: 'SCHOOL',
       insideSupportedRegion: true,
     });
-    expect(geocodingProvider.lookup).toHaveBeenCalledWith(
-      'fake:venue:sman-35',
-    );
+    // Suggestions seed a bounded lookup cache. This preserves the public
+    // search -> lookup contract for providers without an ID endpoint.
+    expect(geocodingProvider.lookup).not.toHaveBeenCalled();
 
     await request(app.getHttpServer())
       .get(
@@ -235,7 +235,7 @@ describe('geocoding API (integration)', () => {
     async (kind, status, code) => {
       geocodingProvider.search.mockRejectedValueOnce(
         new GeocodingProviderError(kind, {
-          cause: new Error('sensitive Pelias or Elasticsearch details'),
+          cause: new Error('sensitive Photon index details'),
         }),
       );
       const response = await request(app.getHttpServer())
@@ -244,8 +244,8 @@ describe('geocoding API (integration)', () => {
         .expect(status);
 
       expect(response.body.error).toMatchObject({ code, retryable: true });
-      expect(JSON.stringify(response.body)).not.toContain('Pelias');
-      expect(JSON.stringify(response.body)).not.toContain('Elasticsearch');
+      expect(JSON.stringify(response.body)).not.toContain('Photon');
+      expect(JSON.stringify(response.body)).not.toContain('index details');
     },
   );
 
@@ -269,7 +269,7 @@ describe('geocoding API (integration)', () => {
     expect(docs.body.paths).toHaveProperty('/api/v1/geocoding/reverse');
   });
 
-  it('makes a Pelias health failure visible without hiding routing readiness', async () => {
+  it('makes a Photon health failure visible without hiding routing readiness', async () => {
     geocodingProvider.health.mockRejectedValueOnce(new Error('offline'));
 
     await request(app.getHttpServer())
@@ -327,7 +327,7 @@ describe('geocoding API fake-provider mode (integration)', () => {
     }
   });
 
-  it('serves deterministic typo-tolerant fixtures without Pelias', async () => {
+  it('serves deterministic typo-tolerant fixtures without Photon', async () => {
     const response = await request(app.getHttpServer())
       .get('/api/v1/geocoding/search')
       .query({

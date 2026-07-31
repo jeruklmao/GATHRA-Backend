@@ -10,7 +10,7 @@ import {
 const MAX_FEATURES = 100;
 const MAX_TEXT_LENGTH = 1_000;
 
-export function mapPeliasSuggestions(
+export function mapPhotonSuggestions(
   payload: unknown,
 ): ProviderPlaceSuggestion[] {
   return parseFeatures(payload).map((feature) => {
@@ -18,22 +18,22 @@ export function mapPeliasSuggestions(
     return {
       providerId: common.providerId,
       primaryText: common.name,
-      secondaryText: secondaryText(common.name, common.label, feature.properties),
+      secondaryText: secondaryText(common.name, feature.properties),
       category: common.category,
       position: common.position,
-      distanceMeters: parseDistanceMeters(feature.properties.distance),
+      distanceMeters: null,
       source: common.source,
     };
   });
 }
 
-export function mapPeliasDetails(payload: unknown): ProviderPlaceDetails[] {
+export function mapPhotonDetails(payload: unknown): ProviderPlaceDetails[] {
   return parseFeatures(payload).map((feature) => {
     const common = parseCommon(feature);
     return {
       providerId: common.providerId,
       name: common.name,
-      formattedAddress: common.label,
+      formattedAddress: secondaryText(common.name, feature.properties),
       position: common.position,
       category: common.category,
       source: common.source,
@@ -41,14 +41,14 @@ export function mapPeliasDetails(payload: unknown): ProviderPlaceDetails[] {
   });
 }
 
-interface PeliasFeature {
+interface PhotonFeature {
   readonly properties: Record<string, unknown>;
   readonly geometry: {
     readonly coordinates: readonly [number, number];
   };
 }
 
-function parseFeatures(payload: unknown): PeliasFeature[] {
+function parseFeatures(payload: unknown): PhotonFeature[] {
   if (
     !isRecord(payload) ||
     payload.type !== 'FeatureCollection' ||
@@ -60,7 +60,7 @@ function parseFeatures(payload: unknown): PeliasFeature[] {
   return payload.features.map((feature) => parseFeature(feature));
 }
 
-function parseFeature(value: unknown): PeliasFeature {
+function parseFeature(value: unknown): PhotonFeature {
   if (
     !isRecord(value) ||
     value.type !== 'Feature' ||
@@ -85,131 +85,105 @@ function parseFeature(value: unknown): PeliasFeature {
   };
 }
 
-function parseCommon(feature: PeliasFeature): {
+function parseCommon(feature: PhotonFeature): {
   readonly providerId: string;
   readonly name: string;
-  readonly label: string | null;
   readonly category: PlaceCategory;
   readonly position: GeocodingPoint;
   readonly source: GeocodingSource;
 } {
-  const providerId = requiredText(feature.properties.gid);
-  const name = requiredText(feature.properties.name);
-  const label = optionalText(feature.properties.label);
+  const type =
+    optionalText(feature.properties.osm_type)?.toUpperCase() ?? null;
+  const id = positiveSafeInteger(feature.properties.osm_id);
+  const name =
+    optionalText(feature.properties.name) ||
+    optionalText(feature.properties.street) ||
+    optionalText(feature.properties.city);
+  if (
+    type === null ||
+    !['N', 'W', 'R'].includes(type) ||
+    id === null ||
+    name === null
+  ) {
+    throw new GeocodingProviderError('INVALID_RESPONSE');
+  }
+
   return {
-    providerId,
+    providerId: `${type}:${id}`,
     name,
-    label,
     category: mapCategory(feature.properties),
     position: {
       latitude: feature.geometry.coordinates[1],
       longitude: feature.geometry.coordinates[0],
     },
-    source: mapSource(providerId),
+    source: GeocodingSource.OPENSTREETMAP,
   };
 }
 
 function mapCategory(properties: Record<string, unknown>): PlaceCategory {
-  const tokens = [
-    optionalText(properties.layer),
-    optionalText(properties.source),
-    ...parseStringArray(properties.category),
-  ]
-    .filter((value): value is string => value !== null)
-    .join(' ')
-    .toLowerCase();
+  const osmKey = optionalText(properties.osm_key)?.toLowerCase() || '';
+  const osmValue = optionalText(properties.osm_value)?.toLowerCase() || '';
+  const combined = `${osmKey} ${osmValue}`;
 
-  if (containsAny(tokens, ['school', 'education', 'college', 'university'])) {
+  if (
+    combined.includes('school') ||
+    combined.includes('college') ||
+    combined.includes('university')
+  ) {
     return PlaceCategory.SCHOOL;
   }
   if (
-    containsAny(tokens, [
-      'hospital',
-      'clinic',
-      'health',
-      'doctor',
-      'pharmacy',
-    ])
+    combined.includes('hospital') ||
+    combined.includes('clinic') ||
+    combined.includes('pharmacy')
   ) {
     return PlaceCategory.HOSPITAL;
   }
-  if (containsAny(tokens, ['government', 'townhall', 'public building'])) {
+  if (combined.includes('government') || combined.includes('townhall')) {
     return PlaceCategory.GOVERNMENT;
   }
-  if (containsAny(tokens, ['transit', 'station', 'airport', 'terminal'])) {
+  if (
+    combined.includes('station') ||
+    combined.includes('airport') ||
+    combined.includes('terminal')
+  ) {
     return PlaceCategory.TRANSIT;
   }
-  if (containsAny(tokens, ['street'])) {
+  if (osmKey === 'highway') {
     return PlaceCategory.ROAD;
   }
-  if (containsAny(tokens, ['address'])) {
-    return PlaceCategory.ADDRESS;
-  }
-  if (
-    containsAny(tokens, ['neighbourhood', 'locality', 'borough', 'macrocounty'])
-  ) {
+  if (osmKey === 'place') {
     return PlaceCategory.NEIGHBOURHOOD;
   }
-  if (containsAny(tokens, ['venue', 'landmark'])) {
+  if (osmKey === 'historic' || osmKey === 'tourism' || combined.includes('landmark')) {
     return PlaceCategory.LANDMARK;
   }
+  if (optionalText(properties.housenumber) !== null) {
+    return PlaceCategory.ADDRESS;
+  }
+
   return PlaceCategory.OTHER;
 }
 
 function secondaryText(
   name: string,
-  label: string | null,
   properties: Record<string, unknown>,
 ): string | null {
-  if (label !== null) {
-    const prefix = `${name},`;
-    const withoutName = label.startsWith(prefix)
-      ? label.slice(prefix.length).trim()
-      : label;
-    if (withoutName !== name && withoutName.length > 0) {
-      return withoutName;
-    }
-  }
-  const hierarchy = [
-    properties.neighbourhood,
-    properties.locality,
-    properties.borough,
-    properties.county,
-    properties.region,
+  const parts = [
+    optionalText(properties.housenumber) === null
+      ? properties.street
+      : `${optionalText(properties.street) ?? ''} ${
+          optionalText(properties.housenumber) ?? ''
+        }`.trim(),
+    properties.district ?? properties.locality,
+    properties.city ?? properties.county,
+    properties.state,
+    properties.country,
   ]
     .map(optionalText)
     .filter((value): value is string => value !== null && value !== name);
-  return hierarchy.length === 0 ? null : [...new Set(hierarchy)].join(', ');
-}
 
-function parseDistanceMeters(value: unknown): number | null {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
-    return null;
-  }
-  // Pelias reports feature distance in kilometres.
-  return Math.round(value * 1_000);
-}
-
-function mapSource(providerId: string): GeocodingSource {
-  const source = providerId.split(':', 1)[0];
-  switch (source) {
-    case 'openstreetmap':
-      return GeocodingSource.OPENSTREETMAP;
-    case 'whosonfirst':
-      return GeocodingSource.WHOSONFIRST;
-    case 'csv':
-      return GeocodingSource.GATHRA_CSV;
-    default:
-      return GeocodingSource.OTHER;
-  }
-}
-
-function requiredText(value: unknown): string {
-  const text = optionalText(value);
-  if (text === null) {
-    throw new GeocodingProviderError('INVALID_RESPONSE');
-  }
-  return text;
+  return parts.length === 0 ? null : [...new Set(parts)].join(', ');
 }
 
 function optionalText(value: unknown): string | null {
@@ -222,20 +196,14 @@ function optionalText(value: unknown): string | null {
     : null;
 }
 
-function parseStringArray(value: unknown): string[] {
-  if (typeof value === 'string') {
-    return [value];
-  }
-  if (!Array.isArray(value)) {
-    return [];
-  }
-  return value
-    .map(optionalText)
-    .filter((item): item is string => item !== null);
-}
-
-function containsAny(value: string, candidates: readonly string[]): boolean {
-  return candidates.some((candidate) => value.includes(candidate));
+function positiveSafeInteger(value: unknown): number | null {
+  const parsed =
+    typeof value === 'number'
+      ? value
+      : typeof value === 'string' && /^[0-9]+$/.test(value)
+        ? Number(value)
+        : Number.NaN;
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
 function isLongitude(value: unknown): value is number {

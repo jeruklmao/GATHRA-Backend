@@ -1,7 +1,7 @@
 # GATHRA routing backend
 
 This service owns GATHRA's route-preview, simulated flood-hazard, and
-geocoding contracts. It keeps GraphHopper and Pelias private. It deliberately
+geocoding contracts. It keeps GraphHopper and Photon private. It deliberately
 contains no authentication, database, traffic, telemetry, real sensor
 ingestion, or active navigation-session execution. Flood data is currently
 development/staging-only, in-memory, and lost whenever the backend restarts.
@@ -12,7 +12,7 @@ development/staging-only, in-memory, and lost whenever the backend restarts.
 Android -> NestJS :3000 -> in-memory FloodHazardProvider
                        |       |-> GraphHopper custom_model :8989
                        |       `-> independent geometry evaluation/ranking
-                       `-> Pelias :4000 -> Elasticsearch (private profile)
+                       `-> Photon :2322 (private Compose network)
 ```
 
 Only the NestJS port is published by `compose.yaml`. GraphHopper uses its own
@@ -25,10 +25,11 @@ before production use. Treat it as experimental for this milestone: it has not
 been calibrated against Indonesian regulations, local access rules, or expected
 motorcycle travel times.
 
-Pelias is an optional Compose profile; deterministic fake geocoding is the
-default. Its runtime/import architecture, region definition, resource guidance,
-safe rebuild workflow, quality corpus, and rollback procedure are documented
-in [`geocoding/README.md`](geocoding/README.md). Android developer setup is in
+Photon is the normal Compose geocoder; deterministic fake geocoding remains
+available through `GEOCODING_PROVIDER=fake`. Its pinned data installation,
+private-network policy, resource guidance, quality corpus, and replacement
+workflow are documented in [`geocoding/README.md`](geocoding/README.md).
+Android developer setup is in
 [`../docs/development-geocoding.md`](../docs/development-geocoding.md).
 
 ## Prerequisites

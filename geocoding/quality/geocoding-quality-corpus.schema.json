@@ -144,7 +144,7 @@
         "minCanonicalTop3SuccessRate",
         "maxCanonicalNoResultRate",
         "maxOutsideRegionFalsePositiveRate",
-        "minReverseLabelContextCategorySuccessRate",
+        "minReverseLabelAddressCategorySuccessRate",
         "minReverseCoordinatePreservationRate"
       ],
       "properties": {
@@ -160,7 +160,7 @@
         "maxOutsideRegionFalsePositiveRate": {
           "$ref": "#/$defs/ratio"
         },
-        "minReverseLabelContextCategorySuccessRate": {
+        "minReverseLabelAddressCategorySuccessRate": {
           "$ref": "#/$defs/ratio"
         },
         "minReverseCoordinatePreservationRate": {

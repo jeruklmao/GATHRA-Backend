@@ -21,7 +21,7 @@ const timeoutMs = Math.max(
 const requireVerifiedAcceptance =
   process.env.GEOCODING_QUALITY_REQUIRE_VERIFIED === 'true';
 
-if (!['backend', 'pelias'].includes(mode)) {
+if (!['backend', 'photon'].includes(mode)) {
   throw new Error(`Unsupported GEOCODING_QUALITY_MODE: ${mode}`);
 }
 
@@ -162,18 +162,30 @@ const normalizeEvaluationCategory = (value, fallbackText = '') => {
   return category || null;
 };
 
-const normalizePeliasFeatures = (payload) =>
+const normalizePhotonFeatures = (payload) =>
   Array.isArray(payload?.features)
     ? payload.features.map((feature) => {
         const position = positionFromFeature(feature);
         const primaryText =
-          feature?.properties?.name ?? feature?.properties?.label ?? '';
-        const secondaryText = feature?.properties?.label ?? '';
+          feature?.properties?.name ??
+          feature?.properties?.street ??
+          feature?.properties?.city ??
+          '';
+        const secondaryText = [
+          feature?.properties?.street,
+          feature?.properties?.housenumber,
+          feature?.properties?.district ?? feature?.properties?.locality,
+          feature?.properties?.city ?? feature?.properties?.county,
+          feature?.properties?.state,
+          feature?.properties?.country,
+        ]
+          .filter(Boolean)
+          .filter((value) => value !== primaryText)
+          .join(', ');
         const rawCategories = [
-          ...(Array.isArray(feature?.properties?.category)
-            ? feature.properties.category
-            : [feature?.properties?.category]),
-          feature?.properties?.layer,
+          feature?.properties?.osm_value,
+          feature?.properties?.osm_key,
+          feature?.properties?.type,
         ].filter(Boolean);
         const category = rawCategories
           .map((value) =>
@@ -230,15 +242,19 @@ const normalizeBackendDetails = (payload) => {
 };
 
 const buildUrl = (testCase) => {
-  const endpoint = testCase.kind.toLowerCase();
+  const endpoint =
+    mode === 'photon'
+      ? testCase.kind === 'REVERSE'
+        ? 'reverse'
+        : 'api'
+      : testCase.kind.toLowerCase();
   const url = new URL(`${baseUrl}/${endpoint}`);
 
   if (testCase.kind === 'REVERSE') {
-    if (mode === 'pelias') {
-      url.searchParams.set('point.lat', testCase.point.latitude);
-      url.searchParams.set('point.lon', testCase.point.longitude);
-      url.searchParams.set('size', '1');
-      url.searchParams.set('lang', 'id');
+    if (mode === 'photon') {
+      url.searchParams.set('lat', testCase.point.latitude);
+      url.searchParams.set('lon', testCase.point.longitude);
+      url.searchParams.set('limit', '1');
     } else {
       url.searchParams.set('lat', testCase.point.latitude);
       url.searchParams.set('lon', testCase.point.longitude);
@@ -246,17 +262,20 @@ const buildUrl = (testCase) => {
     return url;
   }
 
-  if (mode === 'pelias') {
-    url.searchParams.set('text', testCase.query);
-    url.searchParams.set('focus.point.lat', testCase.focus.latitude);
-    url.searchParams.set('focus.point.lon', testCase.focus.longitude);
-    url.searchParams.set('boundary.country', 'IDN');
-    url.searchParams.set('boundary.rect.min_lon', regionBounds.west);
-    url.searchParams.set('boundary.rect.min_lat', regionBounds.south);
-    url.searchParams.set('boundary.rect.max_lon', regionBounds.east);
-    url.searchParams.set('boundary.rect.max_lat', regionBounds.north);
-    url.searchParams.set('size', '8');
-    url.searchParams.set('lang', 'id');
+  if (mode === 'photon') {
+    url.searchParams.set('q', testCase.query);
+    url.searchParams.set('lat', testCase.focus.latitude);
+    url.searchParams.set('lon', testCase.focus.longitude);
+    url.searchParams.set(
+      'bbox',
+      [
+        regionBounds.west,
+        regionBounds.south,
+        regionBounds.east,
+        regionBounds.north,
+      ].join(','),
+    );
+    url.searchParams.set('limit', '8');
   } else {
     url.searchParams.set('q', testCase.query);
     url.searchParams.set('lat', testCase.focus.latitude);
@@ -269,7 +288,7 @@ const buildUrl = (testCase) => {
 
 const evaluateCase = async (testCase) => {
   if (
-    mode === 'pelias' &&
+    mode === 'photon' &&
     testCase.kind === 'REVERSE' &&
     testCase.coverageClass === 'OUTSIDE'
   ) {
@@ -310,8 +329,8 @@ const evaluateCase = async (testCase) => {
       };
     }
 
-    const details = mode === 'pelias'
-      ? normalizePeliasFeatures(payload)[0]
+    const details = mode === 'photon'
+      ? normalizePhotonFeatures(payload)[0]
       : normalizeBackendDetails(payload);
     const combinedLabel =
       `${details?.primaryText ?? ''} ${details?.secondaryText ?? ''}`.trim();
@@ -321,6 +340,8 @@ const evaluateCase = async (testCase) => {
     const contextMatches = normalize(combinedLabel).includes(
       normalize(testCase.expected.contextContains),
     );
+    const addressPresent =
+      normalize(details?.secondaryText ?? '').length > 0;
     const categoryMatches =
       details?.category === testCase.expected.category;
     const coordinatePreserved =
@@ -335,18 +356,19 @@ const evaluateCase = async (testCase) => {
         response.ok &&
         details?.insideSupportedRegion !== false &&
         nameMatches &&
-        contextMatches &&
+        addressPresent &&
         categoryMatches,
       coordinatePreserved,
       nameMatches,
+      addressPresent,
       contextMatches,
       categoryMatches,
       responseStatus: response.status,
     };
   }
 
-  const suggestions = mode === 'pelias'
-    ? normalizePeliasFeatures(payload)
+  const suggestions = mode === 'photon'
+    ? normalizePhotonFeatures(payload)
     : normalizeBackendSuggestions(payload);
   const expectedName = normalize(testCase.expected.nameContains);
   const matchIndex = suggestions.findIndex((suggestion) =>
@@ -433,6 +455,10 @@ const reverseAssertionSuccessRate = ratio(
   reverseResults.filter((result) => result.reverseAssertionSuccess).length,
   reverseResults.length,
 );
+const reverseExpectedContextMatchRate = ratio(
+  reverseResults.filter((result) => result.contextMatches).length,
+  reverseResults.length,
+);
 const reverseCoordinatePreservationRate = ratio(
   reverseResults.filter((result) => result.coordinatePreserved).length,
   reverseResults.length,
@@ -484,11 +510,11 @@ if (
 }
 if (
   reverseAssertionSuccessRate <
-  thresholds.minReverseLabelContextCategorySuccessRate
+  thresholds.minReverseLabelAddressCategorySuccessRate
 ) {
   failures.push(
-    `reverse name/context/category ${reverseAssertionSuccessRate.toFixed(3)} < ${
-      thresholds.minReverseLabelContextCategorySuccessRate
+    `reverse name/address/category ${reverseAssertionSuccessRate.toFixed(3)} < ${
+      thresholds.minReverseLabelAddressCategorySuccessRate
     }`,
   );
 }
@@ -534,22 +560,27 @@ console.log(`Canonical no-result rate: ${percent(canonicalNoResultRate)}`);
 console.log(`Variant top-3 success: ${percent(variantTop3SuccessRate)}`);
 console.log(`Buffer top-3 success: ${percent(bufferTop3SuccessRate)}`);
 console.log(
-  `Reverse name/context/category success: ${percent(
+  `Reverse name/address/category success: ${percent(
     reverseAssertionSuccessRate,
+  )}`,
+);
+console.log(
+  `Reverse expected administrative-context match (informational): ${percent(
+    reverseExpectedContextMatchRate,
   )}`,
 );
 console.log(
   `Reverse coordinate preservation: ${
     mode === 'backend'
       ? percent(reverseCoordinatePreservationRate)
-      : 'n/a for raw Pelias'
+      : 'n/a for raw Photon'
   }`,
 );
 console.log(
   `Outside-region false-positive: ${
     mode === 'backend'
       ? percent(outsideRegionFalsePositiveRate)
-      : 'n/a for raw Pelias'
+      : 'n/a for raw Photon'
   }`,
 );
 console.log(
@@ -585,7 +616,9 @@ if (caseIssues.length > 0) {
   for (const result of caseIssues.slice(0, 20)) {
     const reverseDetails =
       result.testCase.kind === 'REVERSE'
-        ? `name=${Boolean(result.nameMatches)} context=${Boolean(
+        ? `name=${Boolean(result.nameMatches)} address=${Boolean(
+            result.addressPresent,
+          )} context=${Boolean(
             result.contextMatches,
           )} category=${Boolean(result.categoryMatches)} coordinate=${Boolean(
             result.coordinatePreserved,
@@ -770,7 +803,7 @@ function validateCorpus() {
           testCase.expected?.maxCoordinateDeltaMeters == null)
       ) {
         errors.push(
-          `${testCase.id}: core reverse case requires name/context/category/coordinate assertions`,
+          `${testCase.id}: core reverse case requires name/address/context/category/coordinate assertions`,
         );
       }
     } else if (!testCase.query || testCase.focus == null) {

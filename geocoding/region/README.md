@@ -1,8 +1,8 @@
 # GATHRA geocoding coverage
 
 `region-config.json` is the machine-readable source of truth for backend
-coverage classification and Pelias query boundaries.
-`supported-region.geojson` is the rectangular, buffered import boundary.
+coverage classification and Photon query boundaries.
+`supported-region.geojson` records the rectangular buffered service boundary.
 `administrative-boundaries.geojson` contains the four actual OSM relation
 polygons used to classify quality-corpus points as `CORE`; city bounding boxes
 must never be used as a substitute for those polygons.
@@ -38,8 +38,9 @@ recorded in `region-config.json`. When boundaries or buffer policy changes:
 1. increment `regionConfigVersion`;
 2. update the recorded relation snapshot, actual polygons, and bounds;
 3. regenerate `supported-region.geojson`;
-4. regenerate both the raw Pelias PBF and GraphHopper's routing-filtered PBF;
-5. rebuild into a candidate index and rerun quality checks.
+4. regenerate GraphHopper's routing-filtered PBF;
+5. verify that the selected Indonesia Photon dump still covers the boundary;
+6. rerun normalized and raw-provider quality checks.
 
 The raw OSM input is ODbL-licensed. Preserve OpenStreetMap attribution and the
 source/dataset metadata when distributing derived data.

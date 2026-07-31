@@ -1,18 +1,5 @@
 name: gathra-routing
 
-x-pelias-import-job: &pelias-import-job
-  profiles: ["geocoding-import"]
-  environment:
-    PELIAS_CONFIG: "${PELIAS_CONFIG:-/code/pelias.json}"
-  volumes:
-    - "./geocoding/pelias.json:/code/pelias.json:ro"
-    - "${GATHRA_GEOCODING_DATA_DIR:-./geocoding/data}:/data"
-  networks:
-    - geocoding-private
-  restart: "no"
-  security_opt:
-    - no-new-privileges:true
-
 services:
   routing-engine:
     build:
@@ -44,8 +31,8 @@ services:
       PORT: "3000"
       ROUTING_ENGINE_BASE_URL: "http://routing-engine:8989"
       ROUTING_ENGINE_TIMEOUT_MS: "${ROUTING_ENGINE_TIMEOUT_MS:-8000}"
-      GEOCODING_PROVIDER: "${GEOCODING_PROVIDER:-fake}"
-      PELIAS_BASE_URL: "http://pelias-api:4000"
+      GEOCODING_PROVIDER: "${GEOCODING_PROVIDER:-photon}"
+      PHOTON_BASE_URL: "${PHOTON_BASE_URL:-http://photon:2322}"
       GEOCODING_PROVIDER_TIMEOUT_MS: "${GEOCODING_PROVIDER_TIMEOUT_MS:-2500}"
       GEOCODING_RATE_LIMIT: "${GEOCODING_RATE_LIMIT:-180}"
       GEOCODING_RATE_WINDOW_MS: "${GEOCODING_RATE_WINDOW_MS:-60000}"
@@ -55,6 +42,8 @@ services:
       MAX_FLOOD_POLYGON_VERTICES: "${MAX_FLOOD_POLYGON_VERTICES:-2000}"
     depends_on:
       routing-engine:
+        condition: service_healthy
+      photon:
         condition: service_healthy
     networks:
       - default
@@ -77,241 +66,43 @@ services:
       start_period: 5s
     restart: unless-stopped
 
-  pelias-elasticsearch:
-    image: "pelias/elasticsearch:7.17.27@sha256:8aa3c622abd74192eceaf53e9a3dfd51c1a75e50ee7a537d7f912aa7f80bab05"
-    profiles: ["geocoding", "geocoding-import"]
+  photon:
+    build:
+      context: ./photon
+      args:
+        PHOTON_VERSION: "0.5.0"
+        PHOTON_SHA256: "3d1c167065a3d0b86a3359598e3beed3b735477c95b674ec4e913244d0fd6c9b"
     environment:
-      discovery.type: "single-node"
-      xpack.security.enabled: "false"
-      ES_JAVA_OPTS: "${PELIAS_ELASTICSEARCH_JAVA_OPTS:--Xms2g -Xmx2g}"
+      JAVA_TOOL_OPTIONS: "${PHOTON_JAVA_OPTS:--Xms128m -Xmx384m}"
+    expose:
+      - "2322"
     volumes:
-      - pelias-elasticsearch-data:/usr/share/elasticsearch/data
-    expose:
-      - "9200"
+      - photon-data:/photon/photon_data
     networks:
       - geocoding-private
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "curl --fail --silent 'http://127.0.0.1:9200/_cluster/health?wait_for_status=yellow&timeout=3s' >/dev/null"
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 30
-      start_period: 45s
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-      nofile:
-        soft: 65536
-        hard: 65536
-    cap_add:
-      - IPC_LOCK
-    mem_limit: "${PELIAS_ELASTICSEARCH_MEMORY_LIMIT:-3g}"
-    cpus: "${PELIAS_ELASTICSEARCH_CPUS:-2.0}"
-    pids_limit: 512
-    restart: unless-stopped
-    stop_grace_period: 60s
-
-  pelias-libpostal:
-    image: "pelias/libpostal-service:latest@sha256:72beeef72e968a7865ad7538854d900de7aa9cf27f3de899f29c00cd4a4d96fe"
-    profiles: ["geocoding", "geocoding-import"]
-    expose:
-      - "4400"
-    networks:
-      - geocoding-private
-    mem_limit: "${PELIAS_LIBPOSTAL_MEMORY_LIMIT:-4g}"
-    cpus: "${PELIAS_LIBPOSTAL_CPUS:-1.0}"
-    pids_limit: 256
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-
-  pelias-placeholder:
-    image: "pelias/placeholder:master@sha256:5f1d823895a64f9b1c60f30a8c2c9d9f3357de8919758e1cfb053e129b69190b"
-    profiles: ["geocoding", "geocoding-import"]
-    environment:
-      PORT: "4100"
-      PELIAS_CONFIG: "/code/pelias.json"
-    volumes:
-      - "./geocoding/pelias.json:/code/pelias.json:ro"
-      - "${GATHRA_GEOCODING_DATA_DIR:-./geocoding/data}:/data:ro"
-    expose:
-      - "4100"
-    networks:
-      - geocoding-private
-    mem_limit: "${PELIAS_PLACEHOLDER_MEMORY_LIMIT:-1g}"
-    cpus: "${PELIAS_PLACEHOLDER_CPUS:-1.0}"
-    pids_limit: 256
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-
-  pelias-pip:
-    image: "pelias/pip-service:master@sha256:9c57505384d388dbddac444169b9868671a65b036ea9e03e114a08b9df2c02b6"
-    profiles: ["geocoding", "geocoding-import"]
-    environment:
-      PORT: "4200"
-      PELIAS_CONFIG: "/code/pelias.json"
-    volumes:
-      - "./geocoding/pelias.json:/code/pelias.json:ro"
-      - "${GATHRA_GEOCODING_DATA_DIR:-./geocoding/data}:/data:ro"
-    expose:
-      - "4200"
-    networks:
-      - geocoding-private
-    mem_limit: "${PELIAS_PIP_MEMORY_LIMIT:-1g}"
-    cpus: "${PELIAS_PIP_CPUS:-1.0}"
-    pids_limit: 256
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-
-  pelias-api:
-    image: "pelias/api:master@sha256:e4d5d799fb9c048f869c611139d6df7ac10777a3acf387bd52cb528bedda4d3b"
-    profiles: ["geocoding"]
-    environment:
-      PORT: "4000"
-      PELIAS_CONFIG: "/code/pelias.json"
-    volumes:
-      - "./geocoding/pelias.json:/code/pelias.json:ro"
-    expose:
-      - "4000"
-    networks:
-      - geocoding-private
-    depends_on:
-      pelias-elasticsearch:
-        condition: service_healthy
-      pelias-libpostal:
-        condition: service_started
-      pelias-placeholder:
-        condition: service_started
-      pelias-pip:
-        condition: service_started
     healthcheck:
       test:
         [
           "CMD",
-          "node",
-          "-e",
-          "fetch('http://127.0.0.1:4000/v1/search?text=Jakarta&size=1').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+          "curl",
+          "--fail",
+          "--silent",
+          "http://127.0.0.1:2322/api?q=Jakarta&limit=1&bbox=106.479,-6.437,106.955,-6.025"
         ]
-      interval: 10s
-      timeout: 5s
-      retries: 30
+      interval: 5s
+      timeout: 4s
+      retries: 60
       start_period: 30s
-    mem_limit: "${PELIAS_API_MEMORY_LIMIT:-768m}"
-    cpus: "${PELIAS_API_CPUS:-1.0}"
-    pids_limit: 256
+    mem_limit: "${PHOTON_MEMORY_LIMIT:-512m}"
+    cpus: "${PHOTON_CPUS:-1.5}"
     restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-
-  pelias-schema:
-    <<: *pelias-import-job
-    image: "pelias/schema:master@sha256:8e342cdc5be1c2d091b9867247f5c434c36acc28cb80ff49d2077f66d88270e9"
-    depends_on:
-      pelias-elasticsearch:
-        condition: service_healthy
-
-  pelias-wof-download:
-    <<: *pelias-import-job
-    image: "pelias/whosonfirst:master@sha256:1242d891afd1cfdf7f6294c283641552276b11d82cbefcf4554523d7dee06302"
-    networks:
-      - geocoding-private
-      - geocoding-download
-
-  pelias-wof-import:
-    <<: *pelias-import-job
-    image: "pelias/whosonfirst:master@sha256:1242d891afd1cfdf7f6294c283641552276b11d82cbefcf4554523d7dee06302"
-    depends_on:
-      pelias-elasticsearch:
-        condition: service_healthy
-    mem_limit: "${PELIAS_IMPORT_MEMORY_LIMIT:-4g}"
-    cpus: "${PELIAS_IMPORT_CPUS:-2.0}"
-
-  pelias-placeholder-prepare:
-    <<: *pelias-import-job
-    image: "pelias/placeholder:master@sha256:5f1d823895a64f9b1c60f30a8c2c9d9f3357de8919758e1cfb053e129b69190b"
-    mem_limit: "${PELIAS_IMPORT_MEMORY_LIMIT:-4g}"
-    cpus: "${PELIAS_IMPORT_CPUS:-2.0}"
-
-  pelias-osm-import:
-    <<: *pelias-import-job
-    image: "pelias/openstreetmap:master@sha256:468fcf01c9b8f64b39233f18f9bd5d904394ea7d718064d733c4ae5e88a2f1c2"
-    depends_on:
-      pelias-elasticsearch:
-        condition: service_healthy
-    mem_limit: "${PELIAS_IMPORT_MEMORY_LIMIT:-4g}"
-    cpus: "${PELIAS_IMPORT_CPUS:-2.0}"
-
-  pelias-csv-import:
-    <<: *pelias-import-job
-    image: "pelias/csv-importer:master@sha256:f497d0119138aa3f50b42fe5e38f4b8f99250f2e6986cdbc5b2a0cf9298c9cee"
-    depends_on:
-      pelias-elasticsearch:
-        condition: service_healthy
-    mem_limit: "${PELIAS_IMPORT_MEMORY_LIMIT:-4g}"
-    cpus: "${PELIAS_IMPORT_CPUS:-2.0}"
-
-  pelias-api-candidate:
-    image: "pelias/api:master@sha256:e4d5d799fb9c048f869c611139d6df7ac10777a3acf387bd52cb528bedda4d3b"
-    profiles: ["geocoding-import"]
-    environment:
-      PORT: "4001"
-      PELIAS_CONFIG: "${GATHRA_PELIAS_CANDIDATE_CONFIG:-/data/config/pelias-candidate.json}"
-    volumes:
-      - "${GATHRA_GEOCODING_DATA_DIR:-./geocoding/data}:/data:ro"
-    expose:
-      - "4001"
-    networks:
-      - geocoding-private
-    depends_on:
-      pelias-elasticsearch:
-        condition: service_healthy
-      pelias-libpostal:
-        condition: service_started
-      pelias-placeholder:
-        condition: service_started
-      pelias-pip:
-        condition: service_started
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "fetch('http://127.0.0.1:4001/v1/autocomplete?text=Jakarta&size=1').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 30
-      start_period: 30s
-    restart: "no"
-    security_opt:
-      - no-new-privileges:true
-
-  pelias-quality:
-    image: "pelias/api:master@sha256:e4d5d799fb9c048f869c611139d6df7ac10777a3acf387bd52cb528bedda4d3b"
-    profiles: ["geocoding-import"]
-    entrypoint: ["node"]
-    volumes:
-      - "./geocoding/quality:/quality:ro"
-      - "./geocoding/region:/region:ro"
-    networks:
-      - geocoding-private
-    restart: "no"
-    security_opt:
-      - no-new-privileges:true
 
 volumes:
   graphhopper-cache:
-  pelias-elasticsearch-data:
+  photon-data:
+    external: true
+    name: "${PHOTON_DATA_VOLUME:-gathra-routing_photon-data}"
 
 networks:
   geocoding-private:
     internal: true
-  geocoding-download:
-    driver: bridge
