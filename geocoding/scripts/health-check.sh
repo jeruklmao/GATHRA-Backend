@@ -1,19 +1,22 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
-source "$(dirname -- "$0")/_common.sh"
 
-require_command curl
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+BACKEND_DIR="$(cd -- "${SCRIPT_DIR}/../.." && pwd)"
+COMPOSE=(
+  docker compose
+  --project-directory "${BACKEND_DIR}"
+  --file "${BACKEND_DIR}/compose.yaml"
+)
 
-compose_all_geocoding exec -T pelias-elasticsearch \
+"${COMPOSE[@]}" exec -T photon \
   curl --fail --silent \
-  "http://127.0.0.1:9200/_cluster/health?wait_for_status=yellow&timeout=3s" \
+  "http://127.0.0.1:2322/api?q=Jakarta&limit=1&bbox=106.479,-6.437,106.955,-6.025" \
   >/dev/null
-
-compose_all_geocoding exec -T pelias-api node -e \
-  "fetch('http://127.0.0.1:4000/v1/autocomplete?text=Jakarta&size=1').then(async r=>{if(!r.ok)throw new Error(await r.text())}).catch(e=>{console.error(e.message);process.exit(1)})"
 
 curl --fail --silent "http://127.0.0.1:${GATHRA_BACKEND_PORT:-3000}/api/v1/health" \
+  | jq --exit-status \
+    '.status == "ok" and .checks.routing == "up" and .checks.geocoding == "up"' \
   >/dev/null
 
-echo "Elasticsearch, private Pelias API, and public NestJS health checks passed."
-
+echo "Private Photon and public NestJS geocoding health checks passed."

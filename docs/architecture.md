@@ -11,11 +11,7 @@ NestJS
   |-- FloodHazardProvider --+-> GraphHopper custom model :8989
   |                         `-> independent route/polygon evaluation
   |-- read-only flood GeoJSON endpoint
-  `-- Geocoding provider --> Pelias API :4000
-                               |-- Elasticsearch :9200
-                               |-- Placeholder :4100
-                               |-- PIP :4200
-                               `-- libpostal :4400
+  `-- Geocoding provider ----> Photon :2322
 ```
 
 Only NestJS publishes a host port. Provider ports are Compose-internal.
@@ -110,7 +106,7 @@ markers.
 - `flood`: the simulation-only `FloodHazardProvider`, read-only GeoJSON API,
   optional development mutation controller, configured limits, and independent
   route evaluator.
-- `geocoding`: controller/service/provider token, fake/Pelias adapters,
+- `geocoding`: controller/service/provider token, fake/Photon adapters,
   response mapper, bounded TTL cache, concurrency limiter, rate guard,
   supported-region classifier, and signed opaque place tokens.
 - `health`: readiness for both selected providers.
@@ -139,14 +135,19 @@ blocked route. Hazard snapshots are in-memory and not production durable.
 ### Geocoding
 
 `GeocodingProvider` defines autocomplete, search, lookup, reverse, and health.
-`FakeGeocodingProvider` is the backend default. `PeliasGeocodingProvider` is
-selected by configuration and constrains searches to Indonesia plus the
-versioned buffered bounds.
+`PhotonGeocodingProvider` is selected by the normal Compose configuration;
+`FakeGeocodingProvider` remains available for deterministic tests and
+development. Photon searches use proximity bias and the versioned buffered
+bounds over the pinned Indonesia extract. Photon 0.5.0 does not accept the
+newer `countrycode` parameter. Indonesian API requests use Photon's
+local/default labels because this pinned dump does not expose an `id` analyzer.
 
-Pelias GIDs are never returned directly. NestJS issues signed opaque tokens
-for lookup. Normal logs contain request IDs, duration, count, and query length,
-not full address-like queries. Reverse responses preserve the requested
-coordinate.
+Provider IDs are never returned directly. NestJS issues signed opaque tokens.
+Because Photon has no public lookup-by-OSM-ID endpoint, normalized suggestion
+details are stored in the existing bounded TTL cache when a token is issued;
+the public `/places/:id` contract remains unchanged. Normal logs contain
+request IDs, duration, count, and query length, not full address-like queries.
+Reverse responses preserve the requested coordinate.
 
 ## Docker Compose
 
@@ -154,44 +155,22 @@ Always-on services:
 
 - `routing-engine`
 - `backend`
+- `photon`
 
-Runtime profile `geocoding`:
-
-- `pelias-elasticsearch`
-- `pelias-libpostal`
-- `pelias-placeholder`
-- `pelias-pip`
-- `pelias-api`
-
-Explicit profile `geocoding-import`:
-
-- `pelias-schema`
-- `pelias-wof-download`
-- `pelias-wof-import`
-- `pelias-placeholder-prepare`
-- `pelias-osm-import`
-- `pelias-csv-import`
-- `pelias-api-candidate`
-- `pelias-quality`
-
-Persistent volumes are `graphhopper-cache` and
-`pelias-elasticsearch-data`. `geocoding-private` is internal;
-`geocoding-download` grants egress only to data-download jobs.
-
-Candidate index names follow `gathra-geocoder-vYYYYMMDDHHMM[SS]`.
-`gathra-geocoder-read` is the stable read alias. Rebuild scripts create a new
-candidate, import, test, switch the alias atomically, and retain the previous
-index. Deletion requires the physical index name twice and refuses the live
-alias target.
+Persistent volumes are `graphhopper-cache` and `photon-data`.
+`geocoding-private` is internal, and only NestJS publishes a host port.
+Photon data installation is an explicit checksummed script and refuses to
+overwrite a non-empty volume. Updates use a separate candidate volume; the
+previous volume is retained for rollback.
 
 ## Architectural constraints
 
 - No provider SDK/type may cross a domain boundary.
-- No direct Android access to GraphHopper/Pelias/Elasticsearch.
+- No direct Android access to GraphHopper or Photon.
 - No background-location permission or raw location-history persistence.
 - No network/geocoding calls from Composables.
 - No production secret in source or BuildConfig.
-- No normal startup import/index rebuild.
+- No normal startup geocoder download or index replacement.
 - No hosted geocoder fallback.
 - Flood data is simulated and in-memory: no database, sensor ingestion,
   authentication, multi-instance consistency, traffic, or telemetry.

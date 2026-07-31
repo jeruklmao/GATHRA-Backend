@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 const DEFAULT_PORT = 3000;
 const DEFAULT_ROUTING_ENGINE_URL = 'http://routing-engine:8989';
 const DEFAULT_ROUTING_TIMEOUT_MS = 8_000;
-const DEFAULT_PELIAS_URL = 'http://pelias-api:4000';
+const DEFAULT_PHOTON_URL = 'http://photon:2322';
 const DEFAULT_GEOCODING_TIMEOUT_MS = 3_500;
 const DEFAULT_GEOCODING_CONCURRENCY = 8;
 const DEFAULT_GEOCODING_QUEUE_SIZE = 32;
@@ -18,8 +18,8 @@ export interface AppConfiguration {
   readonly port: number;
   readonly routingEngineBaseUrl: string;
   readonly routingEngineTimeoutMs: number;
-  readonly geocodingProvider: 'fake' | 'pelias';
-  readonly peliasBaseUrl: string;
+  readonly geocodingProvider: 'fake' | 'photon';
+  readonly photonBaseUrl: string;
   readonly geocodingTimeoutMs: number;
   readonly geocodingMaxConcurrency: number;
   readonly geocodingMaxQueueSize: number;
@@ -57,11 +57,11 @@ export function readConfiguration(
       DEFAULT_ROUTING_TIMEOUT_MS,
     ),
     geocodingProvider:
-      environment.GEOCODING_PROVIDER?.toLowerCase() === 'pelias'
-        ? 'pelias'
+      environment.GEOCODING_PROVIDER?.toLowerCase() === 'photon'
+        ? 'photon'
         : 'fake',
-    peliasBaseUrl: normalizeBaseUrl(
-      environment.PELIAS_BASE_URL ?? DEFAULT_PELIAS_URL,
+    photonBaseUrl: normalizeBaseUrl(
+      environment.PHOTON_BASE_URL ?? DEFAULT_PHOTON_URL,
     ),
     geocodingTimeoutMs: parsePositiveInteger(
       environment.GEOCODING_PROVIDER_TIMEOUT_MS ??

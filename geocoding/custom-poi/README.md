@@ -14,7 +14,11 @@ Before adding a record:
 - put `formattedAddress`, source, `updatedAt`, and `datasetVersion` in
   `addendum_json_gathra`;
 - confirm redistribution and attribution terms;
-- run the candidate import and quality corpus before switching indexes.
+- add a verified quality-corpus case when the fixture is used for testing.
 
 Never place confidential shelter details, private home addresses, credentials,
 or unverified emergency information in this fixture.
+
+The lightweight Photon deployment does not import this CSV. It remains a
+versioned schema/sample only; adding a real custom-POI import pipeline is
+outside the current milestone.

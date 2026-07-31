@@ -193,6 +193,7 @@ export class GeocodingService {
       | readonly PlaceSuggestion[]
       | undefined;
     if (cached !== undefined) {
+      cached.forEach((suggestion) => this.cacheSuggestionLookup(suggestion));
       this.logOperation(operation, requestId, startedAt, cached.length, true, query.length);
       return { suggestions: [...cached], requestId };
     }
@@ -229,17 +230,24 @@ export class GeocodingService {
     suggestion: ProviderPlaceSuggestion,
   ): PlaceSuggestion {
     try {
-      return {
-        id: this.tokenCodec.encode(this.provider.name, suggestion.providerId),
+      const id = this.tokenCodec.encode(
+        this.provider.name,
+        suggestion.providerId,
+      );
+      const insideSupportedRegion =
+        suggestion.position !== null &&
+        this.supportedRegion.contains(suggestion.position);
+      const mapped = {
+        id,
         primaryText: suggestion.primaryText,
         secondaryText: suggestion.secondaryText,
         category: suggestion.category,
         position: suggestion.position,
         distanceMeters: suggestion.distanceMeters,
-        insideSupportedRegion:
-          suggestion.position !== null &&
-          this.supportedRegion.contains(suggestion.position),
+        insideSupportedRegion,
       };
+      this.cacheSuggestionLookup(mapped);
+      return mapped;
     } catch (error) {
       throw new GeocodingProviderError('INVALID_RESPONSE', { cause: error });
     }
@@ -261,6 +269,27 @@ export class GeocodingService {
     } catch (error) {
       throw new GeocodingProviderError('INVALID_RESPONSE', { cause: error });
     }
+  }
+
+  private cacheSuggestionLookup(suggestion: PlaceSuggestion): void {
+    if (suggestion.position === null) {
+      return;
+    }
+    // Photon deliberately exposes no lookup-by-OSM-ID endpoint. Cache the
+    // normalized details at token issuance so Android's existing
+    // search -> place lookup flow remains provider-neutral and unchanged.
+    this.cache.set(
+      digest(`lookup|${suggestion.id}`),
+      {
+        id: suggestion.id,
+        name: suggestion.primaryText,
+        formattedAddress: suggestion.secondaryText,
+        position: suggestion.position,
+        category: suggestion.category,
+        insideSupportedRegion: suggestion.insideSupportedRegion,
+      } satisfies PlaceDetails,
+      this.configuration.geocodingReverseCacheTtlMs,
+    );
   }
 
   private logOperation(

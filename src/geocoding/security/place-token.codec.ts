@@ -8,11 +8,10 @@ import { readConfiguration } from '../../configuration';
 
 const TOKEN_VERSION = 'v1';
 const MAX_TOKEN_LENGTH = 1_024;
-const SAFE_PROVIDER_ID =
-  /^[a-z][a-z0-9_-]{0,31}:[a-z][a-z0-9_-]{0,31}:[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)*$/;
+const SAFE_PROVIDER_ID = /^[A-Za-z0-9_.-]+:[A-Za-z0-9_.-]+(?::[A-Za-z0-9_.-]+)*$/;
 
 interface PlaceTokenPayload {
-  readonly provider: 'fake' | 'pelias';
+  readonly provider: 'fake' | 'photon';
   readonly id: string;
 }
 
@@ -54,7 +53,7 @@ export class PlaceTokenCodec {
       ) as unknown;
       if (
         !isRecord(decoded) ||
-        (decoded.provider !== 'fake' && decoded.provider !== 'pelias') ||
+        (decoded.provider !== 'fake' && decoded.provider !== 'photon') ||
         typeof decoded.id !== 'string'
       ) {
         return null;

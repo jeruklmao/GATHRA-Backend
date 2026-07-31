@@ -35,6 +35,20 @@ describe('readConfiguration', () => {
     );
   });
 
+  it('selects Photon only through explicit provider configuration', () => {
+    const photon = readConfiguration({
+      GEOCODING_PROVIDER: 'photon',
+      PHOTON_BASE_URL: 'http://photon:2322/',
+    });
+
+    expect(photon.geocodingProvider).toBe('photon');
+    expect(photon.photonBaseUrl).toBe('http://photon:2322');
+    expect(readConfiguration({}).geocodingProvider).toBe('fake');
+    expect(
+      readConfiguration({ GEOCODING_PROVIDER: 'unknown' }).geocodingProvider,
+    ).toBe('fake');
+  });
+
   it('keeps development flood mutation endpoints disabled by default', () => {
     expect(readConfiguration({}).enableDevFloodEndpoints).toBe(false);
     expect(

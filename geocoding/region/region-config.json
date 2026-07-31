@@ -47,7 +47,6 @@
       "officialName": "Kota Administrasi Jakarta Selatan",
       "osmRelationId": 5802438,
       "wikidataId": "Q10114",
-      "whosOnFirstId": 102020433,
       "bounds": {
         "minLongitude": 106.737454,
         "minLatitude": -6.3650478,
@@ -61,7 +60,6 @@
       "officialName": "Kota Tangerang",
       "osmRelationId": 7641583,
       "wikidataId": "Q10127",
-      "whosOnFirstId": 102018849,
       "bounds": {
         "minLongitude": 106.551454,
         "minLatitude": -6.2576223,
@@ -75,7 +73,6 @@
       "officialName": "Kota Tangerang Selatan",
       "osmRelationId": 7641582,
       "wikidataId": "Q10128",
-      "whosOnFirstId": 1276601603,
       "bounds": {
         "minLongitude": 106.6366233,
         "minLatitude": -6.3622632,

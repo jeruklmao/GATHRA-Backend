@@ -7,7 +7,7 @@ and [docs/architecture.md](docs/architecture.md) before changing code.
 
 GATHRA is a native Indonesian Android route-preview and foreground
 turn-by-turn navigation pilot. It uses MapLibre, a NestJS API, self-hosted
-GraphHopper routing, and an in-progress self-hosted Pelias geocoder.
+GraphHopper routing, and a verified self-hosted Photon geocoding pilot.
 
 The geocoding pilot covers Jakarta Pusat, Jakarta Selatan, Kota Tangerang, and
 Kota Tangerang Selatan, plus the versioned buffered envelope in
@@ -16,15 +16,14 @@ Kota Tangerang Selatan, plus the versioned buffered envelope in
 
 ## Working rules
 
-- Preserve the current dirty working tree. The geocoding milestone is
-  implemented but uncommitted on `feature/geocoding`.
+- Preserve work on `feature/geocoding-photon`; inspect the branch and working
+  tree before editing the verified geocoding milestone.
 - Keep the Android app as one module with MVVM, immutable state, StateFlow,
   typed actions/effects, and the existing manual `AppContainer`. Do not add
   Hilt or split modules without discussion.
 - Keep Android domain models independent of Retrofit DTOs, Android Location,
-  MapLibre, GraphHopper, and Pelias types.
-- Android must call NestJS only. Never expose GraphHopper, Pelias, or
-  Elasticsearch directly to a device.
+  MapLibre, GraphHopper, and Photon types.
+- Android must call NestJS only. Never expose GraphHopper or Photon directly to a device.
 - A coordinate selected on the map is authoritative for routing. Reverse
   geocoding may replace display text only, never the coordinate.
 - Keep manual map selection available even when geocoding fails.
@@ -38,15 +37,13 @@ Kota Tangerang Selatan, plus the versioned buffered envelope in
   Material theme tokens rather than screen-local colors.
 - Keep provider images private on Compose networks. Only NestJS port 3000 may
   be published.
-- Do not rebuild, switch, or delete Pelias indexes implicitly. Use the explicit
-  candidate/quality/alias scripts and retain the previous index for rollback.
-- Never commit API keys, tokens, generated graphs, PBF files, Elasticsearch
-  data, or `.env`.
+- Do not rebuild or delete Photon indexes implicitly.
+- Never commit API keys, tokens, generated graphs, PBF files, or `.env`.
 
 ## Decisions requiring discussion before reversal
 
 - MapLibre instead of Google Maps SDK.
-- Self-hosted GraphHopper and Pelias behind a normalized NestJS contract.
+- Self-hosted GraphHopper and Photon behind a normalized NestJS contract.
 - GeoJSON coordinate order is `[longitude, latitude]`; Android `GeoPoint`
   fields remain `latitude`, then `longitude`.
 - `RouteRepository`, `GeocodingRepository`, and `NavigationRepository` are
@@ -55,8 +52,9 @@ Kota Tangerang Selatan, plus the versioned buffered envelope in
 - `demo` uses fake routes, fake geocoding, and deterministic navigation
   simulation; `debug` uses remote repositories.
 - Outside-geocoding-coverage suggestions are shown but cannot be selected.
-- No database, accounts, flood logic, traffic, telemetry, MQTT, or hosted
-  geocoding provider is part of the current baseline.
+- No database, accounts, traffic, telemetry, MQTT, hosted geocoding provider,
+  or production flood ingestion is part of the current baseline. Flood
+  hazards remain simulated and in-memory.
 
 ## High-risk files
 
@@ -78,7 +76,7 @@ Kota Tangerang Selatan, plus the versioned buffered envelope in
 - `backend/src/geocoding/`: opaque tokens, private-query handling, regional
   policy, cache, and provider normalization.
 - `backend/compose.yaml` and `backend/geocoding/scripts/`: private network,
-  persistent data, index activation, and destructive operations.
+  persistent data, and index management.
 - `app/build.gradle.kts` and `AndroidManifest.xml`: cleartext development,
   build flags, and foreground-service permissions.
 
@@ -104,7 +102,7 @@ npm run test:unit
 npm run test:integration
 ```
 
-Do not run full Pelias imports casually. Follow
+Do not run full Photon imports casually. Follow
 `backend/geocoding/README.md`.
 
 ## Onboarding checklist
@@ -115,7 +113,6 @@ Do not run full Pelias imports casually. Follow
    geocoding milestone.
 4. Verify which Android variant and backend provider mode are intended.
 5. Use fake mode for fast deterministic work.
-6. Before real Pelias work, obtain a complete source PBF and verify resources,
-   checksums, region version, and rollback space.
+6. Before replacing Photon data, obtain a complete compatible database dump
+   and verify its checksum, resource needs, region version, and rollback space.
 7. Run focused tests first, then the full relevant verification matrix.
-
