@@ -96,8 +96,9 @@ NestJS exposes four provider-neutral surfaces:
   GraphHopper client, flood-aware filtering, and error contracts.
 - `geocoding`: autocomplete/search/lookup/reverse, provider adapter, bounded
   caches, concurrency/rate guards, regional policy, and opaque tokens.
-- `flood`: read-only active GeoJSON snapshots plus optional local development
-  mutation controllers.
+- `flood`: read-only active GeoJSON snapshots, optional local development
+  mutations, and an independently enabled bearer-authenticated administration
+  controller.
 - `health`: readiness for both selected providers.
 
 URI versioning creates `/api/v1`. Global DTO validation rejects unknown input.
@@ -137,7 +138,18 @@ address-like queries or result text.
 
 The current `FloodHazardProvider` is simulated, in-memory, and local to one
 NestJS process. The read-only GeoJSON endpoint is always registered;
-unauthenticated mutation endpoints require an explicit local opt-in.
+unauthenticated mutation endpoints require an explicit local opt-in. The
+authenticated administration controller, public read controller, and route
+service all resolve the same singleton provider when administration is
+enabled, so one process has one coherent snapshot. Each process adds a random
+instance identity to snapshot IDs so a restart cannot reuse the previous
+process's initial identifiers.
+
+Administration fails closed: both an explicit enable flag and a valid SHA-256
+token digest are required at startup. The controller compares bearer-token
+digests without embedding the raw token, emits metadata-only mutation audit
+events, sends non-cacheable responses, and is excluded from OpenAPI. The raw
+token and deployment routing remain external operational state.
 
 For each preview request:
 

@@ -61,6 +61,39 @@ describe('readConfiguration', () => {
     ).toBe(true);
   });
 
+  it('keeps authenticated flood administration disabled by default', () => {
+    const configuration = readConfiguration({});
+
+    expect(configuration.enableFloodAdminEndpoints).toBe(false);
+    expect(configuration.floodAdminTokenSha256).toBeUndefined();
+  });
+
+  it('requires a valid token digest when flood administration is enabled', () => {
+    expect(() =>
+      readConfiguration({ ENABLE_FLOOD_ADMIN_ENDPOINTS: 'true' }),
+    ).toThrow(
+      'FLOOD_ADMIN_TOKEN_SHA256 is required when ENABLE_FLOOD_ADMIN_ENDPOINTS=true',
+    );
+    expect(() =>
+      readConfiguration({
+        ENABLE_FLOOD_ADMIN_ENDPOINTS: 'true',
+        FLOOD_ADMIN_TOKEN_SHA256: 'not-a-digest',
+      }),
+    ).toThrow(
+      'FLOOD_ADMIN_TOKEN_SHA256 must be a 64-character hexadecimal SHA-256 digest',
+    );
+  });
+
+  it('normalizes a configured flood administration token digest', () => {
+    const configuration = readConfiguration({
+      ENABLE_FLOOD_ADMIN_ENDPOINTS: 'TRUE',
+      FLOOD_ADMIN_TOKEN_SHA256: ` ${'AB'.repeat(32)} `,
+    });
+
+    expect(configuration.enableFloodAdminEndpoints).toBe(true);
+    expect(configuration.floodAdminTokenSha256).toBe('ab'.repeat(32));
+  });
+
   it('parses configured flood validation limits', () => {
     const configuration = readConfiguration({
       MAX_ACTIVE_FLOOD_HAZARDS: '7',

@@ -42,10 +42,14 @@ export class ApiExceptionFilter implements ExceptionFilter {
       },
     };
 
-    response
-      .status(normalized.status)
-      .setHeader('Cache-Control', 'no-store')
-      .json(body);
+    response.status(normalized.status).setHeader('Cache-Control', 'no-store');
+    if (normalized.status === HttpStatus.UNAUTHORIZED) {
+      response.setHeader(
+        'WWW-Authenticate',
+        'Bearer realm="gathra-flood-admin"',
+      );
+    }
+    response.json(body);
   }
 }
 

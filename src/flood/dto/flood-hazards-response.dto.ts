@@ -63,7 +63,7 @@ export class FloodHazardsResponseDto {
   @ApiProperty({ example: 'FeatureCollection' })
   type!: 'FeatureCollection';
 
-  @ApiProperty({ example: 'snapshot_v1_1' })
+  @ApiProperty({ example: 'snapshot_95f20c0a_v1_1' })
   snapshotId!: string;
 
   @ApiProperty({ example: '2026-07-28T06:20:00.000Z' })

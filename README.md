@@ -13,9 +13,11 @@ Android/client -> NestJS :3000 -> GraphHopper 11.0 :8989 (private)
                             `---> in-memory FloodHazardProvider
 ```
 
-Flood data is simulation-only, unauthenticated when local mutation tools are
-enabled, and lost on restart. The backend has no database, real sensor
-ingestion, traffic, accounts, telemetry, or active navigation-session logic.
+Flood data is simulation-only and lost on restart. Local development mutation
+tools are unauthenticated; a separate fail-closed administration surface uses
+a high-entropy bearer token when explicitly enabled. The backend has no
+database, real sensor ingestion, user accounts, traffic, telemetry, or active
+navigation-session logic.
 
 ## Prerequisites
 
@@ -76,7 +78,7 @@ Checked-in defaults live in `.env.example`, `compose.yaml`, and
 | Geocoding cache | `GEOCODING_CACHE_ENTRIES`, `GEOCODING_CACHE_TTL_MS`, `GEOCODING_REVERSE_CACHE_TTL_MS` |
 | Geocoding policy | `GEOCODING_TOKEN_SECRET`, `GEOCODING_REGION_CONFIG`, `GEOCODING_REGION_VERSION`, optional region-bound overrides |
 | Photon runtime/data | `PHOTON_JAVA_OPTS`, `PHOTON_MEMORY_LIMIT`, `PHOTON_CPUS`, `PHOTON_DATA_URL`, `PHOTON_DATA_MD5`, `PHOTON_DATA_VOLUME` |
-| Flood simulation | `ENABLE_DEV_FLOOD_ENDPOINTS`, `MAX_ACTIVE_FLOOD_HAZARDS`, `MAX_FLOOD_POLYGON_VERTICES` |
+| Flood simulation | `ENABLE_DEV_FLOOD_ENDPOINTS`, `ENABLE_FLOOD_ADMIN_ENDPOINTS`, `FLOOD_ADMIN_TOKEN_SHA256`, `MAX_ACTIVE_FLOOD_HAZARDS`, `MAX_FLOOD_POLYGON_VERTICES` |
 
 `GEOCODING_TOKEN_SECRET` is a deployment secret. Source code contains a safe
 development fallback, but a stable deployment value must remain outside Git.
@@ -94,7 +96,10 @@ URI versioning produces these current v1 endpoints:
 - `GET /api/v1/health`
 
 Development flood endpoints under `/api/v1/dev/flood-hazards` exist only when
-`ENABLE_DEV_FLOOD_ENDPOINTS=true` at application startup.
+`ENABLE_DEV_FLOOD_ENDPOINTS=true` at application startup. The separate
+`/api/v1/admin/flood-hazards` surface exists only when
+`ENABLE_FLOOD_ADMIN_ENDPOINTS=true` and a valid token digest is configured.
+It is intentionally omitted from OpenAPI.
 
 OpenAPI is available at `/api/docs` and `/api/docs-json`. Those paths are also
 currently reachable on the public deployment because Swagger is configured
@@ -318,6 +323,26 @@ curl --fail --request POST \
 Each mutation advances the in-memory snapshot. Never expose an opt-in stack to
 an untrusted network, and never present its data as a safety guarantee.
 
+## Authenticated flood administration
+
+The administration controller mutates the same singleton provider used by the
+public read and route-preview endpoints in that NestJS process. It is disabled
+by default and startup fails if it is enabled without a 64-character
+hexadecimal SHA-256 digest in `FLOOD_ADMIN_TOKEN_SHA256`.
+
+Generate a 256-bit hexadecimal bearer token into a mode-600 file outside Git,
+then configure only its digest in the deployment environment. Do not put the
+raw token in Compose, shell history, source control, logs, or chat. Requests use
+`Authorization: Bearer <token>`; missing and incorrect credentials receive a
+generic HTTP 401 response. Use an operations script that reads the token file
+without printing it.
+
+The authenticated surface supports listing, adding, deleting, clearing, and
+activating the `central-corridor-high` or `central-corridor-blocked` presets.
+It is authentication for a simulation tool, not authorization for multiple
+users and not a public-safety data source. State remains per-process and is
+lost whenever the backend restarts.
+
 ## Quality checks
 
 ```bash
@@ -337,6 +362,9 @@ require GraphHopper or Photon network access.
 - The current public endpoint uses HTTPS and keeps GraphHopper and Photon
   private.
 - Development flood mutation routes are not available publicly.
+- Authenticated flood administration is fail-closed, hidden from OpenAPI, and
+  uses only a token digest in the process environment; the raw token remains
+  external deployment state.
 - Public Swagger is an observed current exposure, not an authentication layer.
 - The deployment is not a public-safety guarantee and repository changes do
   not deploy automatically.

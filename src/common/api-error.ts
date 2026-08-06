@@ -2,6 +2,7 @@ import { HttpStatus } from '@nestjs/common';
 
 export type ApiErrorCode =
   | 'VALIDATION_ERROR'
+  | 'AUTHENTICATION_REQUIRED'
   | 'NOT_FOUND'
   | 'METHOD_NOT_ALLOWED'
   | 'NO_ROUTE'
@@ -47,6 +48,15 @@ export class ApiException extends Error {
       'The request is invalid.',
       false,
       details,
+    );
+  }
+
+  static authenticationRequired(): ApiException {
+    return new ApiException(
+      HttpStatus.UNAUTHORIZED,
+      'AUTHENTICATION_REQUIRED',
+      'Authentication is required.',
+      false,
     );
   }
 }

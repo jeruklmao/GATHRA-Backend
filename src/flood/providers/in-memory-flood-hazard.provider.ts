@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import type { FloodHazardProvider } from '../flood-hazard.provider';
 import {
@@ -14,6 +15,9 @@ import type {
 
 export const NOW_FN = Symbol('NOW_FN');
 export const FLOOD_HAZARD_LIMITS = Symbol('FLOOD_HAZARD_LIMITS');
+export const FLOOD_SNAPSHOT_INSTANCE_ID = Symbol(
+  'FLOOD_SNAPSHOT_INSTANCE_ID',
+);
 
 export interface FloodHazardLimits {
   readonly maxActiveHazards: number;
@@ -29,6 +33,7 @@ const DEFAULT_LIMITS: FloodHazardLimits = {
 export class InMemoryFloodHazardProvider implements FloodHazardProvider {
   private hazardsMap = new Map<string, FloodHazard>();
   private version = 0;
+  private readonly snapshotInstanceId: string;
 
   constructor(
     @Optional()
@@ -37,7 +42,17 @@ export class InMemoryFloodHazardProvider implements FloodHazardProvider {
     @Optional()
     @Inject(FLOOD_HAZARD_LIMITS)
     private readonly configuredLimits?: FloodHazardLimits,
-  ) {}
+    @Optional()
+    @Inject(FLOOD_SNAPSHOT_INSTANCE_ID)
+    configuredSnapshotInstanceId?: string,
+  ) {
+    const instanceId =
+      configuredSnapshotInstanceId ?? randomBytes(16).toString('hex');
+    if (!/^[A-Za-z0-9_-]{1,64}$/.test(instanceId)) {
+      throw new Error('Flood snapshot instance ID is invalid');
+    }
+    this.snapshotInstanceId = instanceId;
+  }
 
   private get now(): Date {
     return this.customNowFn ? this.customNowFn() : new Date();
@@ -55,15 +70,7 @@ export class InMemoryFloodHazardProvider implements FloodHazardProvider {
       }
     }
 
-    const snapshotId = `snapshot_v${this.version}_${activeHazards.length}`;
-
-    return {
-      snapshotId,
-      generatedAt: currentNow,
-      validUntil: earliestValidUntil(activeHazards),
-      hazards: activeHazards,
-      source: 'SIMULATED',
-    };
+    return this.createSnapshot(activeHazards, currentNow);
   }
 
   addHazard(hazardData: unknown): FloodHazard {
@@ -141,37 +148,43 @@ export class InMemoryFloodHazardProvider implements FloodHazardProvider {
       ],
     };
 
-    const hazard = validateFloodHazard({
-      id: `preset_central_corridor_${level.toLowerCase()}`,
-      level,
-      geometry: centralCorridorPolygon,
-      confidence: 0.95,
-      observedAt: currentNow,
-      validUntil,
-      sourceNodeIds: ['node_central_01', 'node_central_02'],
-      description:
-        level === 'BLOCKED'
-          ? 'Simulasi area banjir yang tidak dapat dilalui di koridor pusat'
-          : 'Simulasi area dengan indikasi risiko banjir tinggi di koridor pusat',
-    }, {
-      maxPolygonVertices: limits.maxPolygonVertices,
-    });
+    const hazard = validateFloodHazard(
+      {
+        id: `preset_central_corridor_${level.toLowerCase()}`,
+        level,
+        geometry: centralCorridorPolygon,
+        confidence: 0.95,
+        observedAt: currentNow,
+        validUntil,
+        sourceNodeIds: ['node_central_01', 'node_central_02'],
+        description:
+          level === 'BLOCKED'
+            ? 'Simulasi area banjir yang tidak dapat dilalui di koridor pusat'
+            : 'Simulasi area dengan indikasi risiko banjir tinggi di koridor pusat',
+      },
+      {
+        maxPolygonVertices: limits.maxPolygonVertices,
+      },
+    );
 
-    const userHazard = validateFloodHazard({
-      id: `preset_user_custom_${level.toLowerCase()}`,
-      level,
-      geometry: userCustomPolygon,
-      confidence: 0.95,
-      observedAt: currentNow,
-      validUntil,
-      sourceNodeIds: ['node_user_01', 'node_user_02'],
-      description:
-        level === 'BLOCKED'
-          ? 'Simulasi area banjir yang tidak dapat dilalui pada poligon uji'
-          : 'Simulasi area dengan indikasi risiko banjir tinggi pada poligon uji',
-    }, {
-      maxPolygonVertices: limits.maxPolygonVertices,
-    });
+    const userHazard = validateFloodHazard(
+      {
+        id: `preset_user_custom_${level.toLowerCase()}`,
+        level,
+        geometry: userCustomPolygon,
+        confidence: 0.95,
+        observedAt: currentNow,
+        validUntil,
+        sourceNodeIds: ['node_user_01', 'node_user_02'],
+        description:
+          level === 'BLOCKED'
+            ? 'Simulasi area banjir yang tidak dapat dilalui pada poligon uji'
+            : 'Simulasi area dengan indikasi risiko banjir tinggi pada poligon uji',
+      },
+      {
+        maxPolygonVertices: limits.maxPolygonVertices,
+      },
+    );
 
     const projectedActiveHazardIds = new Set(
       this.listHazards().map((activeHazard) => activeHazard.id),
@@ -189,9 +202,16 @@ export class InMemoryFloodHazardProvider implements FloodHazardProvider {
     this.version++;
 
     const activeHazards = this.listHazards();
+    return this.createSnapshot(activeHazards, currentNow);
+  }
+
+  private createSnapshot(
+    activeHazards: readonly FloodHazard[],
+    generatedAt: Date,
+  ): FloodHazardSnapshot {
     return {
-      snapshotId: `snapshot_v${this.version}_${activeHazards.length}`,
-      generatedAt: currentNow,
+      snapshotId: `snapshot_${this.snapshotInstanceId}_v${this.version}_${activeHazards.length}`,
+      generatedAt,
       validUntil: earliestValidUntil(activeHazards),
       hazards: activeHazards,
       source: 'SIMULATED',

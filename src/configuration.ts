@@ -40,6 +40,8 @@ export interface AppConfiguration {
   };
   readonly floodProvider: 'in-memory';
   readonly enableDevFloodEndpoints: boolean;
+  readonly enableFloodAdminEndpoints: boolean;
+  readonly floodAdminTokenSha256?: string;
   readonly maxActiveFloodHazards: number;
   readonly maxFloodPolygonVertices: number;
 }
@@ -47,6 +49,7 @@ export interface AppConfiguration {
 export function readConfiguration(
   environment: NodeJS.ProcessEnv = process.env,
 ): AppConfiguration {
+  const floodAdmin = readFloodAdminConfiguration(environment);
   return {
     port: parsePositiveInteger(environment.PORT, DEFAULT_PORT),
     routingEngineBaseUrl: normalizeBaseUrl(
@@ -102,6 +105,7 @@ export function readConfiguration(
     floodProvider: 'in-memory',
     enableDevFloodEndpoints:
       environment.ENABLE_DEV_FLOOD_ENDPOINTS?.toLowerCase() === 'true',
+    ...floodAdmin,
     maxActiveFloodHazards: parsePositiveInteger(
       environment.MAX_ACTIVE_FLOOD_HAZARDS,
       50,
@@ -110,6 +114,37 @@ export function readConfiguration(
       environment.MAX_FLOOD_POLYGON_VERTICES,
       2000,
     ),
+  };
+}
+
+function readFloodAdminConfiguration(environment: NodeJS.ProcessEnv): {
+  readonly enableFloodAdminEndpoints: boolean;
+  readonly floodAdminTokenSha256?: string;
+} {
+  const enableFloodAdminEndpoints =
+    environment.ENABLE_FLOOD_ADMIN_ENDPOINTS?.toLowerCase() === 'true';
+  const configuredDigest =
+    environment.FLOOD_ADMIN_TOKEN_SHA256?.trim().toLowerCase() || undefined;
+
+  if (
+    configuredDigest !== undefined &&
+    !/^[a-f0-9]{64}$/.test(configuredDigest)
+  ) {
+    throw new Error(
+      'FLOOD_ADMIN_TOKEN_SHA256 must be a 64-character hexadecimal SHA-256 digest',
+    );
+  }
+  if (enableFloodAdminEndpoints && configuredDigest === undefined) {
+    throw new Error(
+      'FLOOD_ADMIN_TOKEN_SHA256 is required when ENABLE_FLOOD_ADMIN_ENDPOINTS=true',
+    );
+  }
+
+  return {
+    enableFloodAdminEndpoints,
+    ...(configuredDigest === undefined
+      ? {}
+      : { floodAdminTokenSha256: configuredDigest }),
   };
 }
 

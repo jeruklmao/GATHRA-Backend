@@ -9,6 +9,7 @@ describe('InMemoryFloodHazardProvider configured limits', () => {
         maxActiveHazards: 1,
         maxPolygonVertices: 10,
       },
+      'provider-test',
     );
 
     provider.addHazard(hazard('first'));
@@ -26,6 +27,7 @@ describe('InMemoryFloodHazardProvider configured limits', () => {
         maxActiveHazards: 1,
         maxPolygonVertices: 10,
       },
+      'provider-test',
     );
 
     expect(() => provider.activateCentralCorridorPreset('HIGH')).toThrow(
@@ -41,6 +43,7 @@ describe('InMemoryFloodHazardProvider configured limits', () => {
         maxActiveHazards: 10,
         maxPolygonVertices: 4,
       },
+      'provider-test',
     );
 
     expect(() =>
@@ -70,6 +73,7 @@ describe('InMemoryFloodHazardProvider configured limits', () => {
         maxActiveHazards: 10,
         maxPolygonVertices: 10,
       },
+      'provider-test',
     );
 
     provider.addHazard({
@@ -85,7 +89,38 @@ describe('InMemoryFloodHazardProvider configured limits', () => {
       'preset_central_corridor_high',
       'preset_user_custom_high',
     ]);
-    expect(snapshot.snapshotId).toBe('snapshot_v2_2');
+    expect(snapshot.snapshotId).toBe('snapshot_provider-test_v2_2');
+  });
+
+  it('keeps otherwise identical snapshots distinct across provider processes', async () => {
+    const first = new InMemoryFloodHazardProvider(
+      undefined,
+      undefined,
+      'process-a',
+    );
+    const second = new InMemoryFloodHazardProvider(
+      undefined,
+      undefined,
+      'process-b',
+    );
+
+    const firstSnapshot = await first.getActiveSnapshot({});
+    const secondSnapshot = await second.getActiveSnapshot({});
+
+    expect(firstSnapshot.snapshotId).toBe('snapshot_process-a_v0_0');
+    expect(secondSnapshot.snapshotId).toBe('snapshot_process-b_v0_0');
+    expect(firstSnapshot.snapshotId).not.toBe(secondSnapshot.snapshotId);
+  });
+
+  it('rejects an unsafe configured snapshot instance ID', () => {
+    expect(
+      () =>
+        new InMemoryFloodHazardProvider(
+          undefined,
+          undefined,
+          'contains spaces',
+        ),
+    ).toThrow('Flood snapshot instance ID is invalid');
   });
 });
 

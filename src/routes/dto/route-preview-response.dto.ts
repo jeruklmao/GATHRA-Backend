@@ -129,7 +129,7 @@ export class RouteRiskDto {
   @ApiProperty({ example: '2026-07-27T12:05:00.000Z', nullable: true })
   validUntil!: string | null;
 
-  @ApiProperty({ example: 'snapshot_20260727_001', nullable: true })
+  @ApiProperty({ example: 'snapshot_95f20c0a_v1_1', nullable: true })
   hazardSnapshotId!: string | null;
 }
 
@@ -165,7 +165,7 @@ export class FloodMetadataDto {
   @ApiProperty({ example: 'SIMULATED' })
   source!: string;
 
-  @ApiProperty({ example: 'snapshot_20260727_001' })
+  @ApiProperty({ example: 'snapshot_95f20c0a_v1_1' })
   snapshotId!: string;
 
   @ApiProperty({ example: '2026-07-27T12:00:00.000Z' })

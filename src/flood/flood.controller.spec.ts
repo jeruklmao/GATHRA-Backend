@@ -7,7 +7,11 @@ describe('FloodController', () => {
   let controller: FloodController;
 
   beforeEach(() => {
-    provider = new InMemoryFloodHazardProvider();
+    provider = new InMemoryFloodHazardProvider(
+      undefined,
+      undefined,
+      'controller-test',
+    );
     controller = new FloodController(provider);
   });
 
@@ -15,14 +19,14 @@ describe('FloodController', () => {
     const res = await controller.getActiveHazards({});
     expect(res.type).toBe('FeatureCollection');
     expect(res.features).toHaveLength(0);
-    expect(res.snapshotId).toMatch(/^snapshot_v\d+_\d+$/);
+    expect(res.snapshotId).toMatch(/^snapshot_controller-test_v\d+_\d+$/);
   });
 
   it('returns active hazards after preset activation', async () => {
     provider.activateCentralCorridorPreset('HIGH');
     const res = await controller.getActiveHazards({});
 
-    expect(res.snapshotId).toBe('snapshot_v1_2');
+    expect(res.snapshotId).toBe('snapshot_controller-test_v1_2');
     expect(res.features).toHaveLength(2);
     expect(res.features.map((feature) => feature.id)).toEqual([
       'preset_central_corridor_high',
@@ -100,7 +104,11 @@ describe('FloodController', () => {
 
   it('excludes expired hazards from the active snapshot', async () => {
     let now = new Date('2026-07-30T10:00:00.000Z');
-    provider = new InMemoryFloodHazardProvider(() => now);
+    provider = new InMemoryFloodHazardProvider(
+      () => now,
+      undefined,
+      'controller-test',
+    );
     controller = new FloodController(provider);
     provider.addHazard({
       id: 'short-lived',
@@ -125,7 +133,7 @@ describe('FloodController', () => {
     now = new Date('2026-07-30T10:02:00.000Z');
     const expired = await controller.getActiveHazards({});
     expect(expired.features).toHaveLength(0);
-    expect(expired.snapshotId).toBe('snapshot_v1_0');
+    expect(expired.snapshotId).toBe('snapshot_controller-test_v1_0');
   });
 
   it('rejects incomplete bounding box query parameters', async () => {

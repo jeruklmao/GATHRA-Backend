@@ -1,4 +1,4 @@
-import { Controller, Get, Inject, Query } from '@nestjs/common';
+import { Controller, Get, Header, Inject, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiException } from '../common/api-error';
 import { FLOOD_HAZARD_PROVIDER, type FloodHazardProvider } from './flood-hazard.provider';
@@ -15,6 +15,7 @@ export class FloodController {
   ) {}
 
   @Get()
+  @Header('Cache-Control', 'no-store')
   @ApiOperation({
     summary: 'Get active flood hazard polygons (Read-Only)',
     description:
