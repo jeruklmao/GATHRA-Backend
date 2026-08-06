@@ -1,82 +1,157 @@
-# GATHRA routing backend
+# GATHRA backend
 
-This service owns GATHRA's route-preview, simulated flood-hazard, and
-geocoding contracts. It keeps GraphHopper and Photon private. It deliberately
-contains no authentication, database, traffic, telemetry, real sensor
-ingestion, or active navigation-session execution. Flood data is currently
-development/staging-only, in-memory, and lost whenever the backend restarts.
+The NestJS backend owns GATHRA's normalized routing, geocoding, health, and
+simulated flood-hazard contracts. Android calls this service only; GraphHopper
+and Photon remain private implementation providers.
 
-## Runtime architecture
+The deployed public base URL is `https://api.gathra.my.id/`. Local Docker
+Compose publishes NestJS on port 3000 by default.
 
 ```text
-Android -> NestJS :3000 -> in-memory FloodHazardProvider
-                       |       |-> GraphHopper custom_model :8989
-                       |       `-> independent geometry evaluation/ranking
-                       `-> Photon :2322 (private Compose network)
+Android/client -> NestJS :3000 -> GraphHopper 11.0 :8989 (private)
+                            |---> Photon 0.5.0 :2322 (private)
+                            `---> in-memory FloodHazardProvider
 ```
 
-Only the NestJS port is published by `compose.yaml`. GraphHopper uses its own
-Docker image, a pinned GraphHopper 11.0 web-service JAR whose Maven checksum is
-verified during the build, and explicit `car` and `motorcycle` profiles.
-
-The motorcycle profile uses GraphHopper's built-in `motorcycle.json` costing.
-GraphHopper itself describes this model as requiring adaptation and testing
-before production use. Treat it as experimental for this milestone: it has not
-been calibrated against Indonesian regulations, local access rules, or expected
-motorcycle travel times.
-
-Photon is the normal Compose geocoder; deterministic fake geocoding remains
-available through `GEOCODING_PROVIDER=fake`. Its pinned data installation,
-private-network policy, resource guidance, quality corpus, and replacement
-workflow are documented in [`geocoding/README.md`](geocoding/README.md).
-Android developer setup is in
-[`../docs/development-geocoding.md`](../docs/development-geocoding.md).
+Flood data is simulation-only, unauthenticated when local mutation tools are
+enabled, and lost on restart. The backend has no database, real sensor
+ingestion, traffic, accounts, telemetry, or active navigation-session logic.
 
 ## Prerequisites
 
-- Docker Engine with the Docker Compose v2 plugin
-- `curl` and `jq` for the smoke script
-- Node.js 20.11 through 24 and npm for host-side tests
+- Docker Engine and Docker Compose v2.
+- `curl`, `jq`, `tar`, and `md5sum` for provider setup and smoke checks.
+- Node.js `>=20.11 <25` and npm for host-side quality checks.
+- A deliberately installed Photon data volume for the normal Compose mode.
 
-Copy `.env.example` to `.env` only when overriding defaults. The checked-in OSM
-XML file is a tiny synthetic Jakarta-area road graph intended for deterministic
-development and health checks. It is not a city map.
+Copy `backend/.env.example` to `backend/.env` only when overriding defaults.
+Never commit `.env` or a token-secret value.
 
-Start the stack:
+## Local stack
+
+Install Photon data once as described below, then start the complete stack from
+the repository root:
 
 ```bash
 docker compose --project-directory backend -f backend/compose.yaml up \
   --build --wait
+backend/geocoding/scripts/health-check.sh
 ```
 
-Flood mutation endpoints fail closed in every checked-in configuration. Enable
-them only for an isolated local simulation:
+Stop containers while preserving named volumes:
 
 ```bash
-ENABLE_DEV_FLOOD_ENDPOINTS=true \
-docker compose -f backend/compose.yaml up --build --wait
+docker compose --project-directory backend -f backend/compose.yaml down
 ```
 
-These endpoints have no authentication. Never publish port 3000 with
-`ENABLE_DEV_FLOOD_ENDPOINTS=true` on an untrusted network.
+For deterministic backend work that does not query Photon:
 
-Run the complete Compose smoke check (it tears down containers but preserves
-the graph-cache volume):
+```bash
+GEOCODING_PROVIDER=fake \
+docker compose --project-directory backend -f backend/compose.yaml up \
+  --build --wait
+```
+
+Photon remains part of the Compose topology but is not selected by NestJS in
+that mode. Android has no corresponding fake runtime mode.
+
+The complete routing smoke script starts the stack and tears down containers
+without deleting named data volumes:
 
 ```bash
 backend/scripts/compose-health-check.sh
 ```
 
-For useful Jakarta–Tangerang coverage, prepare a current OpenStreetMap extract
-for the buffered bounding box below (longitude/latitude order):
+## Configuration
 
-```bash
+Checked-in defaults live in `.env.example`, `compose.yaml`, and
+`src/configuration.ts`.
+
+| Area | Variables |
+| --- | --- |
+| NestJS | `GATHRA_BACKEND_PORT` (Compose host port), `PORT` (process port) |
+| Routing | `GATHRA_OSM_FILE`, `ROUTING_ENGINE_BASE_URL`, `ROUTING_ENGINE_TIMEOUT_MS`, `GRAPH_HOPPER_JAVA_OPTS`, `GRAPH_HOPPER_MIN_NETWORK_SIZE` |
+| Geocoding provider | `GEOCODING_PROVIDER`, `PHOTON_BASE_URL`, `GEOCODING_PROVIDER_TIMEOUT_MS` |
+| Geocoding limits | `GEOCODING_MAX_CONCURRENCY`, `GEOCODING_MAX_QUEUE_SIZE`, `GEOCODING_RATE_LIMIT`, `GEOCODING_RATE_WINDOW_MS` |
+| Geocoding cache | `GEOCODING_CACHE_ENTRIES`, `GEOCODING_CACHE_TTL_MS`, `GEOCODING_REVERSE_CACHE_TTL_MS` |
+| Geocoding policy | `GEOCODING_TOKEN_SECRET`, `GEOCODING_REGION_CONFIG`, `GEOCODING_REGION_VERSION`, optional region-bound overrides |
+| Photon runtime/data | `PHOTON_JAVA_OPTS`, `PHOTON_MEMORY_LIMIT`, `PHOTON_CPUS`, `PHOTON_DATA_URL`, `PHOTON_DATA_MD5`, `PHOTON_DATA_VOLUME` |
+| Flood simulation | `ENABLE_DEV_FLOOD_ENDPOINTS`, `MAX_ACTIVE_FLOOD_HAZARDS`, `MAX_FLOOD_POLYGON_VERTICES` |
+
+`GEOCODING_TOKEN_SECRET` is a deployment secret. Source code contains a safe
+development fallback, but a stable deployment value must remain outside Git.
+
+## Normalized API
+
+URI versioning produces these current v1 endpoints:
+
+- `POST /api/v1/routes/preview`
+- `GET /api/v1/geocoding/autocomplete`
+- `GET /api/v1/geocoding/search`
+- `GET /api/v1/geocoding/places/:id`
+- `GET /api/v1/geocoding/reverse`
+- `GET /api/v1/flood-hazards`
+- `GET /api/v1/health`
+
+Development flood endpoints under `/api/v1/dev/flood-hazards` exist only when
+`ENABLE_DEV_FLOOD_ENDPOINTS=true` at application startup.
+
+OpenAPI is available at `/api/docs` and `/api/docs-json`. Those paths are also
+currently reachable on the public deployment because Swagger is configured
+unconditionally in `src/app-bootstrap.ts`.
+
+### Route preview
+
+`alternatives` is the number of extra routes and must be `0` or `1`.
+`travelMode` is `CAR` or `MOTORCYCLE`.
+
+```json
+{
+  "origin": { "latitude": -6.1939, "longitude": 106.8250 },
+  "destination": { "latitude": -6.2124, "longitude": 106.8094 },
+  "travelMode": "CAR",
+  "alternatives": 1
+}
+```
+
+Responses contain normalized route geometry, summary, manoeuvre steps, and
+flood-risk metadata. GeoJSON coordinate order is `[longitude, latitude]`.
+Provider response types and GraphHopper signs never cross the NestJS contract.
+
+GraphHopper receives request-scoped flood areas through a custom model. NestJS
+then evaluates returned LineStrings independently. Routes intersecting a
+`BLOCKED` polygon are excluded; if none remain, the API returns
+`NO_ROUTE_DUE_TO_FLOOD`. Origins and destinations in blocked areas use distinct
+error codes.
+
+### Geocoding
+
+Autocomplete and search return normalized suggestions plus opaque NestJS-issued
+place tokens. Clients must not construct Photon or OSM identifiers. Photon has
+no lookup-by-OSM-ID API, so NestJS resolves tokens through its bounded details
+cache. An expired token is recoverable by repeating the search.
+
+Reverse geocoding preserves the exact requested coordinate. Provider names,
+addresses, and coordinates are display metadata only.
+
+### Health
+
+`GET /api/v1/health` is readiness, not process-only liveness. It returns 200
+only when both the configured routing and geocoding providers are available.
+
+## GraphHopper routing data
+
+The checked-in `routing-engine/fixtures/jakarta-sample.osm` is a tiny synthetic
+graph for deterministic smoke checks, not city coverage.
+
+For a broader Jakarta–Tangerang development graph, prepare an OSM extract for
+this routing envelope (longitude/latitude):
+
+```text
 106.52,-6.40,106.90,-6.06
 ```
 
-This box fully contains Jakarta Barat, Jakarta Selatan, Kota Tangerang, and
-Tangerang Selatan, with a buffer for roads crossing municipal boundaries. One
-reproducible Fedora workflow is:
+One reproducible workflow is:
 
 ```bash
 sudo dnf install osmium-tool
@@ -98,223 +173,152 @@ osmium check-refs \
   backend/routing-data/gathra-jakarta-tangerang-routing.osm.pbf
 ```
 
-Point `GATHRA_OSM_FILE` in `backend/.env` at the routing-only PBF, allocate a
-heap appropriate to the extract, and set `GRAPH_HOPPER_MIN_NETWORK_SIZE=200`.
-The default remains `0` because the checked-in deterministic fixture is smaller
-than GraphHopper's regional subnetwork threshold.
+Set `GATHRA_OSM_FILE` to the routing-only PBF and use an appropriate Java heap.
+For a regional graph, set `GRAPH_HOPPER_MIN_NETWORK_SIZE=200`; the tiny fixture
+requires `0`.
 
-Changing the OSM input, routing profile, or subnetwork threshold requires
-rebuilding the generated graph. Remove only the named `graphhopper-cache`
-volume deliberately when switching data; the smoke script does not delete it.
-The source PBF and generated graph data are ignored by Git. Retain the required
-OpenStreetMap attribution and comply with the ODbL when distributing derived
-data.
+Changing OSM input, routing profiles, or the subnetwork threshold requires a
+new graph. Resolve and remove only the exact `graphhopper-cache` volume when
+that replacement is intentional. MOTORCYCLE uses GraphHopper's built-in model
+and has not been calibrated for Indonesian access rules or travel times.
 
-## API
+## Photon data and regional policy
 
-Interactive OpenAPI documentation is served at:
-
-- `http://localhost:3000/api/docs`
-- `http://localhost:3000/api/docs-json`
-
-### `POST /api/v1/routes/preview`
-
-`alternatives` is the number of extra routes beyond the recommended route and
-must be `0` or `1`. JSON numeric strings, unknown properties, identical points,
-unsupported travel modes, and out-of-range coordinates are rejected.
-
-```json
-{
-  "origin": {
-    "latitude": -6.2,
-    "longitude": 106.8167
-  },
-  "destination": {
-    "latitude": -6.19,
-    "longitude": 106.8272
-  },
-  "travelMode": "CAR",
-  "alternatives": 1
-}
-```
-
-A successful response has one route, or two when GraphHopper finds a distinct
-alternative. GeoJSON uses the standard `[longitude, latitude]` position order:
-
-```json
-{
-  "requestId": "4a0ee423-066e-4db7-919a-f3d1f36db680",
-  "routes": [
-    {
-      "id": "route_1b8b94a5f32e8c7d",
-      "isRecommended": true,
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [106.8167, -6.2],
-          [106.8272, -6.19]
-        ]
-      },
-      "summary": {
-        "distanceMeters": 1642,
-        "durationSeconds": 173
-      },
-      "steps": [
-        {
-          "index": 0,
-          "instruction": "Mulai menuju Jalan A",
-          "streetName": "Jalan A",
-          "distanceMeters": 1642,
-          "durationSeconds": 173,
-          "manoeuvre": {
-            "type": "DEPART",
-            "modifier": "STRAIGHT",
-            "bearingBefore": null,
-            "bearingAfter": 93
-          },
-          "geometryStartIndex": 0,
-          "geometryEndIndex": 1
-        },
-        {
-          "index": 1,
-          "instruction": "Anda telah tiba di tujuan",
-          "streetName": "",
-          "distanceMeters": 0,
-          "durationSeconds": 0,
-          "manoeuvre": {
-            "type": "ARRIVE",
-            "modifier": "NONE",
-            "bearingBefore": 93,
-            "bearingAfter": null
-          },
-          "geometryStartIndex": 1,
-          "geometryEndIndex": 1
-        }
-      ]
-    }
-  ],
-  "metadata": {
-    "travelMode": "CAR",
-    "requestedAlternatives": 1,
-    "returnedAlternatives": 0
-  }
-}
-```
-
-The route ID is an opaque stable fingerprint of API version, travel mode, and
-canonical geometry. Clients must not infer provider details from it.
-`steps` is a backward-compatible addition: existing route fields are unchanged.
-Step intervals are inclusive indexes into the parent GeoJSON coordinates,
-ordered without gaps, and always end in `ARRIVE`. GraphHopper signs are mapped
-to GATHRA manoeuvre and modifier enums; they are never exposed to clients.
-Bearings are integer compass degrees derived from the returned LineString.
-The provider adapter rejects a result when its street-snapped start or end is
-more than 500 metres from the requested coordinate, returning `NO_ROUTE`
-instead of presenting an out-of-coverage route.
-
-### Flood-aware route safety
-
-Each response route contains `risk`, and `metadata.flood` identifies the
-immutable hazard snapshot used for evaluation. GraphHopper receives flood
-polygons through a request-scoped custom model, then NestJS independently
-checks every returned LineString against the same polygons.
-
-Only routes that do not intersect a `BLOCKED` polygon are returned as usable.
-The usable routes are ranked by risk, confidence, time, and distance, and
-exactly one is recommended. If GraphHopper returns routes but independent
-evaluation marks all of them blocked, the API returns HTTP 422
-`NO_ROUTE_DUE_TO_FLOOD`; it never recommends the fastest blocked result.
-Origins and destinations inside blocked polygons return the distinct
-`ORIGIN_IN_BLOCKED_AREA` or `DESTINATION_IN_BLOCKED_AREA` errors.
-
-### Flood-hazard APIs
-
-The read-only endpoint remains available without enabling development tools:
+The pinned Indonesia database is:
 
 ```text
-GET /api/v1/flood-hazards
-GET /api/v1/flood-hazards?minLat=...&minLon=...&maxLat=...&maxLon=...
+URL: https://download1.graphhopper.com/public/extracts/by-country-code/id/photon-db-id-250720.tar.bz2
+MD5: 0e027552ff841b12a2c703cf290daad2
 ```
 
-With explicit local opt-in, `/api/v1/dev/flood-hazards` provides in-memory
-add/delete/clear operations and HIGH/BLOCKED central-corridor presets. Presets
-and direct mutations obey `MAX_ACTIVE_FLOOD_HAZARDS` and
-`MAX_FLOOD_POLYGON_VERTICES`. The provider is simulation-only: there is no
-database, authentication, multi-instance consistency, or durable snapshot
-history.
+Initial installation is explicit:
 
-### Geocoding
-
-The provider-neutral geocoding surface is:
-
-- `GET /api/v1/geocoding/autocomplete`
-- `GET /api/v1/geocoding/search`
-- `GET /api/v1/geocoding/places/:id`
-- `GET /api/v1/geocoding/reverse`
-
-Autocomplete/search accept an Indonesian query, optional proximity, and a
-bounded result limit. Lookup accepts only an opaque server-issued token.
-Reverse geocoding preserves the caller's input coordinate in the normalized
-response; returned names and addresses are display metadata. Full schemas and
-error envelopes are available in OpenAPI.
-
-### `GET /api/v1/health`
-
-This is a readiness endpoint, not merely a process liveness endpoint. It returns
-HTTP 200 only after the private routing and selected geocoding providers
-respond:
-
-```json
-{
-  "status": "ok",
-  "service": "gathra-routing-api",
-  "checks": {
-    "routing": "up",
-    "geocoding": "up"
-  }
-}
+```bash
+backend/geocoding/scripts/download-photon-data.sh
 ```
 
-It returns HTTP 503 with `status: "unavailable"` when either provider is down.
+The script downloads over HTTPS, verifies the pinned checksum, rejects unsafe
+archive paths, validates the index layout, and refuses to overwrite a non-empty
+volume. The default external volume is `gathra-routing_photon-data`; Compose
+cannot delete it through `down -v`.
 
-## Errors
+Photon 0.5.0 does not support the newer `countrycode` parameter. NestJS sends
+the configured buffered bounding box. The pinned database does not expose an
+Indonesian language analyzer, so Indonesian requests use local/default labels.
 
-API errors never include stack traces or GraphHopper response bodies:
+### Safe update and rollback
 
-```json
-{
-  "requestId": "4a0ee423-066e-4db7-919a-f3d1f36db680",
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "The route preview request is invalid.",
-    "retryable": false,
-    "details": [
-      {
-        "field": "origin.latitude",
-        "reason": "latitude must not be less than -90"
-      }
-    ]
-  }
-}
+Never unpack a candidate over the active database.
+
+1. Choose a new empty candidate volume and a compatible, verified dump.
+2. Install into that exact volume:
+
+   ```bash
+   PHOTON_DATA_VOLUME=gathra-routing-photon-candidate \
+   PHOTON_DATA_URL=<verified-https-url> \
+   PHOTON_DATA_MD5=<verified-checksum> \
+   backend/geocoding/scripts/download-photon-data.sh
+   ```
+
+3. Start Compose with the same `PHOTON_DATA_VOLUME`.
+4. Run health plus normalized and raw-Photon quality checks.
+5. Keep the previous volume unchanged until the candidate is accepted.
+6. Roll back by restoring the previous volume name and restarting Compose.
+
+Old-volume deletion is deliberately manual. Resolve the exact volume with
+`docker volume inspect` and confirm rollback is no longer needed first.
+
+### Coverage source of truth
+
+`geocoding/region/region-config.json` defines an 8 km buffered envelope around:
+
+- Jakarta Pusat — OSM relation 7625977
+- Jakarta Selatan — OSM relation 5802438
+- Kota Tangerang — OSM relation 7641583
+- Kota Tangerang Selatan — OSM relation 7641582
+
+The configured envelope is larger than the four administrative polygons. A
+buffer point may be serviceable without belonging to one of those cities.
+`supported-region.geojson` records the service rectangle, while
+`administrative-boundaries.geojson` contains the actual relations used by the
+quality runner.
+
+The relation source pattern is
+`https://www.openstreetmap.org/relation/<relation-id>`. Regenerate relation
+geometry from a pinned regional PBF with:
+
+```bash
+osmium getid -r -t regional-source.osm.pbf \
+  r7625977 r5802438 r7641583 r7641582 \
+  -o administrative-boundaries.osm.pbf
+osmium export administrative-boundaries.osm.pbf -f geojsonseq
 ```
 
-| HTTP | Code | Retryable |
-| ---: | --- | :---: |
-| 400 | `VALIDATION_ERROR` | no |
-| 404 | `NOT_FOUND` | no |
-| 422 | `NO_ROUTE` | no |
-| 422 | `NO_ROUTE_DUE_TO_FLOOD` | no |
-| 422 | `ORIGIN_IN_BLOCKED_AREA` | no |
-| 422 | `DESTINATION_IN_BLOCKED_AREA` | no |
-| 502 | `ROUTING_RESPONSE_INVALID` | yes |
-| 503 | `ROUTING_UNAVAILABLE` | yes |
-| 504 | `ROUTING_TIMEOUT` | yes |
-| 500 | `INTERNAL_ERROR` | yes |
+When regional policy changes, update the versioned config, relation snapshot,
+actual polygons, bounds, supported-region GeoJSON, routing extract, and quality
+corpus together. Verify the selected Photon dump still covers the result.
 
-The service accepts a safe `X-Request-Id` value and otherwise generates one.
-The same value is returned in the response header and body.
+### Quality corpus and custom POI fixture
 
-## Host-side development and tests
+Run the normalized contract gate first:
+
+```bash
+backend/geocoding/scripts/run-quality-tests.sh
+```
+
+Then inspect provider ranking without publishing Photon:
+
+```bash
+backend/geocoding/scripts/run-quality-tests.sh --raw-photon
+```
+
+The committed corpus is source-derived regression smoke data, not an
+independently verified address register. `SOURCE_DERIVED` proves traceability
+to its recorded OSM snapshot, not institutional or field validation. Requiring
+independently verified cases intentionally fails until the corpus is promoted:
+
+```bash
+GEOCODING_QUALITY_REQUIRE_VERIFIED=true \
+  backend/geocoding/scripts/run-quality-tests.sh
+```
+
+`geocoding/custom-poi/gathra-poi.csv` is a public-OSM-derived schema fixture.
+The lightweight Photon deployment does not import it. Do not add confidential
+locations, private home addresses, credentials, or unverified emergency data.
+Before adding a fixture row, verify the public name and coordinate, use a
+stable project-owned ID, retain `source=gathra` and `layer=venue`, record
+aliases and dataset/version metadata in the existing JSON fields, review
+redistribution/attribution terms, and add a verified corpus case when the
+fixture participates in testing. A real custom-POI import pipeline requires
+separate design and validation.
+
+## Local flood simulation
+
+The read-only endpoint is always available. Mutation tools fail closed in
+source, `.env.example`, and Compose. Enable them only on an isolated local
+machine:
+
+```bash
+ENABLE_DEV_FLOOD_ENDPOINTS=true \
+docker compose --project-directory backend -f backend/compose.yaml up \
+  --build --wait
+```
+
+Useful local presets are:
+
+```bash
+curl --fail --request DELETE \
+  http://127.0.0.1:3000/api/v1/dev/flood-hazards
+curl --fail --request POST \
+  http://127.0.0.1:3000/api/v1/dev/flood-hazards/presets/central-corridor-high
+curl --fail --request POST \
+  http://127.0.0.1:3000/api/v1/dev/flood-hazards/presets/central-corridor-blocked
+```
+
+Each mutation advances the in-memory snapshot. Never expose an opt-in stack to
+an untrusted network, and never present its data as a safety guarantee.
+
+## Quality checks
 
 ```bash
 cd backend
@@ -325,20 +329,18 @@ npm run test:integration
 npm audit --omit=dev
 ```
 
-Unit tests cover GraphHopper request/response translation, strict upstream
-geometry checks, timeouts, stable route IDs, and provider-error mapping.
-Integration tests start a real Nest application with a provider stub, exercising
-versioning, validation, error envelopes, health, and OpenAPI without network
-access.
+Unit and integration tests use provider doubles where needed; they do not
+require GraphHopper or Photon network access.
 
-## Android host reachability
+## Production constraints and attribution
 
-- Android Emulator: use `http://10.0.2.2:3000/`.
-- USB-connected physical device: run
-  `adb reverse tcp:3000 tcp:3000` and use `http://127.0.0.1:3000/`.
-- Same-LAN physical device: use the Fedora host's LAN address, bind the backend
-  to `0.0.0.0` (already configured), and explicitly allow TCP port 3000 in the
-  Fedora firewall for the trusted network.
-
-Never point Android at port 8989. That endpoint is an implementation detail and
-is intentionally not published.
+- The current public endpoint uses HTTPS and keeps GraphHopper and Photon
+  private.
+- Development flood mutation routes are not available publicly.
+- Public Swagger is an observed current exposure, not an authentication layer.
+- The deployment is not a public-safety guarantee and repository changes do
+  not deploy automatically.
+- Provider indexes and routing graphs must be backed up and replaced through a
+  reviewed operational process.
+- Routing and Photon data are OpenStreetMap-derived. Preserve attribution and
+  comply with the ODbL when distributing source or derived databases.

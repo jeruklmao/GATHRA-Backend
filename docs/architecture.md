@@ -5,174 +5,190 @@
 ```text
 Android app
   |
-  | normalized HTTP/JSON :3000
+  | normalized HTTP/JSON
   v
 NestJS
-  |-- FloodHazardProvider --+-> GraphHopper custom model :8989
-  |                         `-> independent route/polygon evaluation
-  |-- read-only flood GeoJSON endpoint
-  `-- Geocoding provider ----> Photon :2322
+  |-- Route service -------> GraphHopper 11.0
+  |      `---------------> independent flood geometry evaluation
+  |-- Geocoding provider --> Photon 0.5.0
+  |-- Flood provider ------> simulated in-memory snapshots
+  `-- Health -------------> selected routing + geocoding readiness
 ```
 
-Only NestJS publishes a host port. Provider ports are Compose-internal.
+The deployed client path adds HTTPS and Cloudflare Tunnel before NestJS.
+GraphHopper and Photon remain private. Local Compose publishes only NestJS port
+3000; its geocoding provider network is internal.
 
-## Android
+## Android application
 
-The app is a single Gradle module under package
-`opsi.sman35jkt.gathra`. `GathraApplication` creates an application-scoped
-`AppContainer`; no DI framework is used.
+The native app is a single Gradle application module under package
+`opsi.sman35jkt.gathra`. `GathraApplication` owns one application-scoped manual
+`AppContainer`; no dependency-injection framework is used.
+
+The only application variants are `debug` and `release`. Both construct remote
+routing, geocoding, and flood repositories against one shared NestJS base URL,
+plus the fused foreground navigation location source. Deterministic fakes are
+test-source fixtures and are not packaged into either variant.
 
 ### Layers
 
-- `core/model`: framework-independent `GeoPoint`, route, manoeuvre, selection,
-  and place models.
+- `core/model`: framework-independent coordinates, routes, manoeuvres, places,
+  selection metadata, and flood models.
 - `core/location`, `core/map`, `core/navigation`: stable platform/map
-  abstractions and shared helpers.
-- `domain/route`: `RouteRepository`.
-- `domain/flood`: `FloodHazardRepository`.
-- `domain/geocoding`: `GeocodingRepository`.
-- `domain/navigation`: `NavigationRepository`, session/progress/status models,
-  and the explicit state machine.
-- `data/route`: deterministic fake and Retrofit remote implementations.
-- `data/flood`: deterministic fake and strict Retrofit/GeoJSON mapping.
-- `data/geocoding`: deterministic fake and Retrofit remote implementations;
-  DTO mapping stays here.
-- `data/location`: one-shot foreground location, fused navigation updates, and
-  deterministic simulated updates.
-- `data/navigation`: geometry projection, progress, deviation, reroute,
-  filtering, voice policy, and the application-scoped session engine.
+  abstractions and shared navigation helpers.
+- `domain/route`: provider-neutral `RouteRepository`.
+- `domain/geocoding`: provider-neutral `GeocodingRepository`.
+- `domain/flood`: provider-neutral `FloodHazardRepository`.
+- `domain/navigation`: navigation repository, session/progress/status models,
+  and explicit state transitions.
+- `data/route/remote`: Retrofit API, strict DTO mapping, and remote repository.
+- `data/geocoding/remote`: Retrofit API, normalized DTO mapping, and remote
+  repository.
+- `data/flood/remote`: Retrofit/GeoJSON API, strict snapshot mapping, and remote
+  repository.
+- `data/location`: one-shot foreground location and fused active-navigation
+  updates.
+- `data/navigation`: geometry projection, progress, deviation, filtering,
+  reroute coordination, voice policy, and the application-scoped session
+  engine.
 - `feature/map`, `feature/geocoding`, `feature/navigation`: immutable UI state,
   typed actions/effects, ViewModels, and Compose surfaces.
 - `service/navigation`: foreground service, notification, controller, and TTS
-  manager.
+  lifecycle.
 
-### State and lifecycle
+Retrofit DTOs, Android Location, and MapLibre objects never enter Android
+domain or UI state.
 
-`MapRouteViewModel` owns route-preview state. It cancels stale route requests,
-supports permission-denied fallback, and reverse-geocodes selected map points
-asynchronously. Reverse results modify labels only. Flood polling is not
-started by construction: `ScreenStarted` creates one idempotent polling job and
-`ScreenStopped` cancels polling/fetch/debounce work. The last successful
-snapshot remains available and is explicitly marked stale after refresh
-failure or lifecycle stop.
+### Preview, search, and coordinate authority
 
-The selected route and visible polygons synchronize by immutable snapshot ID.
-A mismatch enters `OUTDATED_BY_FLOOD_UPDATE`, then a debounced,
-generation-protected request enters `UPDATING`. Only a response evaluated
-against the target snapshot may replace the route. Failure retains the old
-geometry as stale guidance, removes any current LOW implication, and exposes a
-retry. The same visible snapshot is sent to the active navigation foreground
-service, which reuses its guarded reroute path with a cooldown. A newer target
-snapshot immediately invalidates an older in-flight flood reroute; both
-generation and target-snapshot checks prevent a late response from replacing
-newer guidance.
+`MapRouteViewModel` owns route-preview state. It cancels stale requests,
+supports permission-denied fallback behavior, and reverse-geocodes selected
+map points asynchronously. A map-selected `GeoPoint` is authoritative;
+reverse results may change labels only.
 
-`PlaceSearchViewModel` keeps the query across Activity recreation, requires
-three characters for autocomplete, debounces about 400 ms, uses
-`flatMapLatest`, and applies generation checks so old responses cannot replace
-new results. Outside-region suggestions are disabled.
+`PlaceSearchViewModel` retains its query across Activity recreation, applies a
+minimum query length and debounce, and uses cancellation plus generation checks
+so stale responses cannot replace newer results. Suggestions outside configured
+coverage are visible but not selectable. Manual map selection remains available
+when geocoding fails.
 
-`NavigationSessionEngine` and `NavigationSessionRepository` own active
-navigation beyond an Activity instance. The foreground service starts
-high-accuracy updates only during an active session and stops location/TTS/
-reroute work on stop or arrival. Process-death persistence is intentionally
-limited.
+### Navigation ownership
 
-MapLibre Android view instances are retained across Compose recomposition.
-Routes and markers use map sources/layers rather than many Android view
-markers.
+`NavigationSessionRepository` retains the active session beyond one Activity
+instance. `NavigationForegroundService` owns high-accuracy location
+collection, rerouting, notification updates, and TTS while navigation is
+active. `NavigationSessionEngine` performs route projection, progress,
+off-route detection, guarded reroutes, and cleanup.
 
-### Important models and contracts
+The app requests foreground location only. Location updates, reroute jobs, and
+voice work stop on navigation stop or arrival. Process-death recovery is
+limited because the session is not stored in a durable database.
 
-- `GeoPoint`: latitude/longitude, independent of GeoJSON/MapLibre.
-- `TravelMode`: CAR or MOTORCYCLE.
-- `RouteRequest`, `RouteOption`, `RouteGeometry`, `RouteSummary`.
-- `RouteStep`, `RouteManeuver`, `ManeuverType`, `ManeuverModifier`.
-- `RouteSelectionPoint`: coordinate, source, and optional display metadata.
-- `PlaceSuggestion`, `SelectedPlace`, `PlaceCategory`.
-- `FloodHazardSnapshot`, `FloodHazardPolygon`, `RouteFloodRisk`.
-- `NavigationSession`, `NavigationProgress`, `NavigationStatus`,
-  `NavigationLocation`.
-- `RouteRepository.getRoutes`.
-- `GeocodingRepository.autocomplete/search/lookup/reverse`.
-- `NavigationRepository.session/prepare/setMuted/finish`.
+MapLibre Android views are retained across Compose recomposition. Route,
+marker, and flood geometry use owned map sources and layers rather than large
+sets of Android view markers.
 
-## NestJS
+## NestJS application
 
-`AppModule` contains four provider-neutral surfaces:
+NestJS exposes four provider-neutral surfaces:
 
-- `routes`: validation/controller/service plus `GraphHopperClient`; only
-  independently evaluated non-blocked routes are returned.
-- `flood`: the simulation-only `FloodHazardProvider`, read-only GeoJSON API,
-  optional development mutation controller, configured limits, and independent
-  route evaluator.
-- `geocoding`: controller/service/provider token, fake/Photon adapters,
-  response mapper, bounded TTL cache, concurrency limiter, rate guard,
-  supported-region classifier, and signed opaque place tokens.
+- `routes`: strict request validation, normalized response mapping,
+  GraphHopper client, flood-aware filtering, and error contracts.
+- `geocoding`: autocomplete/search/lookup/reverse, provider adapter, bounded
+  caches, concurrency/rate guards, regional policy, and opaque tokens.
+- `flood`: read-only active GeoJSON snapshots plus optional local development
+  mutation controllers.
 - `health`: readiness for both selected providers.
 
-Global bootstrap provides URI versioning (`/api/v1`), strict DTO validation,
-request IDs, a common sanitized error envelope, and OpenAPI.
+URI versioning creates `/api/v1`. Global DTO validation rejects unknown input.
+Request IDs and a sanitized common error envelope are applied across APIs.
+OpenAPI is configured at `/api/docs` and `/api/docs-json`.
 
-### GraphHopper
+## GraphHopper boundary
 
-GraphHopper 11.0 is built from `backend/routing-engine/` and reads the PBF/XML
-mounted as `/data/region.osm`. It has explicit `car` and `motorcycle` profiles.
-The client asks for GeoJSON points and instructions, validates snapped
-endpoints and geometry, maps provider signs to framework-independent
-manoeuvres, and ensures ordered intervals ending with `ARRIVE`.
+GraphHopper 11.0 reads the OSM file mounted as `/data/region.osm` and maintains
+its generated graph in a named cache. The checked-in fixture is intentionally
+small; useful geographic routing coverage depends on the configured PBF.
 
-Routes never expose GraphHopper response types. The Android remote repository
-maps normalized DTOs into domain models.
+The provider defines `car` and `motorcycle` profiles. The NestJS client asks
+for GeoJSON geometry and instructions, validates snapped endpoints and
+geometry, maps provider signs into GATHRA manoeuvre/modifier enums, and
+constructs ordered step intervals ending in `ARRIVE`.
 
-Flood polygons are converted to request-scoped GraphHopper custom-model areas.
-LOW, MEDIUM, HIGH, and BLOCKED priority multipliers remain `0.8`, `0.35`,
-`0.05`, and `0.0`; custom models require `ch.disable=true`. NestJS then checks
-the returned LineStrings independently. If all returned routes intersect a
-BLOCKED polygon, it returns `NO_ROUTE_DUE_TO_FLOOD` instead of recommending a
-blocked route. Hazard snapshots are in-memory and not production durable.
+GraphHopper response types never leave the backend. Route IDs are normalized
+opaque fingerprints rather than provider identifiers.
 
-### Geocoding
+## Photon boundary
 
 `GeocodingProvider` defines autocomplete, search, lookup, reverse, and health.
-`PhotonGeocodingProvider` is selected by the normal Compose configuration;
-`FakeGeocodingProvider` remains available for deterministic tests and
-development. Photon searches use proximity bias and the versioned buffered
-bounds over the pinned Indonesia extract. Photon 0.5.0 does not accept the
-newer `countrycode` parameter. Indonesian API requests use Photon's
-local/default labels because this pinned dump does not expose an `id` analyzer.
+Photon is the normal Compose implementation; a fake provider remains available
+inside the backend for deterministic backend tests and local development.
 
-Provider IDs are never returned directly. NestJS issues signed opaque tokens.
-Because Photon has no public lookup-by-OSM-ID endpoint, normalized suggestion
-details are stored in the existing bounded TTL cache when a token is issued;
-the public `/places/:id` contract remains unchanged. Normal logs contain
-request IDs, duration, count, and query length, not full address-like queries.
-Reverse responses preserve the requested coordinate.
+NestJS constrains Photon queries to the versioned buffered bounds over the
+pinned Indonesia database. Direct provider IDs are not returned. NestJS signs
+opaque place tokens and stores normalized details in a bounded TTL cache
+because Photon has no lookup-by-OSM-ID endpoint. Reverse responses preserve the
+requested coordinate.
 
-## Docker Compose
+Normal logs contain request IDs, durations, counts, and query lengths, not full
+address-like queries or result text.
 
-Always-on services:
+## Flood snapshot flow
 
-- `routing-engine`
-- `backend`
-- `photon`
+The current `FloodHazardProvider` is simulated, in-memory, and local to one
+NestJS process. The read-only GeoJSON endpoint is always registered;
+unauthenticated mutation endpoints require an explicit local opt-in.
 
-Persistent volumes are `graphhopper-cache` and `photon-data`.
-`geocoding-private` is internal, and only NestJS publishes a host port.
-Photon data installation is an explicit checksummed script and refuses to
-overwrite a non-empty volume. Updates use a separate candidate volume; the
-previous volume is retained for rollback.
+For each preview request:
+
+1. NestJS captures one immutable active-hazard snapshot.
+2. Flood polygons become request-scoped GraphHopper custom-model areas.
+3. GraphHopper returns route candidates.
+4. NestJS independently intersects every LineString with the same snapshot.
+5. Routes touching a `BLOCKED` polygon are rejected; usable routes are ranked
+   and exactly one is recommended.
+6. Route-risk metadata records the snapshot used for evaluation.
+
+Android polls the read-only snapshot only while its UI lifecycle is started.
+A selected route is current only when its risk snapshot matches the visible
+snapshot:
+
+```text
+SYNCHRONIZED
+  -> OUTDATED_BY_FLOOD_UPDATE
+  -> UPDATING
+  -> SYNCHRONIZED (replacement matches target)
+  -> STALE       (refresh/recalculation fails or mismatches)
+```
+
+Preview and navigation retain old geometry during validation but do not present
+its old risk as current. Generation and target-snapshot checks prevent late
+responses from replacing newer guidance. Active navigation reuses its guarded
+foreground-service reroute flow.
+
+There is no database, durable history, multi-instance consistency, sensor
+ingestion, or real-time push invalidation.
+
+## Deployment boundary
+
+The repository defines the development Compose topology. The deployed service
+uses the same provider boundaries behind `https://api.gathra.my.id/`, but
+server paths, Cloudflare credentials, backups, and update/rollback scripts are
+external operational state.
+
+Committing to `main` does not deploy automatically. Android release signing and
+distribution are also outside the repository's current build quality gate.
 
 ## Architectural constraints
 
-- No provider SDK/type may cross a domain boundary.
-- No direct Android access to GraphHopper or Photon.
+- Android calls NestJS only; provider SDKs and hostnames remain server-side.
+- Domain models remain provider- and framework-neutral.
+- GeoJSON is `[longitude, latitude]`; Android `GeoPoint` is latitude then
+  longitude.
+- Map selection coordinates remain authoritative.
 - No background-location permission or raw location-history persistence.
 - No network/geocoding calls from Composables.
-- No production secret in source or BuildConfig.
-- No normal startup geocoder download or index replacement.
+- No production secrets in source, Gradle properties, or BuildConfig.
+- No automatic provider-data download, import, replacement, or deletion.
 - No hosted geocoder fallback.
-- Flood data is simulated and in-memory: no database, sensor ingestion,
-  authentication, multi-instance consistency, traffic, or telemetry.
-- Development flood mutation endpoints are unauthenticated and disabled by
-  default; local opt-in must never be exposed publicly.
+- Missing, stale, or simulated flood data is never a safety guarantee.
