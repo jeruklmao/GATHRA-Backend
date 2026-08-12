@@ -1,9 +1,9 @@
-# GATHRA agent guide
+# GATHRA Backend agent guide
 
-Read [README.md](README.md), [docs/architecture.md](docs/architecture.md), and
-[docs/development.md](docs/development.md) before changing code. Read
-[backend/README.md](backend/README.md) before changing backend configuration or
-provider data.
+Read [README.md](README.md) and [docs/architecture.md](docs/architecture.md)
+before changing code, provider configuration, or provider data. The Android
+client lives in the independent
+[GATHRA-Android repository](https://github.com/JerukLMAO/GATHRA-Android).
 
 ## Purpose and verified baseline
 
@@ -28,52 +28,22 @@ Android -> NestJS -> GraphHopper
 
 The geocoding pilot covers Jakarta Pusat, Jakarta Selatan, Kota Tangerang, Kota
 Tangerang Selatan, and the versioned buffered envelope in
-`backend/geocoding/region/region-config.json`. Do not spell Tangerang as
-“Tanggerang” except in explicit typo-quality fixtures.
-
-## Android rules
-
-- The supported application variants are only `debug` and `release`.
-- Both variants default to `https://api.gathra.my.id/` through
-  `BuildConfig.API_BASE_URL`.
-- `GATHRA_API_BASE_URL` is the canonical debug override;
-  `GATHRA_RELEASE_API_BASE_URL` is the canonical release override.
-- The older route-prefixed property names are compatibility aliases only.
-- Release overrides must use HTTPS, and release cleartext traffic stays
-  disabled. Debug enables cleartext only when its resolved override uses HTTP.
-- Debug and release always use `RemoteRouteRepository`,
-  `RemoteGeocodingRepository`, `RemoteFloodHazardRepository`, and
-  `FusedNavigationLocationSource`.
-- Deterministic Android fake repositories and the location simulator live in
-  `app/src/test`; do not wire them into an application variant.
-- Keep the app as one module with MVVM/UDF, immutable state, StateFlow, typed
-  actions/effects, and the manual `AppContainer`. Do not introduce Hilt or
-  split modules without discussion.
-- Keep domain models independent of Retrofit DTOs, Android Location, MapLibre,
-  GraphHopper, and Photon types.
-- Android must call NestJS only. Never expose or call GraphHopper or Photon
-  directly from a device.
-- A coordinate selected on the map is authoritative for routing. Reverse
-  geocoding may replace display text only, never the coordinate.
-- Keep manual map selection available when geocoding or location fails.
-- Request foreground location only. Do not add `ACCESS_BACKGROUND_LOCATION`.
-- Keep active navigation execution in the foreground service/repository layer,
-  not in Composables or an Activity.
-- Keep all Android user-facing text in `strings.xml`, in Indonesian, and use
-  Material theme tokens rather than screen-local colors.
+`geocoding/region/region-config.json`. Do not spell Tangerang as “Tanggerang”
+except in explicit typo-quality fixtures.
 
 ## Backend and provider rules
 
-- Keep `RouteRepository`, `GeocodingRepository`, and
-  `NavigationRepository` provider-neutral; DTOs never enter UI state.
-- GeoJSON positions are `[longitude, latitude]`; Android `GeoPoint` constructor
-  order remains `latitude`, then `longitude`.
+- Keep normalized API DTOs independent of GraphHopper and Photon response
+  types.
+- GeoJSON positions are `[longitude, latitude]`; the Android client constructs
+  `GeoPoint` as latitude, then longitude.
 - GraphHopper signs are normalized into GATHRA manoeuvre enums.
 - Keep provider services private on Compose networks. Only NestJS port 3000
   may be published for local development.
 - Photon is the normal geocoder. `GEOCODING_PROVIDER=fake` is allowed only for
   deterministic backend development and tests.
-- Outside-coverage geocoding suggestions may be shown but cannot be selected.
+- Preserve the client contract that outside-coverage suggestions may be shown
+  but cannot be selected.
 - Do not download, rebuild, replace, or delete Photon indexes implicitly.
   Candidate volumes, checksums, quality checks, and rollback must be explicit.
 - Do not delete GraphHopper caches without first resolving the exact data and
@@ -101,51 +71,18 @@ Tangerang Selatan, and the versioned buffered envelope in
 
 ## High-risk files
 
-- `app/build.gradle.kts`: API URL validation, variants, BuildConfig, cleartext.
-- `app/src/main/AndroidManifest.xml`: foreground permissions and cleartext.
-- `app/src/main/java/opsi/sman35jkt/gathra/AppContainer.kt`: runtime wiring.
-- `app/src/main/java/opsi/sman35jkt/gathra/GathraApp.kt`: screen ownership and
-  lifecycle dispatch.
-- `feature/map/MapRouteViewModel.kt`: cancellation, permissions, selection,
-  reverse-coordinate authority, and flood snapshots.
-- `feature/geocoding/PlaceSearchViewModel.kt`: debounce and stale responses.
-- `core/map/MapLibreRouteMap.kt` and `MapLibreNavigationMap.kt`: Android view
-  lifecycle and map-source/layer ownership.
-- `data/navigation/NavigationSessionEngine.kt` and
-  `service/navigation/NavigationForegroundService.kt`: location, reroute, TTS,
-  and cleanup lifecycle.
-- `backend/src/routes/graphhopper.client.ts`: provider validation and step
+- `src/routes/graphhopper.client.ts`: provider validation and step
   geometry intervals.
-- `backend/src/routes/routes.service.ts`: flood-aware route filtering/ranking.
-- `backend/src/geocoding/`: opaque tokens, private-query handling, regional
+- `src/routes/routes.service.ts`: flood-aware route filtering/ranking.
+- `src/geocoding/`: opaque tokens, private-query handling, regional
   policy, cache, and provider normalization.
-- `backend/src/flood/`: simulated snapshot semantics and default-closed tools.
-- `backend/compose.yaml` and `backend/geocoding/scripts/`: private networking,
+- `src/flood/`: simulated snapshot semantics and default-closed tools.
+- `compose.yaml` and `geocoding/scripts/`: private networking,
   persistent provider data, and index management.
 
 ## Verification
 
-Use the Android Studio JBR on Fedora:
-
 ```bash
-JAVA_HOME=/opt/android-studio/jbr ./gradlew clean
-JAVA_HOME=/opt/android-studio/jbr ./gradlew testDebugUnitTest
-JAVA_HOME=/opt/android-studio/jbr ./gradlew lintDebug
-JAVA_HOME=/opt/android-studio/jbr ./gradlew assembleDebug
-JAVA_HOME=/opt/android-studio/jbr ./gradlew assembleRelease
-JAVA_HOME=/opt/android-studio/jbr ./gradlew compileDebugAndroidTestKotlin
-```
-
-Run connected tests when a compatible emulator/device is available:
-
-```bash
-JAVA_HOME=/opt/android-studio/jbr ./gradlew connectedDebugAndroidTest
-```
-
-Backend:
-
-```bash
-cd backend
 npm ci
 npm run build
 npm run test:unit
@@ -160,8 +97,6 @@ import merely to validate source changes.
 
 - Flood snapshots have no PostgreSQL/PostGIS persistence, multi-instance
   consistency, MQTT/sensor ingestion, or real-time push.
-- Navigation survives Activity recreation through application-scoped state but
-  has limited process-death recovery.
 - GraphHopper motorcycle costing is not calibrated against Indonesian access
   rules or field observations.
 - The geocoding corpus is source-derived smoke data, not an independently
@@ -177,9 +112,9 @@ import merely to validate source changes.
 
 1. Run `git status --short --branch`, inspect the current diff, and identify the
    actual default branch before editing.
-2. Read the four retained documentation files relevant to the change.
-3. Confirm whether Android should use the public default or an explicit local
-   debug override.
+2. Read the two retained documentation files relevant to the change.
+3. Confirm the selected provider mode and whether checked-in defaults or an
+   explicit local override should be used.
 4. Inspect source, tests, workflows, and provider configuration rather than
    trusting historical PR text or generated reports.
 5. Preserve coordinate authority, provider privacy, foreground-only location,

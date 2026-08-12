@@ -1,4 +1,4 @@
-# GATHRA backend
+# GATHRA Backend
 
 The NestJS backend owns GATHRA's normalized routing, geocoding, health, and
 simulated flood-hazard contracts. Android calls this service only; GraphHopper
@@ -26,7 +26,7 @@ navigation-session logic.
 - Node.js `>=20.11 <25` and npm for host-side quality checks.
 - A deliberately installed Photon data volume for the normal Compose mode.
 
-Copy `backend/.env.example` to `backend/.env` only when overriding defaults.
+Copy `.env.example` to `.env` only when overriding defaults.
 Never commit `.env` or a token-secret value.
 
 ## Local stack
@@ -35,23 +35,21 @@ Install Photon data once as described below, then start the complete stack from
 the repository root:
 
 ```bash
-docker compose --project-directory backend -f backend/compose.yaml up \
-  --build --wait
-backend/geocoding/scripts/health-check.sh
+docker compose up --build --wait
+geocoding/scripts/health-check.sh
 ```
 
 Stop containers while preserving named volumes:
 
 ```bash
-docker compose --project-directory backend -f backend/compose.yaml down
+docker compose down
 ```
 
 For deterministic backend work that does not query Photon:
 
 ```bash
 GEOCODING_PROVIDER=fake \
-docker compose --project-directory backend -f backend/compose.yaml up \
-  --build --wait
+docker compose up --build --wait
 ```
 
 Photon remains part of the Compose topology but is not selected by NestJS in
@@ -61,7 +59,7 @@ The complete routing smoke script starts the stack and tears down containers
 without deleting named data volumes:
 
 ```bash
-backend/scripts/compose-health-check.sh
+scripts/compose-health-check.sh
 ```
 
 ## Configuration
@@ -160,22 +158,22 @@ One reproducible workflow is:
 
 ```bash
 sudo dnf install osmium-tool
-mkdir -p backend/routing-data
+mkdir -p routing-data
 curl --fail --location --retry 3 \
-  --output backend/routing-data/java-latest.osm.pbf \
+  --output routing-data/java-latest.osm.pbf \
   https://download.geofabrik.de/asia/indonesia/java-latest.osm.pbf
 osmium extract \
   --bbox=106.52,-6.40,106.90,-6.06 \
   --strategy=complete_ways \
   --set-bounds \
-  backend/routing-data/java-latest.osm.pbf \
-  --output backend/routing-data/gathra-jakarta-tangerang.osm.pbf
+  routing-data/java-latest.osm.pbf \
+  --output routing-data/gathra-jakarta-tangerang.osm.pbf
 osmium tags-filter \
-  backend/routing-data/gathra-jakarta-tangerang.osm.pbf \
+  routing-data/gathra-jakarta-tangerang.osm.pbf \
   nw/highway r/type=restriction \
-  --output backend/routing-data/gathra-jakarta-tangerang-routing.osm.pbf
+  --output routing-data/gathra-jakarta-tangerang-routing.osm.pbf
 osmium check-refs \
-  backend/routing-data/gathra-jakarta-tangerang-routing.osm.pbf
+  routing-data/gathra-jakarta-tangerang-routing.osm.pbf
 ```
 
 Set `GATHRA_OSM_FILE` to the routing-only PBF and use an appropriate Java heap.
@@ -199,7 +197,7 @@ MD5: 0e027552ff841b12a2c703cf290daad2
 Initial installation is explicit:
 
 ```bash
-backend/geocoding/scripts/download-photon-data.sh
+geocoding/scripts/download-photon-data.sh
 ```
 
 The script downloads over HTTPS, verifies the pinned checksum, rejects unsafe
@@ -222,7 +220,7 @@ Never unpack a candidate over the active database.
    PHOTON_DATA_VOLUME=gathra-routing-photon-candidate \
    PHOTON_DATA_URL=<verified-https-url> \
    PHOTON_DATA_MD5=<verified-checksum> \
-   backend/geocoding/scripts/download-photon-data.sh
+   geocoding/scripts/download-photon-data.sh
    ```
 
 3. Start Compose with the same `PHOTON_DATA_VOLUME`.
@@ -268,13 +266,13 @@ corpus together. Verify the selected Photon dump still covers the result.
 Run the normalized contract gate first:
 
 ```bash
-backend/geocoding/scripts/run-quality-tests.sh
+geocoding/scripts/run-quality-tests.sh
 ```
 
 Then inspect provider ranking without publishing Photon:
 
 ```bash
-backend/geocoding/scripts/run-quality-tests.sh --raw-photon
+geocoding/scripts/run-quality-tests.sh --raw-photon
 ```
 
 The committed corpus is source-derived regression smoke data, not an
@@ -284,7 +282,7 @@ independently verified cases intentionally fails until the corpus is promoted:
 
 ```bash
 GEOCODING_QUALITY_REQUIRE_VERIFIED=true \
-  backend/geocoding/scripts/run-quality-tests.sh
+  geocoding/scripts/run-quality-tests.sh
 ```
 
 `geocoding/custom-poi/gathra-poi.csv` is a public-OSM-derived schema fixture.
@@ -305,8 +303,7 @@ machine:
 
 ```bash
 ENABLE_DEV_FLOOD_ENDPOINTS=true \
-docker compose --project-directory backend -f backend/compose.yaml up \
-  --build --wait
+docker compose up --build --wait
 ```
 
 Useful local presets are:
@@ -346,7 +343,6 @@ lost whenever the backend restarts.
 ## Quality checks
 
 ```bash
-cd backend
 npm ci
 npm run build
 npm run test:unit

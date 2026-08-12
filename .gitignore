@@ -2,8 +2,12 @@ node_modules/
 dist/
 coverage/
 .env
+.env.*
+!.env.example
 graph-cache/
 *.log
+routing-data/
+data/
 geocoding/data/*
 !geocoding/data/.gitkeep
 geocoding/quality/results/
