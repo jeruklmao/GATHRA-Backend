@@ -7,13 +7,14 @@ import { RequestIdMiddleware } from './common/request-id.middleware';
 import { FloodModule } from './flood/flood.module';
 import { GeocodingModule } from './geocoding/geocoding.module';
 import { HealthController } from './health/health.controller';
+import { IotModule } from './iot/iot.module';
 import { GraphHopperClient } from './routes/graphhopper.client';
 import { RoutesController } from './routes/routes.controller';
 import { RoutesService } from './routes/routes.service';
 import { ROUTING_PROVIDER } from './routes/routing-provider';
 
 @Module({
-  imports: [GeocodingModule, FloodModule.register()],
+  imports: [GeocodingModule, FloodModule.register(), IotModule],
   controllers: [RoutesController, HealthController],
   providers: [
     RoutesService,

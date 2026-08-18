@@ -22,6 +22,7 @@ export type ApiErrorCode =
   | 'GEOCODER_UNAVAILABLE'
   | 'INVALID_PROVIDER_RESPONSE'
   | 'GEOCODING_RATE_LIMITED'
+  | 'IOT_INGESTION_UNAVAILABLE'
   | 'INTERNAL_ERROR';
 
 export interface ApiErrorDetail {

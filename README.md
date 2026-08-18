@@ -1,8 +1,9 @@
 # GATHRA Backend
 
-The NestJS backend owns GATHRA's normalized routing, geocoding, health, and
-simulated flood-hazard contracts. Android calls this service only; GraphHopper
-and Photon remain private implementation providers.
+The NestJS backend owns GATHRA's normalized routing, geocoding, health,
+simulated flood-hazard contracts, and PostgreSQL-backed raw IoT telemetry.
+Android and future web clients call this service only; GraphHopper, Photon, and
+PostgreSQL remain private implementation providers.
 
 The deployed public base URL is `https://api.gathra.my.id/`. Local Docker
 Compose publishes NestJS on port 3000 by default.
@@ -10,24 +11,30 @@ Compose publishes NestJS on port 3000 by default.
 ```text
 Android/client -> NestJS :3000 -> GraphHopper 11.0 :8989 (private)
                             |---> Photon 0.5.0 :2322 (private)
+                            |---> PostgreSQL 17 (private raw telemetry)
                             `---> in-memory FloodHazardProvider
 ```
 
 Flood data is simulation-only and lost on restart. Local development mutation
 tools are unauthenticated; a separate fail-closed administration surface uses
-a high-entropy bearer token when explicitly enabled. The backend has no
-database, real sensor ingestion, user accounts, traffic, telemetry, or active
-navigation-session logic.
+a high-entropy bearer token when explicitly enabled. IoT telemetry is durable
+raw measurement history and is intentionally isolated from flood routing: it
+is **not yet converted into `FloodHazard`**. The backend has no user accounts,
+traffic, or active navigation-session logic.
 
 ## Prerequisites
 
 - Docker Engine and Docker Compose v2.
+- PostgreSQL 17 is provided by Compose; a compatible external PostgreSQL may
+  be used through `DATABASE_URL` for host development.
 - `curl`, `jq`, `tar`, and `md5sum` for provider setup and smoke checks.
 - Node.js `>=20.11 <25` and npm for host-side quality checks.
 - A deliberately installed Photon data volume for the normal Compose mode.
 
-Copy `.env.example` to `.env` only when overriding defaults.
-Never commit `.env` or a token-secret value.
+Copy `.env.example` to `.env` only when overriding defaults. Generate a
+development Gateway credential with `npm run iot:token`; provision the printed
+raw token once and configure only its digest in the Backend. Never commit
+`.env`, a database production password, or a raw token-secret value.
 
 ## Local stack
 
@@ -70,6 +77,8 @@ Checked-in defaults live in `.env.example`, `compose.yaml`, and
 | Area | Variables |
 | --- | --- |
 | NestJS | `GATHRA_BACKEND_PORT` (Compose host port), `PORT` (process port) |
+| PostgreSQL | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` (Compose), `DATABASE_URL` (NestJS) |
+| IoT | `IOT_GATEWAY_TOKEN_SHA256`, `IOT_MAX_BATCH_SIZE` (1–50), `IOT_MONITOR_MAX_LIMIT` (1–1000), `IOT_MONITOR_ALLOWED_ORIGINS` |
 | Routing | `GATHRA_OSM_FILE`, `ROUTING_ENGINE_BASE_URL`, `ROUTING_ENGINE_TIMEOUT_MS`, `GRAPH_HOPPER_JAVA_OPTS`, `GRAPH_HOPPER_MIN_NETWORK_SIZE` |
 | Geocoding provider | `GEOCODING_PROVIDER`, `PHOTON_BASE_URL`, `GEOCODING_PROVIDER_TIMEOUT_MS` |
 | Geocoding limits | `GEOCODING_MAX_CONCURRENCY`, `GEOCODING_MAX_QUEUE_SIZE`, `GEOCODING_RATE_LIMIT`, `GEOCODING_RATE_WINDOW_MS` |
@@ -91,6 +100,11 @@ URI versioning produces these current v1 endpoints:
 - `GET /api/v1/geocoding/places/:id`
 - `GET /api/v1/geocoding/reverse`
 - `GET /api/v1/flood-hazards`
+- `POST /api/v1/iot/telemetry/batch` (Gateway Bearer authentication)
+- `GET /api/v1/iot/gateway/ping` (Gateway Bearer authentication)
+- `GET /api/v1/iot/nodes` (public read-only monitoring)
+- `GET /api/v1/iot/nodes/:nodeId` (public read-only monitoring)
+- `GET /api/v1/iot/nodes/:nodeId/telemetry` (public bounded history)
 - `GET /api/v1/health`
 
 Development flood endpoints under `/api/v1/dev/flood-hazards` exist only when
@@ -140,7 +154,47 @@ addresses, and coordinates are display metadata only.
 ### Health
 
 `GET /api/v1/health` is readiness, not process-only liveness. It returns 200
-only when both the configured routing and geocoding providers are available.
+only when the configured routing and geocoding providers and PostgreSQL are
+available. The response reports each component independently.
+
+### Raw IoT telemetry
+
+Gateway ingestion accepts batches of exact Base64 LoRa payloads plus reception
+metadata. NestJS independently validates and decodes Node Protocol v1, stores
+the exact payload as `BYTEA`, normalizes unavailable sensor sentinels to SQL
+`NULL`, and uses a hard unique constraint on
+`(node_id, node_boot_session_id, node_sequence)`. A committed retry returns
+`DUPLICATE`, so a lost HTTP response cannot create a second row.
+
+The raw Gateway token is never stored by the Backend. Configure only a
+64-character SHA-256 digest:
+
+```bash
+npm run iot:token
+```
+
+Migrations run at application bootstrap under a PostgreSQL advisory lock and
+are recorded in `schema_migrations`. Inspect them with:
+
+```bash
+docker compose exec postgres psql -U "${POSTGRES_USER:-gathra}" \
+  -d "${POSTGRES_DB:-gathra}" -c '\dt iot_*'
+docker compose exec postgres psql -U "${POSTGRES_USER:-gathra}" \
+  -d "${POSTGRES_DB:-gathra}" -c 'TABLE schema_migrations;'
+```
+
+Monitoring endpoints require no Gateway credential. History defaults to 200
+rows, is capped by `IOT_MONITOR_MAX_LIMIT` (at most 1000), orders newest first,
+and uses the trusted `serverReceivedAt` timeline. Browser CORS permits exact
+origins in `IOT_MONITOR_ALLOWED_ORIGINS` (production default
+`https://gathra.my.id`) for read-only methods. `includeRaw=true` opts into
+Base64 payloads for debugging; ordinary chart requests stay compact.
+
+See [docs/iot-telemetry.md](docs/iot-telemetry.md) for persistence and
+ingestion operations, and
+[docs/iot-monitoring-api.md](docs/iot-monitoring-api.md) for the future
+`https://gathra.my.id/node` frontend contract. No frontend is implemented in
+this repository.
 
 ## GraphHopper routing data
 
@@ -350,8 +404,9 @@ npm run test:integration
 npm audit --omit=dev
 ```
 
-Unit and integration tests use provider doubles where needed; they do not
-require GraphHopper or Photon network access.
+The integration command starts an isolated real PostgreSQL service, runs
+migrations plus all API regression tests, and tears it down. Provider doubles
+avoid requiring GraphHopper or Photon network access during that suite.
 
 ## Production constraints and attribution
 
@@ -362,6 +417,12 @@ require GraphHopper or Photon network access.
   uses only a token digest in the process environment; the raw token remains
   external deployment state.
 - Public Swagger is an observed current exposure, not an authentication layer.
+- Gateway ingestion uses one static Bearer credential model in v1; public
+  monitoring never exposes it.
+- Raw telemetry is retained indefinitely in v1. Define reviewed retention or
+  downsampling before deployment scale makes that impractical; TimescaleDB is
+  intentionally not introduced yet.
+- IoT telemetry does not alter routes or create flood polygons/classes.
 - The deployment is not a public-safety guarantee and repository changes do
   not deploy automatically.
 - Provider indexes and routing graphs must be backed up and replaced through a

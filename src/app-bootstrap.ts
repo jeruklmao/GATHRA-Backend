@@ -6,9 +6,18 @@ import {
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ApiExceptionFilter } from './common/api-exception.filter';
 import { validationExceptionFactory } from './common/validation-errors';
+import { readConfiguration } from './configuration';
 
 export function configureApplication(app: INestApplication): void {
+  const configuration = readConfiguration();
   app.enableShutdownHooks();
+  app.enableCors({
+    origin: [...configuration.iotMonitorAllowedOrigins],
+    methods: ['GET', 'HEAD', 'OPTIONS'],
+    allowedHeaders: ['Accept', 'Content-Type', 'X-Request-Id'],
+    credentials: false,
+    maxAge: 3_600,
+  });
   app.enableVersioning({
     type: VersioningType.URI,
     prefix: 'api/v',
@@ -33,9 +42,19 @@ export function configureApplication(app: INestApplication): void {
   const swaggerConfiguration = new DocumentBuilder()
     .setTitle('GATHRA Backend API')
     .setDescription(
-      'Provider-neutral route previews and geocoding. Private providers are never exposed directly.',
+      'Provider-neutral route previews/geocoding plus PostgreSQL-backed raw IoT telemetry. Gateway ingestion is authenticated; monitoring is public and read-only.',
     )
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'opaque Gateway token',
+        description:
+          'Required only for Gateway ingestion and compatibility diagnostics.',
+      },
+      'gatewayBearer',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfiguration);
   SwaggerModule.setup('api/docs', app, document, {

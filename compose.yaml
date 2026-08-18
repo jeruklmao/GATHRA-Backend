@@ -1,6 +1,22 @@
 name: gathra-routing
 
 services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB:-gathra}"
+      POSTGRES_USER: "${POSTGRES_USER:-gathra}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-gathra-local-only}"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    restart: unless-stopped
+
   routing-engine:
     build:
       context: ./routing-engine
@@ -29,6 +45,11 @@ services:
     environment:
       NODE_ENV: production
       PORT: "3000"
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-gathra}:${POSTGRES_PASSWORD:-gathra-local-only}@postgres:5432/${POSTGRES_DB:-gathra}"
+      IOT_GATEWAY_TOKEN_SHA256: "${IOT_GATEWAY_TOKEN_SHA256:-}"
+      IOT_MAX_BATCH_SIZE: "${IOT_MAX_BATCH_SIZE:-50}"
+      IOT_MONITOR_MAX_LIMIT: "${IOT_MONITOR_MAX_LIMIT:-1000}"
+      IOT_MONITOR_ALLOWED_ORIGINS: "${IOT_MONITOR_ALLOWED_ORIGINS:-https://gathra.my.id}"
       ROUTING_ENGINE_BASE_URL: "http://routing-engine:8989"
       ROUTING_ENGINE_TIMEOUT_MS: "${ROUTING_ENGINE_TIMEOUT_MS:-8000}"
       GEOCODING_PROVIDER: "${GEOCODING_PROVIDER:-photon}"
@@ -43,6 +64,8 @@ services:
       MAX_ACTIVE_FLOOD_HAZARDS: "${MAX_ACTIVE_FLOOD_HAZARDS:-50}"
       MAX_FLOOD_POLYGON_VERTICES: "${MAX_FLOOD_POLYGON_VERTICES:-2000}"
     depends_on:
+      postgres:
+        condition: service_healthy
       routing-engine:
         condition: service_healthy
       photon:
@@ -100,6 +123,7 @@ services:
     restart: unless-stopped
 
 volumes:
+  postgres-data:
   graphhopper-cache:
   photon-data:
     external: true

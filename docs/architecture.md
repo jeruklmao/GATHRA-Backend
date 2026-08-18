@@ -12,7 +12,9 @@ NestJS
   |      `---------------> independent flood geometry evaluation
   |-- Geocoding provider --> Photon 0.5.0
   |-- Flood provider ------> simulated in-memory snapshots
-  `-- Health -------------> selected routing + geocoding readiness
+  |-- IoT ingestion -------> PostgreSQL 17 raw telemetry
+  |-- IoT monitoring -----> bounded public read-only queries
+  `-- Health -------------> routing + geocoding + PostgreSQL readiness
 ```
 
 The deployed client path adds HTTPS and Cloudflare Tunnel before NestJS.
@@ -90,7 +92,7 @@ sets of Android view markers.
 
 ## NestJS application
 
-NestJS exposes four provider-neutral surfaces:
+NestJS exposes five provider-neutral areas:
 
 - `routes`: strict request validation, normalized response mapping,
   GraphHopper client, flood-aware filtering, and error contracts.
@@ -99,7 +101,28 @@ NestJS exposes four provider-neutral surfaces:
 - `flood`: read-only active GeoJSON snapshots, optional local development
   mutations, and an independently enabled bearer-authenticated administration
   controller.
-- `health`: readiness for both selected providers.
+- `health`: readiness for both selected providers and PostgreSQL.
+- `iot`: Gateway-authenticated raw packet batches, independent Protocol v1
+  decoding, PostgreSQL repositories, and public read-only Node monitoring.
+
+## IoT persistence boundary
+
+Gateway ingestion and monitoring are isolated under `src/iot`; they do not call
+`RoutesService` or `FloodHazardProvider`. Exact raw LoRa packets are stored with
+decoded measurement columns and reception metadata. The stable physical key is
+Gateway hardware MAC; editable logical Gateway ID is retained as a telemetry
+snapshot. Node measurement identity is enforced by the PostgreSQL unique key
+`(node_id, node_boot_session_id, node_sequence)`.
+
+The Gateway Bearer token is compared through SHA-256 and constant-time digest
+comparison. Only its digest is configured server-side. Monitoring endpoints do
+not use that credential and return frontend-oriented measurement/reception
+objects with unavailable values as JSON `null`. A validated exact-origin CORS
+allowlist permits read-only browser access from the future GATHRA website.
+
+SQL migrations in `database/migrations` execute once under an advisory lock at
+application bootstrap. PostgreSQL is mandatory for Backend readiness. Raw
+history is not automatically deleted or downsampled in v1.
 
 URI versioning creates `/api/v1`. Global DTO validation rejects unknown input.
 Request IDs and a sanitized common error envelope are applied across APIs.
@@ -178,8 +201,9 @@ its old risk as current. Generation and target-snapshot checks prevent late
 responses from replacing newer guidance. Active navigation reuses its guarded
 foreground-service reroute flow.
 
-There is no database, durable history, multi-instance consistency, sensor
-ingestion, or real-time push invalidation.
+Flood snapshots still have no database, durable history, multi-instance
+consistency, sensor conversion, or real-time push invalidation. PostgreSQL IoT
+telemetry is deliberately separate and is not a `FloodHazard` data source yet.
 
 ## Deployment boundary
 

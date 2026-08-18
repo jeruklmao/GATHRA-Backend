@@ -46,7 +46,9 @@ export class ApiExceptionFilter implements ExceptionFilter {
     if (normalized.status === HttpStatus.UNAUTHORIZED) {
       response.setHeader(
         'WWW-Authenticate',
-        'Bearer realm="gathra-flood-admin"',
+        request.path.includes('/iot/')
+          ? 'Bearer realm="gathra-iot-gateway"'
+          : 'Bearer realm="gathra-flood-admin"',
       );
     }
     response.json(body);

@@ -103,4 +103,53 @@ describe('readConfiguration', () => {
     expect(configuration.maxActiveFloodHazards).toBe(7);
     expect(configuration.maxFloodPolygonVertices).toBe(123);
   });
+
+  it('validates IoT database, token digest, and API limits', () => {
+    const configuration = readConfiguration({
+      DATABASE_URL: 'postgresql://user:pass@postgres:5432/gathra',
+      IOT_GATEWAY_TOKEN_SHA256: ` ${'AB'.repeat(32)} `,
+      IOT_MAX_BATCH_SIZE: '20',
+      IOT_MONITOR_MAX_LIMIT: '500',
+      IOT_MONITOR_ALLOWED_ORIGINS:
+        'https://gathra.my.id/, http://localhost:5173, https://gathra.my.id',
+    });
+
+    expect(configuration.databaseUrl).toBe(
+      'postgresql://user:pass@postgres:5432/gathra',
+    );
+    expect(configuration.iotGatewayTokenSha256).toBe('ab'.repeat(32));
+    expect(configuration.iotMaxBatchSize).toBe(20);
+    expect(configuration.iotMonitorMaxLimit).toBe(500);
+    expect(configuration.iotMonitorAllowedOrigins).toEqual([
+      'https://gathra.my.id',
+      'http://localhost:5173',
+    ]);
+  });
+
+  it('rejects malformed IoT security and persistence configuration', () => {
+    expect(() =>
+      readConfiguration({ IOT_GATEWAY_TOKEN_SHA256: 'not-a-digest' }),
+    ).toThrow(
+      'IOT_GATEWAY_TOKEN_SHA256 must be a 64-character hexadecimal SHA-256 digest',
+    );
+    expect(() =>
+      readConfiguration({ DATABASE_URL: 'sqlite:///tmp/db' }),
+    ).toThrow('DATABASE_URL must be a valid PostgreSQL connection URL');
+    expect(() => readConfiguration({ IOT_MAX_BATCH_SIZE: '51' })).toThrow(
+      'IOT_MAX_BATCH_SIZE must be an integer from 1 to 50',
+    );
+    expect(() =>
+      readConfiguration({
+        IOT_MONITOR_ALLOWED_ORIGINS: 'https://gathra.my.id/node',
+      }),
+    ).toThrow(
+      'IOT_MONITOR_ALLOWED_ORIGINS must contain only absolute HTTP(S) origins',
+    );
+  });
+
+  it('allows the production monitoring website origin by default', () => {
+    expect(readConfiguration({}).iotMonitorAllowedOrigins).toEqual([
+      'https://gathra.my.id',
+    ]);
+  });
 });

@@ -12,6 +12,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import type { Response } from 'express';
+import { DatabaseService } from '../database/database.service';
 import {
   GEOCODING_PROVIDER,
   type GeocodingProvider,
@@ -27,6 +28,9 @@ class HealthChecksDto {
 
   @ApiProperty({ enum: ['up', 'down'] })
   geocoding!: 'up' | 'down';
+
+  @ApiProperty({ enum: ['up', 'down'] })
+  postgresql!: 'up' | 'down';
 }
 
 class HealthResponseDto {
@@ -48,6 +52,7 @@ export class HealthController {
     private readonly routingProvider: RoutingProvider,
     @Inject(GEOCODING_PROVIDER)
     private readonly geocodingProvider: GeocodingProvider,
+    private readonly database: DatabaseService,
   ) {}
 
   @Get()
@@ -56,15 +61,21 @@ export class HealthController {
   async health(
     @Res({ passthrough: true }) response: Response,
   ): Promise<HealthResponseDto> {
-    const [routing, geocoding] = await Promise.allSettled([
+    const [routing, geocoding, postgresql] = await Promise.allSettled([
       this.routingProvider.health(),
       this.geocodingProvider.health(),
+      this.database.health(),
     ]);
     const checks: HealthChecksDto = {
       routing: routing.status === 'fulfilled' ? 'up' : 'down',
       geocoding: geocoding.status === 'fulfilled' ? 'up' : 'down',
+      postgresql: postgresql.status === 'fulfilled' ? 'up' : 'down',
     };
-    if (routing.status === 'fulfilled' && geocoding.status === 'fulfilled') {
+    if (
+      routing.status === 'fulfilled' &&
+      geocoding.status === 'fulfilled' &&
+      postgresql.status === 'fulfilled'
+    ) {
       return {
         status: 'ok',
         service: 'gathra-routing-api',

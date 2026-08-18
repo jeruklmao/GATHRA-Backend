@@ -295,7 +295,7 @@ describe('routing API (integration)', () => {
       .expect(200, {
         status: 'ok',
         service: 'gathra-routing-api',
-        checks: { routing: 'up', geocoding: 'up' },
+        checks: { routing: 'up', geocoding: 'up', postgresql: 'up' },
       });
 
     const docs = await request(app.getHttpServer())
@@ -313,7 +313,7 @@ describe('routing API (integration)', () => {
       .expect(503, {
         status: 'unavailable',
         service: 'gathra-routing-api',
-        checks: { routing: 'down', geocoding: 'up' },
+        checks: { routing: 'down', geocoding: 'up', postgresql: 'up' },
       });
   });
 });

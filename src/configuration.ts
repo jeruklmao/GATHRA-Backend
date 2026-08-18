@@ -13,9 +13,19 @@ const DEFAULT_GEOCODING_CACHE_ENTRIES = 1_000;
 const DEFAULT_GEOCODING_CACHE_TTL_MS = 60_000;
 const DEFAULT_GEOCODING_REVERSE_CACHE_TTL_MS = 300_000;
 const DEFAULT_REGION_VERSION = 'gathra-jakarta-tangerang-buffer-v1';
+const DEFAULT_DATABASE_URL =
+  'postgresql://gathra:gathra-local-only@127.0.0.1:5432/gathra';
+const DEFAULT_IOT_MAX_BATCH_SIZE = 50;
+const DEFAULT_IOT_MONITOR_MAX_LIMIT = 1_000;
+const DEFAULT_IOT_MONITOR_ALLOWED_ORIGINS = ['https://gathra.my.id'];
 
 export interface AppConfiguration {
   readonly port: number;
+  readonly databaseUrl: string;
+  readonly iotGatewayTokenSha256?: string;
+  readonly iotMaxBatchSize: number;
+  readonly iotMonitorMaxLimit: number;
+  readonly iotMonitorAllowedOrigins: readonly string[];
   readonly routingEngineBaseUrl: string;
   readonly routingEngineTimeoutMs: number;
   readonly geocodingProvider: 'fake' | 'photon';
@@ -50,8 +60,10 @@ export function readConfiguration(
   environment: NodeJS.ProcessEnv = process.env,
 ): AppConfiguration {
   const floodAdmin = readFloodAdminConfiguration(environment);
+  const iot = readIotConfiguration(environment);
   return {
     port: parsePositiveInteger(environment.PORT, DEFAULT_PORT),
+    ...iot,
     routingEngineBaseUrl: normalizeBaseUrl(
       environment.ROUTING_ENGINE_BASE_URL ?? DEFAULT_ROUTING_ENGINE_URL,
     ),
@@ -115,6 +127,114 @@ export function readConfiguration(
       2000,
     ),
   };
+}
+
+function readIotConfiguration(environment: NodeJS.ProcessEnv): {
+  readonly databaseUrl: string;
+  readonly iotGatewayTokenSha256?: string;
+  readonly iotMaxBatchSize: number;
+  readonly iotMonitorMaxLimit: number;
+  readonly iotMonitorAllowedOrigins: readonly string[];
+} {
+  const databaseUrl = environment.DATABASE_URL?.trim() || DEFAULT_DATABASE_URL;
+  let parsed: URL;
+  try {
+    parsed = new URL(databaseUrl);
+  } catch {
+    throw new Error('DATABASE_URL must be a valid PostgreSQL connection URL');
+  }
+  if (
+    (parsed.protocol !== 'postgresql:' && parsed.protocol !== 'postgres:') ||
+    parsed.hostname === '' ||
+    parsed.pathname.length <= 1
+  ) {
+    throw new Error('DATABASE_URL must be a valid PostgreSQL connection URL');
+  }
+  const configuredDigest =
+    environment.IOT_GATEWAY_TOKEN_SHA256?.trim().toLowerCase() || undefined;
+  if (
+    configuredDigest !== undefined &&
+    !/^[a-f0-9]{64}$/.test(configuredDigest)
+  ) {
+    throw new Error(
+      'IOT_GATEWAY_TOKEN_SHA256 must be a 64-character hexadecimal SHA-256 digest',
+    );
+  }
+  return {
+    databaseUrl,
+    ...(configuredDigest === undefined
+      ? {}
+      : { iotGatewayTokenSha256: configuredDigest }),
+    iotMaxBatchSize: parseBoundedIntegerStrict(
+      environment.IOT_MAX_BATCH_SIZE,
+      DEFAULT_IOT_MAX_BATCH_SIZE,
+      1,
+      50,
+      'IOT_MAX_BATCH_SIZE',
+    ),
+    iotMonitorMaxLimit: parseBoundedIntegerStrict(
+      environment.IOT_MONITOR_MAX_LIMIT,
+      DEFAULT_IOT_MONITOR_MAX_LIMIT,
+      1,
+      1_000,
+      'IOT_MONITOR_MAX_LIMIT',
+    ),
+    iotMonitorAllowedOrigins: parseHttpOrigins(
+      environment.IOT_MONITOR_ALLOWED_ORIGINS,
+    ),
+  };
+}
+
+function parseHttpOrigins(rawValue: string | undefined): readonly string[] {
+  const candidates =
+    rawValue === undefined || rawValue.trim() === ''
+      ? DEFAULT_IOT_MONITOR_ALLOWED_ORIGINS
+      : rawValue.split(',').map((value) => value.trim());
+  if (candidates.length === 0 || candidates.length > 16) {
+    throw new Error(
+      'IOT_MONITOR_ALLOWED_ORIGINS must contain from 1 to 16 HTTP(S) origins',
+    );
+  }
+  const normalized = candidates.map((candidate) => {
+    let parsed: URL;
+    try {
+      parsed = new URL(candidate);
+    } catch {
+      throw new Error(
+        'IOT_MONITOR_ALLOWED_ORIGINS must contain only absolute HTTP(S) origins',
+      );
+    }
+    if (
+      (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') ||
+      parsed.username !== '' ||
+      parsed.password !== '' ||
+      parsed.pathname !== '/' ||
+      parsed.search !== '' ||
+      parsed.hash !== '' ||
+      parsed.origin === 'null'
+    ) {
+      throw new Error(
+        'IOT_MONITOR_ALLOWED_ORIGINS must contain only absolute HTTP(S) origins',
+      );
+    }
+    return parsed.origin;
+  });
+  return [...new Set(normalized)];
+}
+
+function parseBoundedIntegerStrict(
+  rawValue: string | undefined,
+  fallback: number,
+  minimum: number,
+  maximum: number,
+  name: string,
+): number {
+  if (rawValue === undefined || rawValue.trim() === '') return fallback;
+  const parsed = Number(rawValue);
+  if (!Number.isSafeInteger(parsed) || parsed < minimum || parsed > maximum) {
+    throw new Error(`${name} must be an integer from ${minimum} to ${maximum}`);
+  }
+  return parsed;
 }
 
 function readFloodAdminConfiguration(environment: NodeJS.ProcessEnv): {
