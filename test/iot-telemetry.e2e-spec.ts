@@ -24,10 +24,14 @@ process.env.IOT_GATEWAY_TOKEN_SHA256 = createHash('sha256')
 
 // Exact deployed-Node codec vector from GATHRA-Node/test/test_main.cpp.
 const NODE_GOLDEN = Buffer.from([
-  0x47, 0x54, 0x01, 0x01, 0x02, 0x4e, 0x31, 0x01, 0x02, 0x03, 0x04, 0xa0, 0xb0,
-  0xc0, 0xd0, 0x00, 0x00, 0x12, 0x34, 0x00, 0x00, 0x02, 0xe4, 0x00, 0x00, 0x02,
-  0xe3, 0x00, 0x03, 0xfb, 0x2e, 0x11, 0xd7, 0x0e, 0x74, 0x07, 0x07, 0x00, 0x00,
-  0x03, 0x02, 0x02,
+  0x47, 0x54, 0x02, 0x01, 0x02, 0x4e, 0x31,
+  0x01, 0x02, 0x03, 0x04, 0xa0, 0xb0, 0xc0, 0xd0,
+  0x00, 0x00, 0x12, 0x34, 0x00, 0x00, 0x02, 0xe4,
+  0x00, 0x00, 0x02, 0xe3, 0x00, 0x03, 0xfb, 0x2e,
+  0x11, 0xd7, 0x0e, 0x74, 0x07, 0x07, 0x00, 0x00,
+  0x03, 0x02, 0x02, 0x00, 0x00, 0x69, 0xab, 0xcd,
+  0xef, 0x0a, 0x01, 0x69, 0xab, 0xf0, 0x00, 0x01,
+  0x02, 0x03, 0x05, 0x03, 0x00,
 ]);
 
 describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
@@ -86,7 +90,7 @@ describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
         expect(body).toEqual({
           status: 'ok',
           ingestionSchemaVersion: 1,
-          nodeProtocolVersion: 1,
+          nodeProtocolVersion: 2,
           maximumBatchSize: 50,
         });
       });
@@ -113,7 +117,10 @@ describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
       const ledger = await pool.query<{ name: string }>(
         'SELECT name FROM schema_migrations ORDER BY name',
       );
-      expect(ledger.rows).toEqual([{ name: '001_iot_raw_telemetry.sql' }]);
+      expect(ledger.rows).toEqual([
+        { name: '001_iot_raw_telemetry.sql' },
+        { name: '002_protocol_v2_telemetry.sql' },
+      ]);
     } finally {
       await pool.end();
     }
@@ -381,7 +388,7 @@ function batch(readings: unknown[]): object {
     gateway: {
       gatewayId: 'GTH-GW-AABBCCDDEEFF',
       hardwareMac: 'aa:bb:cc:dd:ee:ff',
-      firmwareVersion: '1.0.0',
+      firmwareVersion: '2.0.0',
       bootSessionId: 1_234_567_890,
     },
     readings,
@@ -416,8 +423,8 @@ function packet(values: {
   temperatureCentiC: number;
   humidityCentiPercent: number;
 }): Buffer {
-  const packetBytes = Buffer.alloc(42);
-  packetBytes.set([0x47, 0x54, 1, 1, 2, 0x4e, 0x31], 0);
+  const packetBytes = Buffer.alloc(60);
+  packetBytes.set([0x47, 0x54, 2, 1, 2, 0x4e, 0x31], 0);
   const offset = 7;
   packetBytes.writeUInt32BE(0x0102_0304, offset);
   packetBytes.writeUInt32BE(values.sequence, offset + 4);
@@ -431,5 +438,14 @@ function packet(values: {
   packetBytes.set([7, 7, 4], offset + 28);
   packetBytes.writeUInt16BE(7, offset + 31);
   packetBytes.writeUInt16BE(128, offset + 33);
+  packetBytes[offset + 35] = 0; // RTC_TIMER
+  packetBytes[offset + 36] = 0; // RTC VALID
+  packetBytes.writeUInt32BE(1_787_600_000, offset + 37);
+  packetBytes[offset + 41] = 10;
+  packetBytes[offset + 42] = 0; // no pending maintenance
+  packetBytes.writeUInt32BE(0, offset + 43);
+  packetBytes.writeUInt32BE(0, offset + 47);
+  packetBytes[offset + 51] = 0;
+  packetBytes[offset + 52] = 0xff;
   return packetBytes;
 }

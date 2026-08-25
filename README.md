@@ -160,7 +160,7 @@ available. The response reports each component independently.
 ### Raw IoT telemetry
 
 Gateway ingestion accepts batches of exact Base64 LoRa payloads plus reception
-metadata. NestJS independently validates and decodes Node Protocol v1, stores
+metadata. NestJS independently validates and decodes Node Protocol v2, stores
 the exact payload as `BYTEA`, normalizes unavailable sensor sentinels to SQL
 `NULL`, and uses a hard unique constraint on
 `(node_id, node_boot_session_id, node_sequence)`. A committed retry returns
@@ -417,9 +417,9 @@ avoid requiring GraphHopper or Photon network access during that suite.
   uses only a token digest in the process environment; the raw token remains
   external deployment state.
 - Public Swagger is an observed current exposure, not an authentication layer.
-- Gateway ingestion uses one static Bearer credential model in v1; public
+- Gateway ingestion currently uses one static Bearer credential; public
   monitoring never exposes it.
-- Raw telemetry is retained indefinitely in v1. Define reviewed retention or
+- Raw telemetry is retained indefinitely in the current release. Define reviewed retention or
   downsampling before deployment scale makes that impractical; TimescaleDB is
   intentionally not introduced yet.
 - IoT telemetry does not alter routes or create flood polygons/classes.

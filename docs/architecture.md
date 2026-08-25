@@ -102,7 +102,7 @@ NestJS exposes five provider-neutral areas:
   mutations, and an independently enabled bearer-authenticated administration
   controller.
 - `health`: readiness for both selected providers and PostgreSQL.
-- `iot`: Gateway-authenticated raw packet batches, independent Protocol v1
+- `iot`: Gateway-authenticated raw packet batches, independent Protocol v2
   decoding, PostgreSQL repositories, and public read-only Node monitoring.
 
 ## IoT persistence boundary
@@ -112,7 +112,9 @@ Gateway ingestion and monitoring are isolated under `src/iot`; they do not call
 decoded measurement columns and reception metadata. The stable physical key is
 Gateway hardware MAC; editable logical Gateway ID is retained as a telemetry
 snapshot. Node measurement identity is enforced by the PostgreSQL unique key
-`(node_id, node_boot_session_id, node_sequence)`.
+`(node_id, node_boot_session_id, node_sequence)`. The legacy column name now
+stores the Protocol v2 persistent session ID; it is retained to preserve rows,
+indexes, and the public monitoring envelope.
 
 The Gateway Bearer token is compared through SHA-256 and constant-time digest
 comparison. Only its digest is configured server-side. Monitoring endpoints do
@@ -122,7 +124,7 @@ allowlist permits read-only browser access from the future GATHRA website.
 
 SQL migrations in `database/migrations` execute once under an advisory lock at
 application bootstrap. PostgreSQL is mandatory for Backend readiness. Raw
-history is not automatically deleted or downsampled in v1.
+history is not automatically deleted or downsampled.
 
 URI versioning creates `/api/v1`. Global DTO validation rejects unknown input.
 Request IDs and a sanitized common error envelope are applied across APIs.

@@ -1,29 +1,31 @@
 import {
-  decodeNodeTelemetryV1,
-  decodeNodeTelemetryV1Base64,
+  decodeNodeTelemetryV2,
+  decodeNodeTelemetryV2Base64,
   INT16_MIN,
   NodeProtocolDecodeError,
   UINT16_MAX,
   UINT32_MAX,
-} from './node-protocol-v1';
+} from './node-protocol-v2';
 
-// Copied byte-for-byte from GATHRA-Node/test/test_main.cpp. This vector is
-// produced by the deployed Node codec, not by the TypeScript decoder.
+// Copied byte-for-byte from GATHRA-Node/test/test_main.cpp.
 const NODE_GOLDEN = Buffer.from([
-  0x47, 0x54, 0x01, 0x01, 0x02, 0x4e, 0x31, 0x01, 0x02, 0x03, 0x04, 0xa0,
-  0xb0, 0xc0, 0xd0, 0x00, 0x00, 0x12, 0x34, 0x00, 0x00, 0x02, 0xe4, 0x00,
-  0x00, 0x02, 0xe3, 0x00, 0x03, 0xfb, 0x2e, 0x11, 0xd7, 0x0e, 0x74, 0x07,
-  0x07, 0x00, 0x00, 0x03, 0x02, 0x02,
+  0x47, 0x54, 0x02, 0x01, 0x02, 0x4e, 0x31,
+  0x01, 0x02, 0x03, 0x04, 0xa0, 0xb0, 0xc0, 0xd0,
+  0x00, 0x00, 0x12, 0x34, 0x00, 0x00, 0x02, 0xe4,
+  0x00, 0x00, 0x02, 0xe3, 0x00, 0x03, 0xfb, 0x2e,
+  0x11, 0xd7, 0x0e, 0x74, 0x07, 0x07, 0x00, 0x00,
+  0x03, 0x02, 0x02, 0x00, 0x00, 0x69, 0xab, 0xcd,
+  0xef, 0x0a, 0x01, 0x69, 0xab, 0xf0, 0x00, 0x01,
+  0x02, 0x03, 0x05, 0x03, 0x00,
 ]);
 
-describe('Node Protocol v1 decoder', () => {
+describe('Node Protocol v2 telemetry decoder', () => {
   it('decodes the exact GATHRA-Node golden telemetry vector', () => {
-    const decoded = decodeNodeTelemetryV1(NODE_GOLDEN);
-
+    const decoded = decodeNodeTelemetryV2(NODE_GOLDEN);
     expect(decoded).toMatchObject({
-      protocolVersion: 1,
+      protocolVersion: 2,
       nodeId: 'N1',
-      bootSessionId: 0x0102_0304,
+      persistentSessionId: 0x0102_0304,
       sequence: 0xa0b0_c0d0,
       medianEchoUs: 0x1234,
       rawDistanceMm: 740,
@@ -37,81 +39,85 @@ describe('Node Protocol v1 decoder', () => {
       filterState: 0,
       qualityFlags: 3,
       healthFlags: 0x0202,
+      bootReason: 0,
+      rtcState: 0,
+      rtcUnixTime: 0x69ab_cdef,
+      pollIntervalMinutes: 10,
+      scheduleState: 1,
+      scheduledMaintenanceUnix: 0x69ab_f000,
+      lastCommandId: 0x0102_0305,
+      lastCommandType: 3,
+      lastCommandResult: 0,
     });
     expect(decoded.rawPayload).toEqual(NODE_GOLDEN);
   });
 
-  it.each(['A', 'Z'.repeat(24)])(
-    'accepts boundary Node ID %s',
-    (nodeId) => {
-      const decoded = decodeNodeTelemetryV1(
-        manualPacket({ nodeId, bootSessionId: UINT32_MAX }),
-      );
-      expect(decoded.nodeId).toBe(nodeId);
-      expect(decoded.bootSessionId).toBe(UINT32_MAX);
-    },
-  );
+  it.each(['A', 'Z'.repeat(24)])('accepts boundary Node ID %s', (nodeId) => {
+    const decoded = decodeNodeTelemetryV2(
+      manualPacket({ nodeId, persistentSessionId: UINT32_MAX }),
+    );
+    expect(decoded.nodeId).toBe(nodeId);
+    expect(decoded.persistentSessionId).toBe(UINT32_MAX);
+  });
 
-  it('normalizes every unavailable sentinel to null', () => {
-    const decoded = decodeNodeTelemetryV1(
+  it('normalizes sensor and invalid-RTC sentinels to null', () => {
+    const decoded = decodeNodeTelemetryV2(
       manualPacket({
         rawDistanceMm: UINT32_MAX,
         acceptedDistanceMm: UINT32_MAX,
         temperatureCentiC: INT16_MIN,
         humidityCentiPercent: UINT16_MAX,
+        rtcState: 1,
+        rtcUnixTime: 0,
       }),
     );
-
     expect(decoded.rawDistanceMm).toBeNull();
     expect(decoded.acceptedDistanceMm).toBeNull();
     expect(decoded.temperatureCentiC).toBeNull();
     expect(decoded.humidityCentiPercent).toBeNull();
+    expect(decoded.rtcUnixTime).toBeNull();
   });
 
-  it('preserves unsigned 32-bit values above PostgreSQL INT32_MAX', () => {
-    const decoded = decodeNodeTelemetryV1(
+  it('preserves unsigned big-endian values above INT32_MAX', () => {
+    const decoded = decodeNodeTelemetryV2(
       manualPacket({
-        bootSessionId: 0xffff_fffe,
+        persistentSessionId: 0xffff_fffe,
         sequence: 0x8000_0001,
         medianEchoUs: 0xf000_0001,
         rawDistanceMm: 0xefff_ffff,
       }),
     );
-
-    expect(decoded.bootSessionId).toBe(4_294_967_294);
+    expect(decoded.persistentSessionId).toBe(4_294_967_294);
     expect(decoded.sequence).toBe(2_147_483_649);
     expect(decoded.medianEchoUs).toBe(4_026_531_841);
     expect(decoded.rawDistanceMm).toBe(4_026_531_839);
   });
 
-  it('rejects bad magic, version, ACK type, truncation, trailing data, invalid ID, and filter state', () => {
+  it('rejects v1, wrong type, malformed length, invalid IDs, enums, and state flags', () => {
     expectCode(withByte(NODE_GOLDEN, 0, 0), 'BAD_MAGIC');
-    expectCode(withByte(NODE_GOLDEN, 2, 2), 'UNSUPPORTED_VERSION');
+    expectCode(withByte(NODE_GOLDEN, 2, 1), 'UNSUPPORTED_VERSION');
     expectCode(withByte(NODE_GOLDEN, 3, 2), 'WRONG_TYPE');
     expectCode(NODE_GOLDEN.subarray(0, -1), 'TRUNCATED');
     expectCode(Buffer.concat([NODE_GOLDEN, Buffer.from([0])]), 'TRAILING_DATA');
     expectCode(manualPacket({ nodeId: 'bad!' }), 'INVALID_NODE_ID');
-    const highBitNodeId = Buffer.from(NODE_GOLDEN);
-    highBitNodeId[5] = 0xc1; // Node.js ASCII decoding would otherwise alias this to 'A'.
-    expectCode(highBitNodeId, 'INVALID_NODE_ID');
     expectCode(manualPacket({ filterState: 8 }), 'INVALID_FILTER_STATE');
+    expectCode(manualPacket({ bootReason: 6 }), 'INVALID_ENUM');
+    expectCode(manualPacket({ rtcState: 1, rtcUnixTime: 1 }), 'INVALID_FLAGS');
+    expectCode(manualPacket({ pollIntervalMinutes: 0 }), 'INVALID_FLAGS');
   });
 
   it('requires canonical Base64 and enforces the radio capacity', () => {
-    expect(decodeNodeTelemetryV1Base64(NODE_GOLDEN.toString('base64')).nodeId)
+    expect(decodeNodeTelemetryV2Base64(NODE_GOLDEN.toString('base64')).nodeId)
       .toBe('N1');
-    expect(() => decodeNodeTelemetryV1Base64('not base64')).toThrow(
+    expect(() => decodeNodeTelemetryV2Base64('not base64')).toThrow(
       NodeProtocolDecodeError,
     );
     expectCode(Buffer.alloc(97), 'PACKET_TOO_LARGE');
   });
 });
 
-function expectCode(
-  packet: Buffer,
-  code: NodeProtocolDecodeError['code'],
-): void {
-  expect(() => decodeNodeTelemetryV1(packet)).toThrow(
+function expectCode(packet: Buffer, code: NodeProtocolDecodeError['code']): void {
+  expect(() => decodeNodeTelemetryV2(packet)).toThrow(
     expect.objectContaining({ code }),
   );
 }
@@ -125,7 +131,7 @@ function withByte(source: Buffer, offset: number, value: number): Buffer {
 function manualPacket(
   values: Partial<{
     nodeId: string;
-    bootSessionId: number;
+    persistentSessionId: number;
     sequence: number;
     medianEchoUs: number;
     rawDistanceMm: number;
@@ -133,14 +139,18 @@ function manualPacket(
     temperatureCentiC: number;
     humidityCentiPercent: number;
     filterState: number;
+    bootReason: number;
+    rtcState: number;
+    rtcUnixTime: number;
+    pollIntervalMinutes: number;
   }>,
 ): Buffer {
   const node = Buffer.from(values.nodeId ?? 'N1', 'ascii');
-  const packet = Buffer.alloc(40 + node.length);
-  packet.set([0x47, 0x54, 1, 1, node.length], 0);
+  const packet = Buffer.alloc(58 + node.length);
+  packet.set([0x47, 0x54, 2, 1, node.length], 0);
   node.copy(packet, 5);
   const offset = 5 + node.length;
-  packet.writeUInt32BE(values.bootSessionId ?? 1, offset);
+  packet.writeUInt32BE(values.persistentSessionId ?? 1, offset);
   packet.writeUInt32BE(values.sequence ?? 2, offset + 4);
   packet.writeUInt32BE(values.medianEchoUs ?? 4321, offset + 8);
   packet.writeUInt32BE(values.rawDistanceMm ?? 742, offset + 12);
@@ -152,5 +162,14 @@ function manualPacket(
   packet.set([7, 7, values.filterState ?? 4], offset + 28);
   packet.writeUInt16BE(7, offset + 31);
   packet.writeUInt16BE(128, offset + 33);
+  packet[offset + 35] = values.bootReason ?? 0;
+  packet[offset + 36] = values.rtcState ?? 0;
+  packet.writeUInt32BE(values.rtcUnixTime ?? 1_787_600_000, offset + 37);
+  packet[offset + 41] = values.pollIntervalMinutes ?? 10;
+  packet[offset + 42] = 0;
+  packet.writeUInt32BE(0, offset + 43);
+  packet.writeUInt32BE(0, offset + 47);
+  packet[offset + 51] = 0;
+  packet[offset + 52] = 0xff;
   return packet;
 }

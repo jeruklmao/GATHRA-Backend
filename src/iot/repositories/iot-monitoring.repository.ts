@@ -4,7 +4,7 @@ import type {
   MonitoringNodeSummary,
   MonitoringTelemetry,
 } from '../models/monitoring.models';
-import { FILTER_STATE_NAMES } from '../protocol/node-protocol-v1';
+import { FILTER_STATE_NAMES } from '../protocol/node-protocol-v2';
 
 interface TelemetryRow {
   readonly telemetry_id: string | null;

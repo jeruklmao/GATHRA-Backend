@@ -33,7 +33,7 @@ export class TelemetryIngestionController {
   @Post('telemetry/batch')
   @HttpCode(200)
   @ApiOperation({
-    summary: 'Persist a Gateway batch of exact Protocol v1 LoRa packets',
+    summary: 'Persist a Gateway batch of exact Protocol v2 LoRa packets',
     description:
       'Gateway-authenticated ingestion. Each packet is independently decoded and returns INSERTED, DUPLICATE, or REJECTED_INVALID.',
   })
@@ -67,14 +67,14 @@ export class TelemetryIngestionController {
   async ping(): Promise<{
     status: 'ok';
     ingestionSchemaVersion: 1;
-    nodeProtocolVersion: 1;
+    nodeProtocolVersion: 2;
     maximumBatchSize: number;
   }> {
     await this.database.health();
     return {
       status: 'ok',
       ingestionSchemaVersion: 1,
-      nodeProtocolVersion: 1,
+      nodeProtocolVersion: 2,
       maximumBatchSize: readConfiguration().iotMaxBatchSize,
     };
   }

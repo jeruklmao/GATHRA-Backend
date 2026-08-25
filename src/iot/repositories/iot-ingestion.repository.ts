@@ -79,7 +79,8 @@ export class IotIngestionRepository {
             gatewayId,
             gateway.gatewayId,
             decoded.nodeId,
-            decoded.bootSessionId,
+            // Legacy SQL column name; Protocol v2 stores persistentSessionId.
+            decoded.persistentSessionId,
             decoded.sequence,
             reception.gatewayTimeTrusted
               ? new Date(reception.gatewayReceivedAt as string)

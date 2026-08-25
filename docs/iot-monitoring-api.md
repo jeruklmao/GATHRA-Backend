@@ -11,6 +11,9 @@ paths, credentials, queries, fragments, or wildcards.
 All history uses `serverReceivedAt` as its trusted timeline. Gateway UTC is
 also returned when it was trusted at capture. No `ONLINE` boolean is invented;
 clients receive `lastSeenAt` and can define a reviewed freshness policy later.
+For Protocol 2 rows, the retained response field `bootSessionId` contains the
+Node persistentSessionId. The legacy name is preserved to avoid a monitoring
+API/database rewrite; it no longer implies a session created at every boot.
 
 ## List Nodes
 

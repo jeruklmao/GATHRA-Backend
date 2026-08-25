@@ -1,4 +1,4 @@
-import type { FilterStateName } from '../protocol/node-protocol-v1';
+import type { FilterStateName } from '../protocol/node-protocol-v2';
 
 export interface MonitoringTelemetry {
   readonly id: number;
