@@ -61,6 +61,24 @@ describe('readConfiguration', () => {
     ).toBe(true);
   });
 
+  it('selects sensor hazards by default only in production and supports explicit simulation', () => {
+    expect(readConfiguration({}).floodProvider).toBe('in-memory');
+    expect(readConfiguration({ NODE_ENV: 'production' }).floodProvider).toBe(
+      'sensor',
+    );
+    expect(
+      readConfiguration({ NODE_ENV: 'production', FLOOD_PROVIDER: 'in-memory' })
+        .floodProvider,
+    ).toBe('in-memory');
+    expect(
+      readConfiguration({ NODE_ENV: 'test', FLOOD_PROVIDER: 'sensor' })
+        .floodProvider,
+    ).toBe('sensor');
+    expect(() => readConfiguration({ FLOOD_PROVIDER: 'unknown' })).toThrow(
+      'FLOOD_PROVIDER must be either sensor or in-memory',
+    );
+  });
+
   it('keeps authenticated flood administration disabled by default', () => {
     const configuration = readConfiguration({});
 

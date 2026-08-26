@@ -48,7 +48,7 @@ export interface AppConfiguration {
     readonly fallbackLatitude: number;
     readonly fallbackLongitude: number;
   };
-  readonly floodProvider: 'in-memory';
+  readonly floodProvider: 'in-memory' | 'sensor';
   readonly enableDevFloodEndpoints: boolean;
   readonly enableFloodAdminEndpoints: boolean;
   readonly floodAdminTokenSha256?: string;
@@ -114,7 +114,7 @@ export function readConfiguration(
     geocodingTokenSecret:
       environment.GEOCODING_TOKEN_SECRET?.trim() || undefined,
     geocodingRegion: readGeocodingRegion(environment),
-    floodProvider: 'in-memory',
+    floodProvider: readFloodProvider(environment),
     enableDevFloodEndpoints:
       environment.ENABLE_DEV_FLOOD_ENDPOINTS?.toLowerCase() === 'true',
     ...floodAdmin,
@@ -127,6 +127,19 @@ export function readConfiguration(
       2000,
     ),
   };
+}
+
+function readFloodProvider(
+  environment: NodeJS.ProcessEnv,
+): AppConfiguration['floodProvider'] {
+  const configured = environment.FLOOD_PROVIDER?.trim().toLowerCase();
+  if (configured === undefined || configured === '') {
+    return environment.NODE_ENV === 'production' ? 'sensor' : 'in-memory';
+  }
+  if (configured !== 'sensor' && configured !== 'in-memory') {
+    throw new Error('FLOOD_PROVIDER must be either sensor or in-memory');
+  }
+  return configured;
 }
 
 function readIotConfiguration(environment: NodeJS.ProcessEnv): {

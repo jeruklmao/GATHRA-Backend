@@ -13,7 +13,7 @@ pilot. Its stable boundary is:
 ```text
 Android -> NestJS -> GraphHopper
                  -> Photon
-                 -> in-memory simulated flood provider
+                 -> PostgreSQL sensor-backed flood provider
 ```
 
 - The live NestJS API base URL is `https://api.gathra.my.id/`.
@@ -53,12 +53,13 @@ except in explicit typo-quality fixtures.
 
 ## Flood-safety invariants
 
-- Flood hazards are simulated, in-memory, per-process, and not a public-safety
-  data source.
+- Production flood hazards are sensor-backed but remain modeled observations,
+  not a public-safety guarantee. In-memory hazards are explicit simulation.
 - Development mutation endpoints are unauthenticated and disabled by default.
   Enable them only for an isolated local test stack.
-- A route intersecting a `BLOCKED` polygon cannot be selectable or
-  recommended. Blocked-only provider results return `NO_ROUTE_DUE_TO_FLOOD`.
+- A route intersecting a polygon whose runtime multiplier is zero cannot be
+  selectable or recommended. Exclusion-only results return
+  `NO_ROUTE_DUE_TO_FLOOD`.
 - `UNKNOWN` and `NOT_EVALUATED` are never represented as LOW.
 - A route-risk snapshot must match the visible hazard snapshot. Mismatch
   triggers guarded recalculation; stale guidance must not imply current safety.
@@ -104,9 +105,8 @@ import merely to validate source changes.
   it as an acceptance gate.
 - Exercise Photon candidate-volume backup, restore, and rollback on disposable
   data before relying on the procedure operationally.
-- A future flood-storage milestone should preserve `FloodHazardProvider` while
-  adding transactional immutable PostgreSQL/PostGIS snapshots; keep sensor
-  ingestion out of that storage milestone.
+- Sensor deployments and interpreted current state use ordinary PostgreSQL
+  JSONB geometry; immutable Protocol 3 telemetry remains the source of truth.
 
 ## Onboarding checklist
 

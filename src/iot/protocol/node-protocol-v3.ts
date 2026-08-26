@@ -24,6 +24,42 @@ export const FILTER_STATE_NAMES = [
   'INVALID',
 ] as const;
 
+// Protocol 3 values mirror GATHRA-Node/lib/model/model.hpp. Keep classifier
+// policy named rather than scattering anonymous wire bits.
+export const NODE_FILTER_STATE = {
+  STABLE: 0,
+  ACCEPTED: 1,
+  VERIFY_RISE: 2,
+  VERIFY_FALL: 3,
+  TRANSIENT_REJECTED: 4,
+  CHANGE_CONFIRMED: 5,
+  UNCERTAIN: 6,
+  INVALID: 7,
+} as const;
+
+export const NODE_QUALITY_FLAG = {
+  ENVIRONMENT_COMPENSATED: 1 << 0,
+  RAW_DISTANCE_VALID: 1 << 1,
+  ACCEPTED_DISTANCE_VALID: 1 << 2,
+  INSTALLATION_LIMITS_APPLIED: 1 << 3,
+  VERIFICATION_PERFORMED: 1 << 4,
+} as const;
+
+export const NODE_HEALTH_FLAG = {
+  SONAR_INVALID: 1 << 0,
+  DHT_INVALID: 1 << 1,
+  ENVIRONMENT_STALE: 1 << 2,
+  BATTERY_LOW: 1 << 3,
+  BATTERY_CRITICAL: 1 << 4,
+  RADIO_ERROR: 1 << 5,
+  TX_UNACKED: 1 << 6,
+  FILTER_TRANSIENT: 1 << 7,
+  FILTER_UNCERTAIN: 1 << 8,
+  CALIBRATION_MISSING: 1 << 9,
+  SENSOR_DEGRADED: 1 << 10,
+  BATTERY_ADC_INVALID: 1 << 11,
+} as const;
+
 export type FilterStateName = (typeof FILTER_STATE_NAMES)[number];
 
 export interface DecodedNodeTelemetryV3 {

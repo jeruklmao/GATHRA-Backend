@@ -55,6 +55,16 @@ export function configureApplication(app: INestApplication): void {
       },
       'gatewayBearer',
     )
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'opaque flood-administrator token',
+        description:
+          'Required only for authenticated flood sensor deployment administration.',
+      },
+      'floodAdminBearer',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfiguration);
   SwaggerModule.setup('api/docs', app, document, {

@@ -13,17 +13,40 @@ export class FloodHazardPropertiesDto {
   @ApiProperty({ example: 'Simulated HIGH flood hazard', nullable: true })
   description!: string | null;
 
-  @ApiProperty({ example: '2026-07-28T06:20:00.000Z' })
-  observedAt!: string;
+  @ApiProperty({ example: '2026-07-28T06:20:00.000Z', nullable: true })
+  observedAt!: string | null;
 
   @ApiProperty({ example: '2026-07-29T06:20:00.000Z', nullable: true })
   validUntil!: string | null;
 
-  @ApiProperty({ example: 'SIMULATED' })
+  @ApiProperty({ enum: ['SIMULATED', 'SENSOR'], example: 'SENSOR' })
   source!: string;
 
   @ApiProperty({ example: ['node_central_01'], type: [String] })
   sourceNodeIds!: string[];
+
+  @ApiProperty({
+    description:
+      'Runtime routing multiplier. 1 means no penalty; 0 means hard exclusion.',
+    example: 0.35,
+    minimum: 0,
+    maximum: 1,
+  })
+  routingMultiplier!: number;
+
+  @ApiProperty({
+    description: 'Bounded reason codes explaining UNKNOWN sensor state.',
+    type: [String],
+    example: ['STALE'],
+  })
+  reasonCodes!: string[];
+
+  @ApiProperty({
+    enum: ['FRESH', 'STALE', 'NO_TELEMETRY'],
+    nullable: true,
+    example: 'FRESH',
+  })
+  freshness!: string | null;
 }
 
 export class GeoJsonPolygonGeometryDto {
@@ -72,7 +95,7 @@ export class FloodHazardsResponseDto {
   @ApiProperty({ example: '2026-07-29T06:20:00.000Z', nullable: true })
   validUntil!: string | null;
 
-  @ApiProperty({ example: 'SIMULATED' })
+  @ApiProperty({ enum: ['SIMULATED', 'SENSOR'], example: 'SENSOR' })
   source!: string;
 
   @ApiProperty({ type: [FloodHazardFeatureDto] })

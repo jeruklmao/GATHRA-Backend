@@ -106,7 +106,7 @@ describe('authenticated flood administration (integration)', () => {
       .expect(404);
   });
 
-  it('keeps the administration surface out of public OpenAPI documentation', async () => {
+  it('documents sensor deployment administration while retaining legacy simulation privacy', async () => {
     const docs = await supertest(app!.getHttpServer())
       .get('/api/docs-json')
       .expect(200);
@@ -114,7 +114,11 @@ describe('authenticated flood administration (integration)', () => {
     expect(docs.body.paths).toHaveProperty('/api/v1/flood-hazards');
     expect(
       Object.keys(docs.body.paths).filter((path) => path.includes('/admin/')),
-    ).toEqual([]);
+    ).toEqual([
+      '/api/v1/admin/iot/sensor-deployments',
+      '/api/v1/admin/iot/sensor-deployments/{nodeId}',
+    ]);
+    expect(docs.body.paths).not.toHaveProperty('/api/v1/admin/flood-hazards');
   });
 });
 

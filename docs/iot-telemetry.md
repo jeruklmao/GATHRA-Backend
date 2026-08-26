@@ -1,6 +1,12 @@
 # IoT raw telemetry persistence
 
-This module accepts exact GATHRA Node Protocol 3 TELEMETRY packets and provides read-only monitoring. It does not implement Gateway/Node command queues, command APIs, remote scheduling, water-height calculation, flood classification, sensor placement, or route geometry. Protocol 1 and 2 packets are rejected; there is no compatibility decoder.
+This module accepts exact GATHRA Node Protocol 3 TELEMETRY packets and provides
+read-only raw monitoring. It does not implement Gateway/Node command queues,
+command APIs, or remote scheduling. After raw persistence commits, the separate
+sensor-flood module may derive water height and current hazard state for a
+configured deployment; see
+[sensor-flood-hazards.md](sensor-flood-hazards.md). Protocol 1 and 2 packets are
+rejected; there is no compatibility decoder.
 
 ## Ingestion boundary
 
@@ -34,6 +40,11 @@ UNIQUE (node_id, node_boot_session_id, node_sequence)
 Migration 003 adds nullable BIGINT `reference_distance_mm` with a checked 1–4294967295 domain and expands the historical database version constraint to `IN (1,2,3)`. The production application decoder itself is Protocol 3-only. No table or historical migration is rewritten or dropped.
 
 INSERT ... ON CONFLICT DO NOTHING RETURNING id makes retries idempotent. A committed retry returns DUPLICATE.
+
+Raw ingestion remains the primary durability boundary. Derived flood-state
+recomputation runs only after the raw batch transaction commits. Missing
+deployment or a classifier failure cannot reject or roll back valid telemetry;
+failures are logged and can be recovered by a later packet or deployment PUT.
 
 ## Sentinels and numeric storage
 

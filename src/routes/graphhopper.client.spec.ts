@@ -1,6 +1,10 @@
 import { GraphHopperClient } from './graphhopper.client';
 import { TravelModeDto } from './dto/route-preview-request.dto';
 import { RoutingProviderError } from './routing-provider';
+import type {
+  FloodHazard,
+  FloodRiskLevel,
+} from '../flood/models/flood-hazard';
 
 const originalEnvironment = { ...process.env };
 
@@ -368,6 +372,65 @@ describe('GraphHopperClient', () => {
     });
   });
 
+  it.each([
+    ['LOW', 1, false, TravelModeDto.CAR],
+    ['UNKNOWN', 1, false, TravelModeDto.CAR],
+    ['MEDIUM', 0.35, true, TravelModeDto.CAR],
+    ['HIGH', 0.05, true, TravelModeDto.CAR],
+    ['BLOCKED', 0, true, TravelModeDto.CAR],
+    ['MEDIUM', 0.7, true, TravelModeDto.CAR],
+    ['UNKNOWN', 0.5, true, TravelModeDto.CAR],
+    ['BLOCKED', 0.2, true, TravelModeDto.CAR],
+    ['MEDIUM', 0.35, true, TravelModeDto.MOTORCYCLE],
+  ] as const)(
+    'uses runtime %s multiplier %s in the custom model (present=%s, mode=%s)',
+    async (level, routingMultiplier, hasCustomModel, travelMode) => {
+      const fetchMock = jest.spyOn(globalThis, 'fetch').mockResolvedValue(
+        jsonResponse({
+          paths: [
+            graphHopperPath(1_000, 60_000, [
+              [106.8167, -6.2],
+              [106.82, -6.196],
+            ]),
+          ],
+        }),
+      );
+
+      await new GraphHopperClient().preview({
+        origin: { latitude: -6.2, longitude: 106.8167 },
+        destination: { latitude: -6.196, longitude: 106.82 },
+        travelMode,
+        alternatives: 0,
+        hazards: [hazard(level, routingMultiplier)],
+      });
+
+      const payload = JSON.parse(
+        String(fetchMock.mock.calls[0][1]?.body),
+      ) as Record<string, unknown>;
+      expect(payload.profile).toBe(
+        travelMode === TravelModeDto.CAR ? 'car' : 'motorcycle',
+      );
+      if (!hasCustomModel) {
+        expect(payload.custom_model).toBeUndefined();
+        expect(payload['ch.disable']).toBeUndefined();
+      } else {
+        expect(payload.custom_model).toMatchObject({
+          areas: {
+            type: 'FeatureCollection',
+            features: [{ id: expect.stringMatching(/^flood_area_/) }],
+          },
+          priority: [
+            {
+              if: expect.stringMatching(/^in_flood_area_/),
+              multiply_by: String(routingMultiplier),
+            },
+          ],
+        });
+        expect(payload['ch.disable']).toBe(true);
+      }
+    },
+  );
+
   it('classifies an aborted provider request as a timeout', async () => {
     process.env.ROUTING_ENGINE_TIMEOUT_MS = '1';
     jest.spyOn(globalThis, 'fetch').mockImplementation((_input, init) => {
@@ -392,6 +455,33 @@ describe('GraphHopperClient', () => {
     });
   });
 });
+
+function hazard(
+  level: FloodRiskLevel,
+  routingMultiplier: number,
+): FloodHazard {
+  return {
+    id: `runtime-${level}-${routingMultiplier}`,
+    level,
+    routingMultiplier,
+    confidence: 1,
+    observedAt: new Date('2026-08-26T00:00:00.000Z'),
+    validUntil: new Date('2026-08-26T01:00:00.000Z'),
+    sourceNodeIds: ['N1'],
+    geometry: {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [106.817, -6.201],
+          [106.819, -6.201],
+          [106.819, -6.199],
+          [106.817, -6.199],
+          [106.817, -6.201],
+        ],
+      ],
+    },
+  };
+}
 
 function jsonResponse(body: unknown): Response {
   return new Response(JSON.stringify(body), {

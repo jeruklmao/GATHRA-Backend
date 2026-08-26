@@ -1,5 +1,6 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { readConfiguration } from '../../configuration';
+import { SensorDeploymentService } from '../../flood/sensors/sensor-deployment.service';
 import type { IngestTelemetryBatchDto } from '../dto/ingest-telemetry.dto';
 import type {
   IngestionBatchResponse,
@@ -15,8 +16,12 @@ import { IotIngestionRepository } from '../repositories/iot-ingestion.repository
 @Injectable()
 export class TelemetryIngestionService {
   private readonly maximumBatchSize = readConfiguration().iotMaxBatchSize;
+  private readonly logger = new Logger(TelemetryIngestionService.name);
 
-  constructor(private readonly repository: IotIngestionRepository) {}
+  constructor(
+    private readonly repository: IotIngestionRepository,
+    private readonly sensorDeployments: SensorDeploymentService,
+  ) {}
 
   async ingest(
     request: IngestTelemetryBatchDto,
@@ -70,6 +75,30 @@ export class TelemetryIngestionService {
       },
       valid,
       serverReceivedAt,
+    );
+    const insertedNodeIds = [
+      ...new Set(
+        persistence
+          .filter((persisted) => persisted.inserted)
+          .map((persisted) => persisted.nodeId),
+      ),
+    ];
+    await Promise.all(
+      insertedNodeIds.map(async (nodeId) => {
+        try {
+          await this.sensorDeployments.recomputeNode(nodeId);
+        } catch (error) {
+          this.logger.error({
+            event: 'sensor_state_recompute_failed',
+            nodeId,
+            errorName: error instanceof Error ? error.name : 'UnknownError',
+            errorMessage:
+              error instanceof Error
+                ? error.message
+                : 'Unknown derived-state error',
+          });
+        }
+      }),
     );
     const validByIndex = new Map(valid.map((reading) => [reading.index, reading]));
     for (const persisted of persistence) {

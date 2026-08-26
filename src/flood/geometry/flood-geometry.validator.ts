@@ -30,7 +30,7 @@ export function validateFloodHazard(
     throw new FloodGeometryValidationError('Hazard id must be a non-empty string');
   }
 
-  const allowedLevels = ['LOW', 'MEDIUM', 'HIGH', 'BLOCKED'];
+  const allowedLevels = ['LOW', 'MEDIUM', 'HIGH', 'BLOCKED', 'UNKNOWN'];
   if (typeof hazard.level !== 'string' || !allowedLevels.includes(hazard.level)) {
     throw new FloodGeometryValidationError(
       `Hazard level must be one of: ${allowedLevels.join(', ')}`,
@@ -66,6 +66,21 @@ export function validateFloodHazard(
     limits.maxPolygonVertices,
   );
 
+  const routingMultiplier =
+    hazard.routingMultiplier === undefined
+      ? defaultSimulationMultiplier(hazard.level as FloodHazard['level'])
+      : hazard.routingMultiplier;
+  if (
+    typeof routingMultiplier !== 'number' ||
+    !Number.isFinite(routingMultiplier) ||
+    routingMultiplier < 0 ||
+    routingMultiplier > 1
+  ) {
+    throw new FloodGeometryValidationError(
+      'Hazard routingMultiplier must be a finite number between 0 and 1',
+    );
+  }
+
   return {
     id: hazard.id.trim(),
     level: hazard.level as FloodHazard['level'],
@@ -74,6 +89,12 @@ export function validateFloodHazard(
     observedAt,
     validUntil,
     sourceNodeIds,
+    routingMultiplier,
+    reasonCodes: Array.isArray(hazard.reasonCodes)
+      ? hazard.reasonCodes.filter(
+          (reason): reason is string => typeof reason === 'string',
+        )
+      : undefined,
     description: typeof hazard.description === 'string' ? hazard.description : undefined,
   };
 }
@@ -141,6 +162,36 @@ export function validateGeoJsonPolygon(
       );
     }
 
+    const distinctPoints = new Set(
+      validatedRing
+        .slice(0, -1)
+        .map(([longitude, latitude]) => `${longitude}\u0000${latitude}`),
+    );
+    if (distinctPoints.size < 3) {
+      throw new FloodGeometryValidationError(
+        'Polygon ring must contain at least three distinct vertices',
+      );
+    }
+    for (let index = 1; index < validatedRing.length; index += 1) {
+      const previous = validatedRing[index - 1];
+      const current = validatedRing[index];
+      if (previous[0] === current[0] && previous[1] === current[1]) {
+        throw new FloodGeometryValidationError(
+          'Polygon ring must not contain zero-length edges',
+        );
+      }
+    }
+    if (ringHasSelfIntersection(validatedRing)) {
+      throw new FloodGeometryValidationError(
+        'Polygon ring must not self-intersect',
+      );
+    }
+    if (Math.abs(signedRingArea(validatedRing)) < 1e-15) {
+      throw new FloodGeometryValidationError(
+        'Polygon ring must enclose a non-zero area',
+      );
+    }
+
     totalVertices += validatedRing.length;
     validatedRings.push(validatedRing);
   }
@@ -155,6 +206,98 @@ export function validateGeoJsonPolygon(
     type: 'Polygon',
     coordinates: validatedRings,
   };
+}
+
+function defaultSimulationMultiplier(level: FloodHazard['level']): number {
+  switch (level) {
+    case 'LOW':
+    case 'UNKNOWN':
+      return 1;
+    case 'MEDIUM':
+      return 0.35;
+    case 'HIGH':
+      return 0.05;
+    case 'BLOCKED':
+      return 0;
+  }
+}
+
+function signedRingArea(ring: readonly (readonly [number, number])[]): number {
+  let twiceArea = 0;
+  for (let index = 0; index < ring.length - 1; index += 1) {
+    twiceArea +=
+      ring[index][0] * ring[index + 1][1] -
+      ring[index + 1][0] * ring[index][1];
+  }
+  return twiceArea / 2;
+}
+
+function ringHasSelfIntersection(
+  ring: readonly (readonly [number, number])[],
+): boolean {
+  const segmentCount = ring.length - 1;
+  for (let first = 0; first < segmentCount; first += 1) {
+    for (let second = first + 1; second < segmentCount; second += 1) {
+      const adjacent = second === first + 1;
+      const closureAdjacent = first === 0 && second === segmentCount - 1;
+      if (adjacent || closureAdjacent) continue;
+      if (
+        segmentsTouchOrIntersect(
+          ring[first],
+          ring[first + 1],
+          ring[second],
+          ring[second + 1],
+        )
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function segmentsTouchOrIntersect(
+  firstStart: readonly [number, number],
+  firstEnd: readonly [number, number],
+  secondStart: readonly [number, number],
+  secondEnd: readonly [number, number],
+): boolean {
+  const o1 = orientation(firstStart, firstEnd, secondStart);
+  const o2 = orientation(firstStart, firstEnd, secondEnd);
+  const o3 = orientation(secondStart, secondEnd, firstStart);
+  const o4 = orientation(secondStart, secondEnd, firstEnd);
+  if (o1 !== o2 && o3 !== o4) return true;
+  return (
+    (o1 === 0 && pointOnSegment(secondStart, firstStart, firstEnd)) ||
+    (o2 === 0 && pointOnSegment(secondEnd, firstStart, firstEnd)) ||
+    (o3 === 0 && pointOnSegment(firstStart, secondStart, secondEnd)) ||
+    (o4 === 0 && pointOnSegment(firstEnd, secondStart, secondEnd))
+  );
+}
+
+function orientation(
+  first: readonly [number, number],
+  second: readonly [number, number],
+  third: readonly [number, number],
+): -1 | 0 | 1 {
+  const cross =
+    (second[0] - first[0]) * (third[1] - first[1]) -
+    (second[1] - first[1]) * (third[0] - first[0]);
+  if (Math.abs(cross) <= 1e-15) return 0;
+  return cross > 0 ? 1 : -1;
+}
+
+function pointOnSegment(
+  point: readonly [number, number],
+  start: readonly [number, number],
+  end: readonly [number, number],
+): boolean {
+  return (
+    point[0] >= Math.min(start[0], end[0]) &&
+    point[0] <= Math.max(start[0], end[0]) &&
+    point[1] >= Math.min(start[1], end[1]) &&
+    point[1] <= Math.max(start[1], end[1])
+  );
 }
 
 export function generateSafeAreaId(hazardId: string): string {

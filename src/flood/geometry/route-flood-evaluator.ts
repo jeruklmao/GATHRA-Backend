@@ -13,17 +13,11 @@ export interface EvaluatedRouteFloodRisk {
 }
 
 const RISK_LEVEL_SEVERITY: Record<FloodRiskLevel, number> = {
-  LOW: 1,
+  LOW: 0,
+  UNKNOWN: 1,
   MEDIUM: 2,
   HIGH: 3,
   BLOCKED: 4,
-};
-
-const SEVERITY_BASE_SCORE: Record<FloodRiskLevel, number> = {
-  LOW: 0.1,
-  MEDIUM: 0.4,
-  HIGH: 0.7,
-  BLOCKED: 1.0,
 };
 
 export class RouteFloodEvaluator {
@@ -49,9 +43,10 @@ export class RouteFloodEvaluator {
     }
 
     let highestSeverityLevel: FloodRiskLevel | null = null;
-    let highestSeverityNumber = 0;
+    let highestSeverityNumber = -1;
     let intersectsBlockedArea = false;
     let totalAffectedDistanceMeters = 0;
+    let strongestPenalty = 0;
     const intersectedHazards: FloodHazard[] = [];
 
     for (const hazard of hazards) {
@@ -69,7 +64,11 @@ export class RouteFloodEvaluator {
           highestSeverityLevel = hazard.level;
         }
 
-        if (hazard.level === 'BLOCKED') {
+        strongestPenalty = Math.max(
+          strongestPenalty,
+          1 - hazard.routingMultiplier,
+        );
+        if (hazard.routingMultiplier === 0) {
           intersectsBlockedArea = true;
         }
       }
@@ -90,14 +89,9 @@ export class RouteFloodEvaluator {
     }
 
     const level = highestSeverityLevel!;
-    const baseScore = SEVERITY_BASE_SCORE[level];
-    const distanceFraction =
-      totalDistanceMeters > 0
-        ? Math.min(1, totalAffectedDistanceMeters / totalDistanceMeters)
-        : 0;
-    const distancePenalty = Math.min(0.19, distanceFraction * 0.2);
-    const rawScore = Number((baseScore + distancePenalty).toFixed(2));
-    const score = intersectsBlockedArea ? 1.0 : Math.min(0.99, rawScore);
+    const score = intersectsBlockedArea
+      ? 1
+      : Math.min(1, strongestPenalty);
 
     const avgConfidence =
       intersectedHazards.reduce((sum, h) => sum + h.confidence, 0) /
@@ -105,7 +99,11 @@ export class RouteFloodEvaluator {
 
     const reasonCodes: string[] = [];
     if (intersectsBlockedArea) {
+      // Retain the established Android-facing reason code. Its triggering
+      // condition is now the runtime zero multiplier, not the level name.
       reasonCodes.push('BLOCKED_HAZARD_INTERSECTION');
+    } else if (strongestPenalty === 0) {
+      reasonCodes.push('MONITORED_AREA_INTERSECTION_NO_ROUTING_PENALTY');
     } else {
       reasonCodes.push('FLOOD_HAZARD_INTERSECTION');
     }
@@ -240,7 +238,10 @@ function earliestValidUntil(hazards: readonly FloodHazard[]): Date | null {
   if (hazards.length === 0) return null;
   let earliest: Date | null = null;
   for (const hazard of hazards) {
-    if (earliest === null || hazard.validUntil.getTime() < earliest.getTime()) {
+    if (
+      hazard.validUntil !== null &&
+      (earliest === null || hazard.validUntil.getTime() < earliest.getTime())
+    ) {
       earliest = hazard.validUntil;
     }
   }

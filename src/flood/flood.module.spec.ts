@@ -1,13 +1,18 @@
 import { FloodAdminController } from './admin/flood-admin.controller';
+import { SensorDeploymentAdminController } from './admin/sensor-deployment-admin.controller';
 import { DevFloodController } from './dev/dev-flood.controller';
 import { FloodController } from './flood.controller';
+import { FLOOD_HAZARD_PROVIDER } from './flood-hazard.provider';
 import { FloodModule } from './flood.module';
+import { SensorFloodHazardProvider } from './providers/sensor-flood-hazard.provider';
 
 describe('FloodModule', () => {
   const originalEnvironment = {
     enableDevFloodEndpoints: process.env.ENABLE_DEV_FLOOD_ENDPOINTS,
     enableFloodAdminEndpoints: process.env.ENABLE_FLOOD_ADMIN_ENDPOINTS,
     floodAdminTokenSha256: process.env.FLOOD_ADMIN_TOKEN_SHA256,
+    floodProvider: process.env.FLOOD_PROVIDER,
+    nodeEnvironment: process.env.NODE_ENV,
   };
 
   afterEach(() => {
@@ -23,6 +28,11 @@ describe('FloodModule', () => {
       'FLOOD_ADMIN_TOKEN_SHA256',
       originalEnvironment.floodAdminTokenSha256,
     );
+    restoreEnvironmentValue(
+      'FLOOD_PROVIDER',
+      originalEnvironment.floodProvider,
+    );
+    restoreEnvironmentValue('NODE_ENV', originalEnvironment.nodeEnvironment);
   });
 
   it('registers only the read-only controller by default', () => {
@@ -59,9 +69,31 @@ describe('FloodModule', () => {
 
     expect(module.controllers).toEqual([
       FloodController,
+      SensorDeploymentAdminController,
       FloodAdminController,
     ]);
     expect(module.controllers).not.toContain(DevFloodController);
+  });
+
+  it('selects sensor-backed production and omits simulation mutation controllers', () => {
+    process.env.NODE_ENV = 'production';
+    delete process.env.FLOOD_PROVIDER;
+    process.env.ENABLE_DEV_FLOOD_ENDPOINTS = 'true';
+    process.env.ENABLE_FLOOD_ADMIN_ENDPOINTS = 'true';
+    process.env.FLOOD_ADMIN_TOKEN_SHA256 = 'ab'.repeat(32);
+
+    const module = FloodModule.register();
+
+    expect(module.controllers).toEqual([
+      FloodController,
+      SensorDeploymentAdminController,
+    ]);
+    expect(module.controllers).not.toContain(DevFloodController);
+    expect(module.controllers).not.toContain(FloodAdminController);
+    expect(module.providers).toContainEqual({
+      provide: FLOOD_HAZARD_PROVIDER,
+      useExisting: SensorFloodHazardProvider,
+    });
   });
 });
 

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { readConfiguration } from '../configuration';
 import { DatabaseModule } from '../database/database.module';
+import { SensorDeploymentModule } from '../flood/sensors/sensor-deployment.module';
 import {
   GatewayAuthGuard,
   IOT_GATEWAY_TOKEN_DIGEST,
@@ -13,7 +14,7 @@ import { IotMonitoringService } from './services/iot-monitoring.service';
 import { TelemetryIngestionService } from './services/telemetry-ingestion.service';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, SensorDeploymentModule],
   controllers: [TelemetryIngestionController, IotMonitoringController],
   providers: [
     IotIngestionRepository,

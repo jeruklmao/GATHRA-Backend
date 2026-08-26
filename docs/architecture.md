@@ -11,8 +11,8 @@ NestJS
   |-- Route service -------> GraphHopper 11.0
   |      `---------------> independent flood geometry evaluation
   |-- Geocoding provider --> Photon 0.5.0
-  |-- Flood provider ------> simulated in-memory snapshots
-  |-- IoT ingestion -------> PostgreSQL 17 raw telemetry
+  |-- Flood provider ------> PostgreSQL sensor deployment/state snapshots
+  |-- IoT ingestion -------> PostgreSQL 17 raw + derived telemetry state
   |-- IoT monitoring -----> bounded public read-only queries
   `-- Health -------------> routing + geocoding + PostgreSQL readiness
 ```
@@ -98,18 +98,17 @@ NestJS exposes five provider-neutral areas:
   GraphHopper client, flood-aware filtering, and error contracts.
 - `geocoding`: autocomplete/search/lookup/reverse, provider adapter, bounded
   caches, concurrency/rate guards, regional policy, and opaque tokens.
-- `flood`: read-only active GeoJSON snapshots, optional local development
-  mutations, and an independently enabled bearer-authenticated administration
-  controller.
+- `flood`: read-only GeoJSON sensor snapshots, optional explicit in-memory
+  simulation, and bearer-authenticated durable sensor administration.
 - `health`: readiness for both selected providers and PostgreSQL.
 - `iot`: Gateway-authenticated raw packet batches, independent Protocol v3
   decoding, PostgreSQL repositories, and public read-only Node monitoring.
 
 ## IoT persistence boundary
 
-Gateway ingestion and monitoring are isolated under `src/iot`; they do not call
-`RoutesService` or `FloodHazardProvider`. Exact raw LoRa packets are stored with
-decoded measurement columns and reception metadata. The stable physical key is
+Gateway ingestion commits exact raw LoRa packets before best-effort sensor-state
+recomputation; it never calls `RoutesService`. Decoded measurement columns and
+reception metadata remain immutable. The stable physical key is
 Gateway hardware MAC; editable logical Gateway ID is retained as a telemetry
 snapshot. Node measurement identity is enforced by the PostgreSQL unique key
 `(node_id, node_boot_session_id, node_sequence)`. The legacy column name now
@@ -161,29 +160,29 @@ address-like queries or result text.
 
 ## Flood snapshot flow
 
-The current `FloodHazardProvider` is simulated, in-memory, and local to one
-NestJS process. The read-only GeoJSON endpoint is always registered;
-unauthenticated mutation endpoints require an explicit local opt-in. The
-authenticated administration controller, public read controller, and route
-service all resolve the same singleton provider when administration is
-enabled, so one process has one coherent snapshot. Each process adds a random
-instance identity to snapshot IDs so a restart cannot reuse the previous
-process's initial identifiers.
+Production resolves `FloodHazardProvider` to `SensorFloodHazardProvider`.
+Runtime deployments and interpreted state are PostgreSQL-backed. The public
+endpoint includes enabled coverage polygons for every effective level,
+including LOW and UNKNOWN. Explicit `FLOOD_PROVIDER=in-memory` retains the
+simulation provider and local mutation tools for development.
 
 Administration fails closed: both an explicit enable flag and a valid SHA-256
-token digest are required at startup. The controller compares bearer-token
-digests without embedding the raw token, emits metadata-only mutation audit
-events, sends non-cacheable responses, and is excluded from OpenAPI. The raw
-token and deployment routing remain external operational state.
+token digest are required at startup. Sensor deployment endpoints are
+documented in OpenAPI, compare bearer-token digests without embedding the raw
+token, emit metadata-only mutation audit events, and send non-cacheable
+responses. The raw token remains external operational state.
 
 For each preview request:
 
 1. NestJS captures one immutable active-hazard snapshot.
-2. Flood polygons become request-scoped GraphHopper custom-model areas.
+2. Polygons with multipliers below 1 become request-scoped GraphHopper
+   custom-model areas; multiplier-1 polygons remain visible but are routing
+   no-ops.
 3. GraphHopper returns route candidates.
 4. NestJS independently intersects every LineString with the same snapshot.
-5. Routes touching a `BLOCKED` polygon are rejected; usable routes are ranked
-   and exactly one is recommended.
+5. Routes touching any multiplier-zero polygon are rejected independently of
+   level name; usable routes are ranked by runtime multiplier impact and then
+   ordinary route cost.
 6. Route-risk metadata records the snapshot used for evaluation.
 
 Android polls the read-only snapshot only while its UI lifecycle is started.
@@ -203,9 +202,10 @@ its old risk as current. Generation and target-snapshot checks prevent late
 responses from replacing newer guidance. Active navigation reuses its guarded
 foreground-service reroute flow.
 
-Flood snapshots still have no database, durable history, multi-instance
-consistency, sensor conversion, or real-time push invalidation. PostgreSQL IoT
-telemetry is deliberately separate and is not a `FloodHazard` data source yet.
+Snapshot IDs deterministically include sorted deployment versions, current
+telemetry IDs, effective levels, and freshness. Read-time freshness changes a
+snapshot once when `validUntil` is crossed without requiring a cron job or new
+packet. See [sensor-flood-hazards.md](sensor-flood-hazards.md).
 
 ## Deployment boundary
 

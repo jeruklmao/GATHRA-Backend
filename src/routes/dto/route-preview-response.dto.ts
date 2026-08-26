@@ -111,7 +111,11 @@ export class RouteRiskDto {
   @ApiProperty({ example: 0.12, minimum: 0, maximum: 1.0 })
   score!: number;
 
-  @ApiProperty({ example: false })
+  @ApiProperty({
+    description:
+      'True when the route intersects a hazard whose effective runtime multiplier is exactly 0, regardless of risk-level name.',
+    example: false,
+  })
   intersectsBlockedArea!: boolean;
 
   @ApiProperty({ example: 0, minimum: 0 })
@@ -162,7 +166,7 @@ export class RouteDto {
 }
 
 export class FloodMetadataDto {
-  @ApiProperty({ example: 'SIMULATED' })
+  @ApiProperty({ enum: ['SIMULATED', 'SENSOR'], example: 'SENSOR' })
   source!: string;
 
   @ApiProperty({ example: 'snapshot_95f20c0a_v1_1' })

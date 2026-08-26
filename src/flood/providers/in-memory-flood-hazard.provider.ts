@@ -65,7 +65,10 @@ export class InMemoryFloodHazardProvider implements FloodHazardProvider {
     const activeHazards: FloodHazard[] = [];
 
     for (const hazard of this.hazardsMap.values()) {
-      if (hazard.validUntil.getTime() > currentNow.getTime()) {
+      if (
+        hazard.validUntil !== null &&
+        hazard.validUntil.getTime() > currentNow.getTime()
+      ) {
         activeHazards.push(hazard);
       }
     }
@@ -82,6 +85,7 @@ export class InMemoryFloodHazardProvider implements FloodHazardProvider {
       this.listHazards().map((activeHazard) => activeHazard.id),
     );
     if (
+      hazard.validUntil !== null &&
       hazard.validUntil.getTime() > this.now.getTime() &&
       !activeHazardIds.has(hazard.id) &&
       activeHazardIds.size >= limits.maxActiveHazards
@@ -113,7 +117,9 @@ export class InMemoryFloodHazardProvider implements FloodHazardProvider {
   listHazards(): readonly FloodHazard[] {
     const currentNow = this.now;
     return Array.from(this.hazardsMap.values()).filter(
-      (h) => h.validUntil.getTime() > currentNow.getTime(),
+      (h) =>
+        h.validUntil !== null &&
+        h.validUntil.getTime() > currentNow.getTime(),
     );
   }
 
@@ -223,7 +229,10 @@ function earliestValidUntil(hazards: readonly FloodHazard[]): Date | null {
   if (hazards.length === 0) return null;
   let earliest: Date | null = null;
   for (const hazard of hazards) {
-    if (earliest === null || hazard.validUntil.getTime() < earliest.getTime()) {
+    if (
+      hazard.validUntil !== null &&
+      (earliest === null || hazard.validUntil.getTime() < earliest.getTime())
+    ) {
       earliest = hazard.validUntil;
     }
   }

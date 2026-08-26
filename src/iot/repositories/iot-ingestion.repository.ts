@@ -7,6 +7,8 @@ import type { ValidatedIngestReading } from '../models/ingestion.models';
 export interface PersistedIngestionResult {
   readonly index: number;
   readonly inserted: boolean;
+  readonly telemetryId: number | null;
+  readonly nodeId: string;
 }
 
 @Injectable()
@@ -111,7 +113,14 @@ export class IotIngestionRepository {
             decoded.rawPayload,
           ],
         );
-        results.push({ index: reading.index, inserted: inserted.rowCount === 1 });
+        const insertedId = inserted.rows[0]?.id;
+        results.push({
+          index: reading.index,
+          inserted: inserted.rowCount === 1,
+          telemetryId:
+            insertedId === undefined ? null : safeTelemetryId(insertedId),
+          nodeId: decoded.nodeId,
+        });
       }
       return results;
     });
@@ -164,4 +173,12 @@ export class IotIngestionRepository {
       [nodeId, serverReceivedAt, gatewayId],
     );
   }
+}
+
+function safeTelemetryId(value: string): number {
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed)) {
+    throw new Error('Inserted telemetry ID is outside the safe integer range');
+  }
+  return parsed;
 }

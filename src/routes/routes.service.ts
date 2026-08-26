@@ -24,14 +24,6 @@ import {
   RoutingProviderError,
 } from './routing-provider';
 
-const RISK_LEVEL_SEVERITY: Record<string, number> = {
-  LOW: 1,
-  MEDIUM: 2,
-  HIGH: 3,
-  BLOCKED: 4,
-  UNKNOWN: 5,
-};
-
 @Injectable()
 export class RoutesService {
   constructor(
@@ -74,9 +66,11 @@ export class RoutesService {
       request.destination.latitude,
     ];
 
-    const blockedHazards = snapshot.hazards.filter((h) => h.level === 'BLOCKED');
-    for (const blockedHazard of blockedHazards) {
-      if (isPointInsidePolygon(originPoint, blockedHazard.geometry.coordinates)) {
+    const hardExclusionHazards = snapshot.hazards.filter(
+      (hazard) => hazard.routingMultiplier === 0,
+    );
+    for (const hazard of hardExclusionHazards) {
+      if (isPointInsidePolygon(originPoint, hazard.geometry.coordinates)) {
         throw new ApiException(
           422,
           'ORIGIN_IN_BLOCKED_AREA',
@@ -87,7 +81,7 @@ export class RoutesService {
       if (
         isPointInsidePolygon(
           destinationPoint,
-          blockedHazard.geometry.coordinates,
+          hazard.geometry.coordinates,
         )
       ) {
         throw new ApiException(
@@ -110,7 +104,7 @@ export class RoutesService {
         if (
           error instanceof RoutingProviderError &&
           error.kind === 'NO_ROUTE' &&
-          blockedHazards.length > 0
+          hardExclusionHazards.length > 0
         ) {
           // Diagnostic check without hazards to see if flood caused the block
           try {
@@ -167,26 +161,12 @@ export class RoutesService {
         );
       }
 
-      // Rank usable routes only:
-      // 1. Lower flood risk level
-      // 2. Lower risk score
-      // 3. Higher confidence
-      // 4. Shorter duration
-      // 5. Shorter distance
-      // 6. Stable route ID
+      // Runtime multipliers, rather than level names, determine route cost.
+      // A multiplier of 1 produces score 0 and therefore no local ranking
+      // penalty. Provider duration/distance then retain their normal ordering.
       usableRoutes.sort((a, b) => {
-        const aSev = RISK_LEVEL_SEVERITY[a.risk.level] ?? 5;
-        const bSev = RISK_LEVEL_SEVERITY[b.risk.level] ?? 5;
-        if (aSev !== bSev) {
-          return aSev - bSev;
-        }
         if (a.risk.score !== b.risk.score) {
           return a.risk.score - b.risk.score;
-        }
-        const aConf = a.risk.confidence ?? 0;
-        const bConf = b.risk.confidence ?? 0;
-        if (aConf !== bConf) {
-          return bConf - aConf;
         }
         if (a.providerRoute.durationSeconds !== b.providerRoute.durationSeconds) {
           return a.providerRoute.durationSeconds - b.providerRoute.durationSeconds;

@@ -25,6 +25,7 @@ describe('RouteFloodEvaluator', () => {
     observedAt: new Date('2026-07-27T10:00:00Z'),
     validUntil: new Date('2026-07-27T12:00:00Z'),
     sourceNodeIds: [],
+    routingMultiplier: 0.05,
   };
 
   it('evaluates a route entirely outside hazards as LOW risk', () => {
@@ -61,6 +62,7 @@ describe('RouteFloodEvaluator', () => {
       ...sampleHazard,
       id: 'h-blocked',
       level: 'BLOCKED',
+      routingMultiplier: 0,
     };
     const coords: [number, number][] = [
       [106.82, -6.19],
@@ -73,4 +75,33 @@ describe('RouteFloodEvaluator', () => {
     expect(risk.intersectsBlockedArea).toBe(true);
     expect(risk.reasonCodes).toContain('BLOCKED_HAZARD_INTERSECTION');
   });
+
+  it.each([
+    ['LOW', 1, 0, false],
+    ['UNKNOWN', 1, 0, false],
+    ['MEDIUM', 0.35, 0.65, false],
+    ['HIGH', 0.05, 0.95, false],
+    ['BLOCKED', 0, 1, true],
+    ['BLOCKED', 0.2, 0.8, false],
+    ['MEDIUM', 0, 1, true],
+    ['UNKNOWN', 0.5, 0.5, false],
+  ] as const)(
+    'uses runtime %s multiplier %s for score %s and hard exclusion %s',
+    (level, routingMultiplier, score, hardExcluded) => {
+      const risk = evaluator.evaluateRoute(
+        [
+          [106.82, -6.19],
+          [106.825, -6.19],
+        ],
+        1_000,
+        [{ ...sampleHazard, level, routingMultiplier }],
+        'snap-runtime',
+      );
+      expect(risk).toMatchObject({
+        level,
+        score,
+        intersectsBlockedArea: hardExcluded,
+      });
+    },
+  );
 });

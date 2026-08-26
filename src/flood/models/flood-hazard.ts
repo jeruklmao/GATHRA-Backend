@@ -1,6 +1,11 @@
 import type { RoutingPoint } from '../../routes/routing-provider';
 
-export type FloodRiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'BLOCKED';
+export type FloodRiskLevel =
+  | 'LOW'
+  | 'MEDIUM'
+  | 'HIGH'
+  | 'BLOCKED'
+  | 'UNKNOWN';
 
 export interface GeoJsonPolygon {
   readonly type: 'Polygon';
@@ -12,9 +17,12 @@ export interface FloodHazard {
   readonly level: FloodRiskLevel;
   readonly geometry: GeoJsonPolygon;
   readonly confidence: number;
-  readonly observedAt: Date;
-  readonly validUntil: Date;
+  readonly observedAt: Date | null;
+  readonly validUntil: Date | null;
   readonly sourceNodeIds: readonly string[];
+  readonly routingMultiplier: number;
+  readonly reasonCodes?: readonly string[];
+  readonly freshness?: 'FRESH' | 'STALE' | 'NO_TELEMETRY';
   readonly description?: string;
 }
 
@@ -23,7 +31,7 @@ export interface FloodHazardSnapshot {
   readonly generatedAt: Date;
   readonly validUntil: Date | null;
   readonly hazards: readonly FloodHazard[];
-  readonly source: 'SIMULATED';
+  readonly source: 'SIMULATED' | 'SENSOR';
 }
 
 export interface FloodHazardQueryInput {

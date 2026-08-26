@@ -220,6 +220,76 @@ describe('RoutesService', () => {
     expect(provider.preview.mock.calls[1][0].hazards).toEqual([]);
   });
 
+  it('does not hard-exclude BLOCKED when its runtime multiplier is nonzero', async () => {
+    addCrossingHazard(floodProvider, 'BLOCKED', 0.2);
+    provider.preview.mockResolvedValue([
+      route([
+        [106.8, -6.19],
+        [106.84, -6.19],
+      ]),
+    ]);
+
+    const response = await service.preview(
+      'request-blocked-penalty-only',
+      crossingRequest(0),
+    );
+    expect(response.routes[0].risk).toMatchObject({
+      level: 'BLOCKED',
+      score: 0.8,
+      intersectsBlockedArea: false,
+    });
+  });
+
+  it('hard-excludes MEDIUM when its runtime multiplier is zero', async () => {
+    addCrossingHazard(floodProvider, 'MEDIUM', 0);
+    provider.preview.mockResolvedValue([
+      route([
+        [106.8, -6.19],
+        [106.84, -6.19],
+      ]),
+    ]);
+
+    await expect(
+      service.preview('request-medium-hard-exclusion', crossingRequest(0)),
+    ).rejects.toMatchObject<Partial<ApiException>>({
+      status: 422,
+      code: 'NO_ROUTE_DUE_TO_FLOOD',
+    });
+  });
+
+  it.each(['LOW', 'UNKNOWN'] as const)(
+    'does not penalize or rerank a faster %s multiplier-1 intersection',
+    async (level) => {
+      addCrossingHazard(floodProvider, level, 1);
+      provider.preview.mockResolvedValue([
+        {
+          ...route([
+            [106.8, -6.19],
+            [106.84, -6.19],
+          ]),
+          durationSeconds: 100,
+        },
+        {
+          ...route([
+            [106.8, -6.21],
+            [106.84, -6.21],
+          ]),
+          durationSeconds: 200,
+        },
+      ]);
+
+      const response = await service.preview(
+        `request-${level.toLowerCase()}-no-op`,
+        crossingRequest(1),
+      );
+      expect(response.routes[0]).toMatchObject({
+        isRecommended: true,
+        summary: { durationSeconds: 100 },
+        risk: { level, score: 0, intersectsBlockedArea: false },
+      });
+    },
+  );
+
   it('rejects identical endpoints before calling the provider', async () => {
     await expect(
       service.preview('request-1', {
@@ -249,9 +319,18 @@ function crossingRequest(alternatives: number) {
 function addCrossingBlockedHazard(
   floodProvider: InMemoryFloodHazardProvider,
 ) {
+  addCrossingHazard(floodProvider, 'BLOCKED', 0);
+}
+
+function addCrossingHazard(
+  floodProvider: InMemoryFloodHazardProvider,
+  level: 'LOW' | 'MEDIUM' | 'HIGH' | 'BLOCKED' | 'UNKNOWN',
+  routingMultiplier: number,
+) {
   floodProvider.addHazard({
-    id: 'blocked-crossing',
-    level: 'BLOCKED',
+    id: `${level.toLowerCase()}-crossing`,
+    level,
+    routingMultiplier,
     confidence: 0.95,
     observedAt: '2026-07-30T00:00:00.000Z',
     validUntil: '2030-07-30T00:00:00.000Z',

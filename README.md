@@ -1,7 +1,7 @@
 # GATHRA Backend
 
 The NestJS backend owns GATHRA's normalized routing, geocoding, health,
-simulated flood-hazard contracts, and PostgreSQL-backed raw IoT telemetry.
+sensor-backed flood-hazard contracts, and PostgreSQL-backed IoT telemetry.
 Android and future web clients call this service only; GraphHopper, Photon, and
 PostgreSQL remain private implementation providers.
 
@@ -11,16 +11,16 @@ Compose publishes NestJS on port 3000 by default.
 ```text
 Android/client -> NestJS :3000 -> GraphHopper 11.0 :8989 (private)
                             |---> Photon 0.5.0 :2322 (private)
-                            |---> PostgreSQL 17 (private raw telemetry)
-                            `---> in-memory FloodHazardProvider
+                            |---> PostgreSQL 17 (private telemetry + sensor policy/state)
+                            `---> SensorFloodHazardProvider
 ```
 
-Flood data is simulation-only and lost on restart. Local development mutation
-tools are unauthenticated; a separate fail-closed administration surface uses
-a high-entropy bearer token when explicitly enabled. IoT telemetry is durable
-raw measurement history and is intentionally isolated from flood routing: it
-is **not yet converted into `FloodHazard`**. The backend has no user accounts,
-traffic, or active navigation-session logic.
+Production flood polygons and routing multipliers are derived from durable
+Protocol 3 telemetry plus runtime PostgreSQL deployment configuration. The
+in-memory provider remains available only for explicit simulation. A
+fail-closed administration surface uses a high-entropy bearer token when
+enabled. The backend has no user accounts, traffic, or active
+navigation-session logic.
 
 ## Prerequisites
 
@@ -85,7 +85,7 @@ Checked-in defaults live in `.env.example`, `compose.yaml`, and
 | Geocoding cache | `GEOCODING_CACHE_ENTRIES`, `GEOCODING_CACHE_TTL_MS`, `GEOCODING_REVERSE_CACHE_TTL_MS` |
 | Geocoding policy | `GEOCODING_TOKEN_SECRET`, `GEOCODING_REGION_CONFIG`, `GEOCODING_REGION_VERSION`, optional region-bound overrides |
 | Photon runtime/data | `PHOTON_JAVA_OPTS`, `PHOTON_MEMORY_LIMIT`, `PHOTON_CPUS`, `PHOTON_DATA_URL`, `PHOTON_DATA_MD5`, `PHOTON_DATA_VOLUME` |
-| Flood simulation | `ENABLE_DEV_FLOOD_ENDPOINTS`, `ENABLE_FLOOD_ADMIN_ENDPOINTS`, `FLOOD_ADMIN_TOKEN_SHA256`, `MAX_ACTIVE_FLOOD_HAZARDS`, `MAX_FLOOD_POLYGON_VERTICES` |
+| Flood | `FLOOD_PROVIDER` (`sensor` or `in-memory`), `ENABLE_DEV_FLOOD_ENDPOINTS`, `ENABLE_FLOOD_ADMIN_ENDPOINTS`, `FLOOD_ADMIN_TOKEN_SHA256`, `MAX_ACTIVE_FLOOD_HAZARDS`, `MAX_FLOOD_POLYGON_VERTICES` |
 
 `GEOCODING_TOKEN_SECRET` is a deployment secret. Source code contains a safe
 development fallback, but a stable deployment value must remain outside Git.
@@ -100,6 +100,9 @@ URI versioning produces these current v1 endpoints:
 - `GET /api/v1/geocoding/places/:id`
 - `GET /api/v1/geocoding/reverse`
 - `GET /api/v1/flood-hazards`
+- `GET /api/v1/admin/iot/sensor-deployments` (flood-admin Bearer authentication)
+- `GET /api/v1/admin/iot/sensor-deployments/:nodeId` (flood-admin Bearer authentication)
+- `PUT /api/v1/admin/iot/sensor-deployments/:nodeId` (flood-admin Bearer authentication)
 - `POST /api/v1/iot/telemetry/batch` (Gateway Bearer authentication)
 - `GET /api/v1/iot/gateway/ping` (Gateway Bearer authentication)
 - `GET /api/v1/iot/nodes` (public read-only monitoring)
@@ -108,10 +111,11 @@ URI versioning produces these current v1 endpoints:
 - `GET /api/v1/health`
 
 Development flood endpoints under `/api/v1/dev/flood-hazards` exist only when
-`ENABLE_DEV_FLOOD_ENDPOINTS=true` at application startup. The separate
-`/api/v1/admin/flood-hazards` surface exists only when
-`ENABLE_FLOOD_ADMIN_ENDPOINTS=true` and a valid token digest is configured.
-It is intentionally omitted from OpenAPI.
+`FLOOD_PROVIDER=in-memory` and `ENABLE_DEV_FLOOD_ENDPOINTS=true` at startup.
+The legacy `/api/v1/admin/flood-hazards` simulation surface is likewise
+in-memory-only and omitted from OpenAPI. Durable sensor deployment endpoints
+exist when `ENABLE_FLOOD_ADMIN_ENDPOINTS=true` with a valid token digest and
+are documented in OpenAPI.
 
 OpenAPI is available at `/api/docs` and `/api/docs-json`. Those paths are also
 currently reachable on the public deployment because Swagger is configured
@@ -135,9 +139,10 @@ Responses contain normalized route geometry, summary, manoeuvre steps, and
 flood-risk metadata. GeoJSON coordinate order is `[longitude, latitude]`.
 Provider response types and GraphHopper signs never cross the NestJS contract.
 
-GraphHopper receives request-scoped flood areas through a custom model. NestJS
-then evaluates returned LineStrings independently. Routes intersecting a
-`BLOCKED` polygon are excluded; if none remain, the API returns
+GraphHopper receives request-scoped flood areas and their runtime multipliers
+through a custom model. NestJS then evaluates returned LineStrings
+independently. Routes intersecting any multiplier-zero polygon are excluded;
+if none remain, the API returns
 `NO_ROUTE_DUE_TO_FLOOD`. Origins and destinations in blocked areas use distinct
 error codes.
 
@@ -194,7 +199,9 @@ See [docs/iot-telemetry.md](docs/iot-telemetry.md) for persistence and
 ingestion operations, and
 [docs/iot-monitoring-api.md](docs/iot-monitoring-api.md) for the future
 `https://gathra.my.id/node` frontend contract. No frontend is implemented in
-this repository.
+this repository. Sensor interpretation, freshness, administration, snapshots,
+and routing semantics are documented in
+[docs/sensor-flood-hazards.md](docs/sensor-flood-hazards.md).
 
 ## GraphHopper routing data
 
@@ -356,6 +363,7 @@ source, `.env.example`, and Compose. Enable them only on an isolated local
 machine:
 
 ```bash
+FLOOD_PROVIDER=in-memory \
 ENABLE_DEV_FLOOD_ENDPOINTS=true \
 docker compose up --build --wait
 ```
@@ -376,10 +384,11 @@ an untrusted network, and never present its data as a safety guarantee.
 
 ## Authenticated flood administration
 
-The administration controller mutates the same singleton provider used by the
-public read and route-preview endpoints in that NestJS process. It is disabled
-by default and startup fails if it is enabled without a 64-character
-hexadecimal SHA-256 digest in `FLOOD_ADMIN_TOKEN_SHA256`.
+Administration is disabled by default and startup fails if it is enabled
+without a 64-character hexadecimal SHA-256 digest in
+`FLOOD_ADMIN_TOKEN_SHA256`. The same credential protects durable sensor
+deployment GET/PUT endpoints. Simulation mutation endpoints are registered
+only when `FLOOD_PROVIDER=in-memory`.
 
 Generate a 256-bit hexadecimal bearer token into a mode-600 file outside Git,
 then configure only its digest in the deployment environment. Do not put the
@@ -388,11 +397,10 @@ raw token in Compose, shell history, source control, logs, or chat. Requests use
 generic HTTP 401 response. Use an operations script that reads the token file
 without printing it.
 
-The authenticated surface supports listing, adding, deleting, clearing, and
-activating the `central-corridor-high` or `central-corridor-blocked` presets.
-It is authentication for a simulation tool, not authorization for multiple
-users and not a public-safety data source. State remains per-process and is
-lost whenever the backend restarts.
+Sensor configuration survives Backend restarts and telemetry cleanup. A PUT
+validates and persists the complete configuration, increments its material
+version, and recomputes from stored telemetry atomically. Legacy preset tools
+remain simulation-only and process-local.
 
 ## Quality checks
 
@@ -413,16 +421,17 @@ avoid requiring GraphHopper or Photon network access during that suite.
 - The current public endpoint uses HTTPS and keeps GraphHopper and Photon
   private.
 - Development flood mutation routes are not available publicly.
-- Authenticated flood administration is fail-closed, hidden from OpenAPI, and
-  uses only a token digest in the process environment; the raw token remains
-  external deployment state.
+- Authenticated flood administration is fail-closed and uses only a token
+  digest in the process environment; sensor deployment endpoints are in
+  OpenAPI while the legacy simulation mutations remain hidden.
 - Public Swagger is an observed current exposure, not an authentication layer.
 - Gateway ingestion currently uses one static Bearer credential; public
   monitoring never exposes it.
 - Raw telemetry is retained indefinitely in the current release. Define reviewed retention or
   downsampling before deployment scale makes that impractical; TimescaleDB is
   intentionally not introduced yet.
-- IoT telemetry does not alter routes or create flood polygons/classes.
+- Production Protocol 3 telemetry updates configured sensor flood state after
+  raw persistence; derived failures never reject an otherwise valid raw row.
 - The deployment is not a public-safety guarantee and repository changes do
   not deploy automatically.
 - Provider indexes and routing graphs must be backed up and replaced through a

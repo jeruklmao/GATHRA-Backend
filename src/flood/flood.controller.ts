@@ -17,9 +17,9 @@ export class FloodController {
   @Get()
   @Header('Cache-Control', 'no-store')
   @ApiOperation({
-    summary: 'Get active flood hazard polygons (Read-Only)',
+    summary: 'Get current flood hazard and monitored-coverage polygons (Read-Only)',
     description:
-      'Returns active, non-expired flood hazard polygons in GeoJSON FeatureCollection format with snapshot metadata.',
+      'Returns enabled sensor coverage even for LOW, UNKNOWN, or stale state. GeoJSON positions use [longitude, latitude]. UNKNOWN means current condition is unknown, not safe.',
   })
   async getActiveHazards(
     @Query() query: FloodHazardsQueryDto,
@@ -86,10 +86,13 @@ export class FloodController {
         riskLevel: h.level,
         confidence: h.confidence,
         description: h.description ?? null,
-        observedAt: h.observedAt.toISOString(),
+        observedAt: h.observedAt?.toISOString() ?? null,
         validUntil: h.validUntil ? h.validUntil.toISOString() : null,
         source: snapshot.source,
         sourceNodeIds: h.sourceNodeIds ? [...h.sourceNodeIds] : [],
+        routingMultiplier: h.routingMultiplier,
+        reasonCodes: h.reasonCodes ? [...h.reasonCodes] : [],
+        freshness: h.freshness ?? null,
       },
       geometry: h.geometry,
     }));

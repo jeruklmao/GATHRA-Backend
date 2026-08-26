@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { createHash } from 'node:crypto';
 import { readConfiguration } from '../configuration';
 import { generateSafeAreaId } from '../flood/geometry/flood-geometry.validator';
-import type { FloodHazard, FloodRiskLevel } from '../flood/models/flood-hazard';
+import type { FloodHazard } from '../flood/models/flood-hazard';
 import { TravelModeDto } from './dto/route-preview-request.dto';
 import {
   NavigationManoeuvreType,
@@ -614,17 +614,20 @@ function isAbortError(error: unknown): boolean {
   );
 }
 
-const PRIORITY_MULTIPLIER_BY_LEVEL: Record<FloodRiskLevel, number> = {
-  LOW: 0.8,
-  MEDIUM: 0.35,
-  HIGH: 0.05,
-  BLOCKED: 0.0,
-};
-
 function buildCustomModel(hazards: readonly FloodHazard[]) {
-  if (hazards.length === 0) return undefined;
+  const penalizedHazards = hazards.filter((hazard) => {
+    if (
+      !Number.isFinite(hazard.routingMultiplier) ||
+      hazard.routingMultiplier < 0 ||
+      hazard.routingMultiplier > 1
+    ) {
+      throw new RoutingProviderError('INVALID_RESPONSE');
+    }
+    return hazard.routingMultiplier < 1;
+  });
+  if (penalizedHazards.length === 0) return undefined;
 
-  const features = hazards.map((h) => {
+  const features = penalizedHazards.map((h) => {
     const areaId = generateSafeAreaId(h.id);
     return {
       type: 'Feature',
@@ -634,12 +637,11 @@ function buildCustomModel(hazards: readonly FloodHazard[]) {
     };
   });
 
-  const priorityRules = hazards.map((h) => {
+  const priorityRules = penalizedHazards.map((h) => {
     const areaId = generateSafeAreaId(h.id);
-    const multiplier = PRIORITY_MULTIPLIER_BY_LEVEL[h.level];
     return {
       if: `in_${areaId}`,
-      multiply_by: String(multiplier),
+      multiply_by: String(h.routingMultiplier),
     };
   });
 
