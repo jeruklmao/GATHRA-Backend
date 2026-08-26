@@ -100,7 +100,7 @@ export class GatewayTelemetryReadingDto {
   @Max(96)
   packetLength!: number;
 
-  @ApiProperty({ description: 'Exact Protocol v2 TELEMETRY packet, canonical Base64' })
+  @ApiProperty({ description: 'Exact Protocol v3 TELEMETRY packet, canonical Base64' })
   @IsString()
   @MinLength(4)
   @MaxLength(128)

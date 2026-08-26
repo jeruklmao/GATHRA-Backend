@@ -51,6 +51,7 @@ export class IotIngestionRepository {
               median_echo_us,
               raw_distance_mm,
               accepted_distance_mm,
+              reference_distance_mm,
               mad_mm,
               temperature_centi_c,
               humidity_centi_percent,
@@ -69,7 +70,7 @@ export class IotIngestionRepository {
             ) VALUES (
               $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
               $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-              $21, $22, $23, $24, $25, $26, $27, $28
+              $21, $22, $23, $24, $25, $26, $27, $28, $29
             )
             ON CONFLICT (node_id, node_boot_session_id, node_sequence)
               DO NOTHING
@@ -79,7 +80,7 @@ export class IotIngestionRepository {
             gatewayId,
             gateway.gatewayId,
             decoded.nodeId,
-            // Legacy SQL column name; Protocol v2 stores persistentSessionId.
+            // Legacy SQL column name; Protocol v3 stores persistentSessionId.
             decoded.persistentSessionId,
             decoded.sequence,
             reception.gatewayTimeTrusted
@@ -92,6 +93,7 @@ export class IotIngestionRepository {
             decoded.medianEchoUs,
             decoded.rawDistanceMm,
             decoded.acceptedDistanceMm,
+            decoded.referenceDistanceMm,
             decoded.madMm,
             decoded.temperatureCentiC,
             decoded.humidityCentiPercent,

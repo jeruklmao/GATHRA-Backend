@@ -4,7 +4,7 @@ import type {
   MonitoringNodeSummary,
   MonitoringTelemetry,
 } from '../models/monitoring.models';
-import { FILTER_STATE_NAMES } from '../protocol/node-protocol-v2';
+import { FILTER_STATE_NAMES } from '../protocol/node-protocol-v3';
 
 interface TelemetryRow {
   readonly telemetry_id: string | null;
@@ -21,6 +21,7 @@ interface TelemetryRow {
   readonly median_echo_us: string | null;
   readonly raw_distance_mm: string | null;
   readonly accepted_distance_mm: string | null;
+  readonly reference_distance_mm: string | null;
   readonly mad_mm: number | null;
   readonly temperature_centi_c: number | null;
   readonly humidity_centi_percent: number | null;
@@ -80,6 +81,7 @@ export class IotMonitoringRepository {
           latest.median_echo_us,
           latest.raw_distance_mm,
           latest.accepted_distance_mm,
+          latest.reference_distance_mm,
           latest.mad_mm,
           latest.temperature_centi_c,
           latest.humidity_centi_percent,
@@ -133,6 +135,7 @@ export class IotMonitoringRepository {
           latest.median_echo_us,
           latest.raw_distance_mm,
           latest.accepted_distance_mm,
+          latest.reference_distance_mm,
           latest.mad_mm,
           latest.temperature_centi_c,
           latest.humidity_centi_percent,
@@ -206,6 +209,7 @@ export class IotMonitoringRepository {
           t.median_echo_us,
           t.raw_distance_mm,
           t.accepted_distance_mm,
+          t.reference_distance_mm,
           t.mad_mm,
           t.temperature_centi_c,
           t.humidity_centi_percent,
@@ -294,6 +298,10 @@ export class IotMonitoringRepository {
           row.accepted_distance_mm === null
             ? null
             : safeNumber(row.accepted_distance_mm, 'accepted distance'),
+        referenceDistanceMm:
+          row.reference_distance_mm === null
+            ? null
+            : safeNumber(row.reference_distance_mm, 'reference distance'),
         madMm: row.mad_mm,
         temperatureC:
           row.temperature_centi_c === null

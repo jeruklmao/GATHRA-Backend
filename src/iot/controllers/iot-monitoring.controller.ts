@@ -21,6 +21,7 @@ const TELEMETRY_EXAMPLE = {
     medianEchoUs: 4321,
     rawDistanceMm: 742,
     acceptedDistanceMm: 1498,
+    referenceDistanceMm: 1500,
     madMm: 3,
     temperatureC: 29.41,
     humidityPercent: 82.13,
@@ -42,7 +43,7 @@ const TELEMETRY_EXAMPLE = {
     rssiDbm: -91.5,
     snrDb: 8.25,
     frequencyErrorHz: -731,
-    packetLength: 56,
+    packetLength: 78,
   },
 } as const;
 

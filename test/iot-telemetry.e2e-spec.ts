@@ -22,16 +22,17 @@ process.env.IOT_GATEWAY_TOKEN_SHA256 = createHash('sha256')
   .update(RAW_TOKEN)
   .digest('hex');
 
-// Exact deployed-Node codec vector from GATHRA-Node/test/test_main.cpp.
+// Exact Protocol v3 codec vector from GATHRA-Node/test/test_main.cpp.
 const NODE_GOLDEN = Buffer.from([
-  0x47, 0x54, 0x02, 0x01, 0x02, 0x4e, 0x31,
+  0x47, 0x54, 0x03, 0x01, 0x02, 0x4e, 0x31,
   0x01, 0x02, 0x03, 0x04, 0xa0, 0xb0, 0xc0, 0xd0,
   0x00, 0x00, 0x12, 0x34, 0x00, 0x00, 0x02, 0xe4,
   0x00, 0x00, 0x02, 0xe3, 0x00, 0x03, 0xfb, 0x2e,
   0x11, 0xd7, 0x0e, 0x74, 0x07, 0x07, 0x00, 0x00,
   0x03, 0x02, 0x02, 0x00, 0x00, 0x69, 0xab, 0xcd,
   0xef, 0x0a, 0x01, 0x69, 0xab, 0xf0, 0x00, 0x01,
-  0x02, 0x03, 0x05, 0x03, 0x00,
+  0x02, 0x03, 0x05, 0x03, 0x00, 0x00, 0x00, 0x05,
+  0xdc,
 ]);
 
 describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
@@ -90,7 +91,7 @@ describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
         expect(body).toEqual({
           status: 'ok',
           ingestionSchemaVersion: 1,
-          nodeProtocolVersion: 2,
+          nodeProtocolVersion: 3,
           maximumBatchSize: 50,
         });
       });
@@ -120,6 +121,7 @@ describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
       expect(ledger.rows).toEqual([
         { name: '001_iot_raw_telemetry.sql' },
         { name: '002_protocol_v2_telemetry.sql' },
+        { name: '003_iot_protocol_v3_reference_distance.sql' },
       ]);
     } finally {
       await pool.end();
@@ -143,6 +145,8 @@ describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
       raw_payload: Buffer;
       node_sequence: string;
       median_echo_us: string;
+      reference_distance_mm: string | null;
+      protocol_version: number;
       hardware_mac: string;
       gateway_logical_id_snapshot: string;
       gateway_received_at: Date;
@@ -153,6 +157,7 @@ describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
     }>(
       `
         SELECT t.raw_payload, t.node_sequence, t.median_echo_us,
+               t.reference_distance_mm, t.protocol_version,
                g.hardware_mac, t.gateway_logical_id_snapshot,
                t.gateway_received_at, t.gateway_time_trusted,
                t.gateway_boot_session_id,
@@ -164,6 +169,8 @@ describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
     expect(persisted.rows[0].raw_payload).toEqual(NODE_GOLDEN);
     expect(Number(persisted.rows[0].node_sequence)).toBe(0xa0b0_c0d0);
     expect(Number(persisted.rows[0].median_echo_us)).toBe(0x1234);
+    expect(persisted.rows[0].reference_distance_mm).toBe('1500');
+    expect(persisted.rows[0].protocol_version).toBe(3);
     expect(persisted.rows[0].hardware_mac).toBe('AA:BB:CC:DD:EE:FF');
     expect(persisted.rows[0].gateway_logical_id_snapshot).toBe(
       'GTH-GW-AABBCCDDEEFF',
@@ -177,6 +184,23 @@ describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
     );
     expect(persisted.rows[0].rssi_dbm).toBeCloseTo(-91.5);
     expect(persisted.rows[0].snr_db).toBeCloseTo(8.25);
+
+    const list = await request(app.getHttpServer())
+      .get('/api/v1/iot/nodes')
+      .expect(200);
+    expect(list.body[0].latestTelemetry.measurement.referenceDistanceMm).toBe(
+      1500,
+    );
+    const detail = await request(app.getHttpServer())
+      .get('/api/v1/iot/nodes/N1')
+      .expect(200);
+    expect(
+      detail.body.latestTelemetry.measurement.referenceDistanceMm,
+    ).toBe(1500);
+    const history = await request(app.getHttpServer())
+      .get('/api/v1/iot/nodes/N1/telemetry')
+      .expect(200);
+    expect(history.body.items[0].measurement.referenceDistanceMm).toBe(1500);
   });
 
   it('normalizes sensor sentinels to SQL NULL while retaining raw bytes and flags', async () => {
@@ -186,6 +210,7 @@ describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
       acceptedDistanceMm: 0xffff_ffff,
       temperatureCentiC: -0x8000,
       humidityCentiPercent: 0xffff,
+      referenceDistanceMm: 0,
     });
     await ingest(batch([reading(sentinel)]));
 
@@ -194,6 +219,7 @@ describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
       accepted_distance_mm: string | null;
       temperature_centi_c: number | null;
       humidity_centi_percent: number | null;
+      reference_distance_mm: string | null;
       quality_flags: number;
       health_flags: number;
       raw_payload: Buffer;
@@ -203,10 +229,25 @@ describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
       accepted_distance_mm: null,
       temperature_centi_c: null,
       humidity_centi_percent: null,
+      reference_distance_mm: null,
       quality_flags: 7,
       health_flags: 128,
     });
     expect(persisted.rows[0].raw_payload).toEqual(sentinel);
+  });
+
+  it('rejects Protocol 2 telemetry without persisting it', async () => {
+    const protocol2 = Buffer.from(NODE_GOLDEN.subarray(0, -4));
+    protocol2[2] = 2;
+    const response = await ingest(batch([reading(protocol2)]));
+    expect(response.body.results[0]).toMatchObject({
+      status: 'REJECTED_INVALID',
+    });
+    expect(response.body.results[0].reason).toMatch(/^UNSUPPORTED_VERSION:/);
+    const count = await database.query<{ count: string }>(
+      'SELECT COUNT(*)::text AS count FROM iot_telemetry',
+    );
+    expect(count.rows[0].count).toBe('0');
   });
 
   it('deduplicates atomically by Node ID, boot session, and sequence', async () => {
@@ -245,6 +286,7 @@ describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
       acceptedDistanceMm: 0xffff_ffff,
       temperatureCentiC: -0x8000,
       humidityCentiPercent: 0xffff,
+      referenceDistanceMm: 0,
     });
     await ingest(
       batch([
@@ -291,6 +333,7 @@ describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
         measurement: {
           rawDistanceMm: null,
           acceptedDistanceMm: null,
+          referenceDistanceMm: null,
           temperatureC: null,
           humidityPercent: null,
           filterState: { code: 4, name: 'TRANSIENT_REJECTED' },
@@ -304,6 +347,9 @@ describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
       .get('/api/v1/iot/nodes/N1')
       .expect(200);
     expect(detail.body.latestTelemetry.sequence).toBe(101);
+    expect(
+      detail.body.latestTelemetry.measurement.referenceDistanceMm,
+    ).toBeNull();
 
     const firstPage = await request(app.getHttpServer())
       .get('/api/v1/iot/nodes/N1/telemetry')
@@ -316,6 +362,8 @@ describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
     expect(firstPage.body.items[0].rawPayloadBase64).toBeUndefined();
     expect(firstPage.body.items[0].reception.gatewayReceivedAt).toBeNull();
     expect(firstPage.body.items[0].reception.gatewayTimeTrusted).toBe(false);
+    expect(firstPage.body.items[0].measurement.referenceDistanceMm).toBeNull();
+    expect(firstPage.body.items[1].measurement.referenceDistanceMm).toBe(1500);
 
     const secondPage = await request(app.getHttpServer())
       .get('/api/v1/iot/nodes/N1/telemetry')
@@ -324,6 +372,9 @@ describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
     expect(
       secondPage.body.items.map((item: { sequence: number }) => item.sequence),
     ).toEqual([99]);
+    expect(secondPage.body.items[0].measurement.referenceDistanceMm).toBe(
+      1500,
+    );
     expect(secondPage.body.nextBeforeId).toBeNull();
 
     const raw = await request(app.getHttpServer())
@@ -388,7 +439,7 @@ function batch(readings: unknown[]): object {
     gateway: {
       gatewayId: 'GTH-GW-AABBCCDDEEFF',
       hardwareMac: 'aa:bb:cc:dd:ee:ff',
-      firmwareVersion: '2.0.0',
+      firmwareVersion: '2.1.0',
       bootSessionId: 1_234_567_890,
     },
     readings,
@@ -422,9 +473,10 @@ function packet(values: {
   acceptedDistanceMm: number;
   temperatureCentiC: number;
   humidityCentiPercent: number;
+  referenceDistanceMm?: number;
 }): Buffer {
-  const packetBytes = Buffer.alloc(60);
-  packetBytes.set([0x47, 0x54, 2, 1, 2, 0x4e, 0x31], 0);
+  const packetBytes = Buffer.alloc(64);
+  packetBytes.set([0x47, 0x54, 3, 1, 2, 0x4e, 0x31], 0);
   const offset = 7;
   packetBytes.writeUInt32BE(0x0102_0304, offset);
   packetBytes.writeUInt32BE(values.sequence, offset + 4);
@@ -447,5 +499,6 @@ function packet(values: {
   packetBytes.writeUInt32BE(0, offset + 47);
   packetBytes[offset + 51] = 0;
   packetBytes[offset + 52] = 0xff;
+  packetBytes.writeUInt32BE(values.referenceDistanceMm ?? 1500, offset + 53);
   return packetBytes;
 }

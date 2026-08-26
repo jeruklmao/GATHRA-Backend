@@ -1,4 +1,4 @@
-import type { FilterStateName } from '../protocol/node-protocol-v2';
+import type { FilterStateName } from '../protocol/node-protocol-v3';
 
 export interface MonitoringTelemetry {
   readonly id: number;
@@ -9,6 +9,7 @@ export interface MonitoringTelemetry {
     readonly medianEchoUs: number;
     readonly rawDistanceMm: number | null;
     readonly acceptedDistanceMm: number | null;
+    readonly referenceDistanceMm: number | null;
     readonly madMm: number;
     readonly temperatureC: number | null;
     readonly humidityPercent: number | null;

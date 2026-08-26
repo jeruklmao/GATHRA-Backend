@@ -160,9 +160,9 @@ available. The response reports each component independently.
 ### Raw IoT telemetry
 
 Gateway ingestion accepts batches of exact Base64 LoRa payloads plus reception
-metadata. NestJS independently validates and decodes Node Protocol v2, stores
-the exact payload as `BYTEA`, normalizes unavailable sensor sentinels to SQL
-`NULL`, and uses a hard unique constraint on
+metadata. NestJS independently validates and decodes Node Protocol v3 only,
+stores the exact payload as `BYTEA`, normalizes unavailable sensor sentinels
+and `referenceDistanceMm=0` to SQL `NULL`, and uses a hard unique constraint on
 `(node_id, node_boot_session_id, node_sequence)`. A committed retry returns
 `DUPLICATE`, so a lost HTTP response cannot create a second row.
 

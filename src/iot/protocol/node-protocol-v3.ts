@@ -1,7 +1,14 @@
-export const NODE_PROTOCOL_V2 = 2;
+export const NODE_PROTOCOL_V3 = 3;
 export const NODE_TELEMETRY_TYPE = 1;
 export const NODE_MAX_RADIO_PACKET_BYTES = 96;
 export const NODE_MAX_ID_LENGTH = 24;
+export const NODE_COMMON_HEADER_FIXED_BYTES = 5;
+export const NODE_REFERENCE_DISTANCE_PAYLOAD_OFFSET = 53;
+export const NODE_REFERENCE_DISTANCE_BYTES = 4;
+export const NODE_TELEMETRY_PAYLOAD_BYTES =
+  NODE_REFERENCE_DISTANCE_PAYLOAD_OFFSET + NODE_REFERENCE_DISTANCE_BYTES;
+export const NODE_TELEMETRY_FIXED_BYTES =
+  NODE_COMMON_HEADER_FIXED_BYTES + NODE_TELEMETRY_PAYLOAD_BYTES;
 export const UINT32_MAX = 0xffff_ffff;
 export const INT16_MIN = -0x8000;
 export const UINT16_MAX = 0xffff;
@@ -19,14 +26,15 @@ export const FILTER_STATE_NAMES = [
 
 export type FilterStateName = (typeof FILTER_STATE_NAMES)[number];
 
-export interface DecodedNodeTelemetryV2 {
-  readonly protocolVersion: 2;
+export interface DecodedNodeTelemetryV3 {
+  readonly protocolVersion: 3;
   readonly nodeId: string;
   readonly persistentSessionId: number;
   readonly sequence: number;
   readonly medianEchoUs: number;
   readonly rawDistanceMm: number | null;
   readonly acceptedDistanceMm: number | null;
+  readonly referenceDistanceMm: number | null;
   readonly madMm: number;
   readonly temperatureCentiC: number | null;
   readonly humidityCentiPercent: number | null;
@@ -69,9 +77,9 @@ export class NodeProtocolDecodeError extends Error {
   }
 }
 
-export function decodeNodeTelemetryV2Base64(
+export function decodeNodeTelemetryV3Base64(
   encoded: string,
-): DecodedNodeTelemetryV2 {
+): DecodedNodeTelemetryV3 {
   if (
     encoded.length === 0 ||
     encoded.length % 4 !== 0 ||
@@ -91,31 +99,31 @@ export function decodeNodeTelemetryV2Base64(
       'rawPayloadBase64 is not canonical Base64',
     );
   }
-  return decodeNodeTelemetryV2(rawPayload);
+  return decodeNodeTelemetryV3(rawPayload);
 }
 
-export function decodeNodeTelemetryV2(
+export function decodeNodeTelemetryV3(
   rawPayload: Buffer,
-): DecodedNodeTelemetryV2 {
+): DecodedNodeTelemetryV3 {
   if (rawPayload.length > NODE_MAX_RADIO_PACKET_BYTES) {
     throw new NodeProtocolDecodeError(
       'PACKET_TOO_LARGE',
       `decoded payload exceeds ${NODE_MAX_RADIO_PACKET_BYTES} bytes`,
     );
   }
-  if (rawPayload.length < 59) {
+  if (rawPayload.length < NODE_COMMON_HEADER_FIXED_BYTES) {
     throw new NodeProtocolDecodeError(
       'TRUNCATED',
-      'telemetry packet is shorter than the Protocol v2 minimum',
+      'telemetry packet is shorter than the common header',
     );
   }
   if (rawPayload[0] !== 0x47 || rawPayload[1] !== 0x54) {
     throw new NodeProtocolDecodeError('BAD_MAGIC', 'packet magic is not GT');
   }
-  if (rawPayload[2] !== NODE_PROTOCOL_V2) {
+  if (rawPayload[2] !== NODE_PROTOCOL_V3) {
     throw new NodeProtocolDecodeError(
       'UNSUPPORTED_VERSION',
-      'packet version is not Protocol v2',
+      'packet version is not Protocol v3',
     );
   }
   if (rawPayload[3] !== NODE_TELEMETRY_TYPE) {
@@ -131,11 +139,11 @@ export function decodeNodeTelemetryV2(
       'Node ID length must be from 1 to 24 bytes',
     );
   }
-  const expectedLength = 58 + nodeIdLength;
+  const expectedLength = NODE_TELEMETRY_FIXED_BYTES + nodeIdLength;
   if (rawPayload.length < expectedLength) {
     throw new NodeProtocolDecodeError(
       'TRUNCATED',
-      'telemetry packet ended before all Protocol v2 fields were present',
+      'telemetry packet ended before all Protocol v3 fields were present',
     );
   }
   if (rawPayload.length > expectedLength) {
@@ -157,7 +165,7 @@ export function decodeNodeTelemetryV2(
   ) {
     throw new NodeProtocolDecodeError(
       'INVALID_NODE_ID',
-      'Node ID contains characters outside the Protocol v2 alphabet',
+      'Node ID contains characters outside the Protocol v3 alphabet',
     );
   }
 
@@ -167,7 +175,7 @@ export function decodeNodeTelemetryV2(
   if (filterState >= FILTER_STATE_NAMES.length) {
     throw new NodeProtocolDecodeError(
       'INVALID_FILTER_STATE',
-      'filter state code is outside the Protocol v2 range',
+      'filter state code is outside the Protocol v3 range',
     );
   }
   const bootReason = rawPayload[offset + 35];
@@ -184,7 +192,7 @@ export function decodeNodeTelemetryV2(
   ) {
     throw new NodeProtocolDecodeError(
       'INVALID_ENUM',
-      'Protocol v2 diagnostic enum is outside its documented range',
+      'Protocol v3 diagnostic enum is outside its documented range',
     );
   }
   const rtcUnix = rawPayload.readUInt32BE(offset + 37);
@@ -199,16 +207,19 @@ export function decodeNodeTelemetryV2(
   ) {
     throw new NodeProtocolDecodeError(
       'INVALID_FLAGS',
-      'Protocol v2 validity/state fields are inconsistent',
+      'Protocol v3 validity/state fields are inconsistent',
     );
   }
 
   const rawDistance = rawPayload.readUInt32BE(offset + 12);
   const acceptedDistance = rawPayload.readUInt32BE(offset + 16);
+  const referenceDistance = rawPayload.readUInt32BE(
+    offset + NODE_REFERENCE_DISTANCE_PAYLOAD_OFFSET,
+  );
   const temperature = rawPayload.readInt16BE(offset + 22);
   const humidity = rawPayload.readUInt16BE(offset + 24);
   return {
-    protocolVersion: 2,
+    protocolVersion: 3,
     nodeId,
     persistentSessionId: rawPayload.readUInt32BE(offset),
     sequence: rawPayload.readUInt32BE(offset + 4),
@@ -216,6 +227,8 @@ export function decodeNodeTelemetryV2(
     rawDistanceMm: rawDistance === UINT32_MAX ? null : rawDistance,
     acceptedDistanceMm:
       acceptedDistance === UINT32_MAX ? null : acceptedDistance,
+    referenceDistanceMm:
+      referenceDistance === 0 ? null : referenceDistance,
     madMm: rawPayload.readUInt16BE(offset + 20),
     temperatureCentiC: temperature === INT16_MIN ? null : temperature,
     humidityCentiPercent: humidity === UINT16_MAX ? null : humidity,

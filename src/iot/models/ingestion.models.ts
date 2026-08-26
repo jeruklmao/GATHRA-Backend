@@ -1,9 +1,9 @@
 import type { GatewayTelemetryReadingDto } from '../dto/ingest-telemetry.dto';
-import type { DecodedNodeTelemetryV2 } from '../protocol/node-protocol-v2';
+import type { DecodedNodeTelemetryV3 } from '../protocol/node-protocol-v3';
 
 export interface ValidatedIngestReading {
   readonly index: number;
-  readonly decoded: DecodedNodeTelemetryV2;
+  readonly decoded: DecodedNodeTelemetryV3;
   readonly reception: GatewayTelemetryReadingDto;
 }
 

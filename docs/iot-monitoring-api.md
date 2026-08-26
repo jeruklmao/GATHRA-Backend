@@ -11,7 +11,7 @@ paths, credentials, queries, fragments, or wildcards.
 All history uses `serverReceivedAt` as its trusted timeline. Gateway UTC is
 also returned when it was trusted at capture. No `ONLINE` boolean is invented;
 clients receive `lastSeenAt` and can define a reviewed freshness policy later.
-For Protocol 2 rows, the retained response field `bootSessionId` contains the
+For Protocol 3 rows, the retained response field `bootSessionId` contains the
 Node persistentSessionId. The legacy name is preserved to avoid a monitoring
 API/database rewrite; it no longer implies a session created at every boot.
 
@@ -43,6 +43,7 @@ bounded by `IOT_MONITOR_MAX_LIMIT` (hard configuration maximum 1000).
         "medianEchoUs": 4321,
         "rawDistanceMm": 742,
         "acceptedDistanceMm": 1498,
+        "referenceDistanceMm": 1500,
         "madMm": 3,
         "temperatureC": 29.41,
         "humidityPercent": 82.13,
@@ -67,15 +68,14 @@ bounded by `IOT_MONITOR_MAX_LIMIT` (hard configuration maximum 1000).
         "rssiDbm": -91.5,
         "snrDb": 8.25,
         "frequencyErrorHz": -731,
-        "packetLength": 56
+        "packetLength": 78
       }
     }
   }
 ]
 ```
 
-Unavailable raw/accepted distance, temperature, or humidity is JSON `null`,
-never a protocol sentinel.
+Unavailable raw/accepted distance, temperature, or humidity is JSON `null`, never a protocol sentinel. `referenceDistanceMm` is also `null` when the wire value is zero (calibration missing); a configured non-zero reference is returned exactly as a JSON number.
 
 ## Node detail/latest
 
@@ -111,6 +111,7 @@ pagination. Responses are:
         "medianEchoUs": 4321,
         "rawDistanceMm": 742,
         "acceptedDistanceMm": 1498,
+        "referenceDistanceMm": 1500,
         "madMm": 3,
         "temperatureC": 29.41,
         "humidityPercent": 82.13,
@@ -135,7 +136,7 @@ pagination. Responses are:
         "rssiDbm": -91.5,
         "snrDb": 8.25,
         "frequencyErrorHz": -731,
-        "packetLength": 56
+        "packetLength": 78
       }
     }
   ],
@@ -161,6 +162,7 @@ Use the following fields without redesigning ingestion/storage:
 | Chart/indicator | Field |
 | --- | --- |
 | raw vs accepted distance | `measurement.rawDistanceMm`, `measurement.acceptedDistanceMm` |
+| calibration reference | `measurement.referenceDistanceMm` (`null` means missing) |
 | temperature | `measurement.temperatureC` |
 | humidity | `measurement.humidityPercent` |
 | battery | `measurement.batteryMv` |

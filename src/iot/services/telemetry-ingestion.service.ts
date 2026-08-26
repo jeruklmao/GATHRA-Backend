@@ -7,9 +7,9 @@ import type {
   ValidatedIngestReading,
 } from '../models/ingestion.models';
 import {
-  decodeNodeTelemetryV2Base64,
+  decodeNodeTelemetryV3Base64,
   NodeProtocolDecodeError,
-} from '../protocol/node-protocol-v2';
+} from '../protocol/node-protocol-v3';
 import { IotIngestionRepository } from '../repositories/iot-ingestion.repository';
 
 @Injectable()
@@ -40,7 +40,7 @@ export class TelemetryIngestionService {
             'gatewayTimeTrusted must exactly match timestamp availability',
           );
         }
-        const decoded = decodeNodeTelemetryV2Base64(
+        const decoded = decodeNodeTelemetryV3Base64(
           reading.rawPayloadBase64,
         );
         if (reading.packetLength !== decoded.rawPayload.length) {
@@ -81,7 +81,7 @@ export class TelemetryIngestionService {
         index: persisted.index,
         nodeId: reading.decoded.nodeId,
         // Kept as bootSessionId in the v1 ingestion response envelope for API
-        // stability; in Protocol v2 the value is the persistent session ID.
+        // stability; in Protocol v3 the value is the persistent session ID.
         bootSessionId: reading.decoded.persistentSessionId,
         sequence: reading.decoded.sequence,
         status: persisted.inserted ? 'INSERTED' : 'DUPLICATE',
