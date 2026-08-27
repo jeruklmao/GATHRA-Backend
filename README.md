@@ -402,6 +402,11 @@ validates and persists the complete configuration, increments its material
 version, and recomputes from stored telemetry atomically. Legacy preset tools
 remain simulation-only and process-local.
 
+## Production admin dashboard
+
+Dashboard architecture, authentication, observer, metrics, safe configuration,
+and operations are documented in [docs/admin-dashboard.md](docs/admin-dashboard.md).
+
 ## Quality checks
 
 ```bash

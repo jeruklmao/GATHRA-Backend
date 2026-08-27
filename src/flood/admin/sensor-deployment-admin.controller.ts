@@ -125,7 +125,7 @@ export class SensorDeploymentAdminController {
   }
 }
 
-function mapDeployment(state: EffectiveSensorState) {
+export function mapDeployment(state: EffectiveSensorState) {
   const deployment = state.deployment;
   return {
     nodeId: deployment.nodeId,

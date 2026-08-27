@@ -54,6 +54,12 @@ export interface AppConfiguration {
   readonly floodAdminTokenSha256?: string;
   readonly maxActiveFloodHazards: number;
   readonly maxFloodPolygonVertices: number;
+  readonly adminDashboardEnabled: boolean;
+  readonly adminAuthFile: string;
+  readonly adminObserverDirectory: string;
+  readonly adminSessionIdleMinutes: number;
+  readonly adminSessionAbsoluteMinutes: number;
+  readonly adminMetricsRetentionDays: number;
 }
 
 export function readConfiguration(
@@ -125,6 +131,55 @@ export function readConfiguration(
     maxFloodPolygonVertices: parsePositiveInteger(
       environment.MAX_FLOOD_POLYGON_VERTICES,
       2000,
+    ),
+    ...readDashboardConfiguration(environment),
+  };
+}
+
+function readDashboardConfiguration(environment: NodeJS.ProcessEnv): {
+  readonly adminDashboardEnabled: boolean;
+  readonly adminAuthFile: string;
+  readonly adminObserverDirectory: string;
+  readonly adminSessionIdleMinutes: number;
+  readonly adminSessionAbsoluteMinutes: number;
+  readonly adminMetricsRetentionDays: number;
+} {
+  const adminSessionIdleMinutes = parseBoundedIntegerStrict(
+    environment.ADMIN_SESSION_IDLE_MINUTES,
+    30,
+    5,
+    1_440,
+    'ADMIN_SESSION_IDLE_MINUTES',
+  );
+  const adminSessionAbsoluteMinutes = parseBoundedIntegerStrict(
+    environment.ADMIN_SESSION_ABSOLUTE_MINUTES,
+    720,
+    30,
+    10_080,
+    'ADMIN_SESSION_ABSOLUTE_MINUTES',
+  );
+  if (adminSessionAbsoluteMinutes < adminSessionIdleMinutes) {
+    throw new Error(
+      'ADMIN_SESSION_ABSOLUTE_MINUTES must be at least ADMIN_SESSION_IDLE_MINUTES',
+    );
+  }
+  return {
+    adminDashboardEnabled:
+      environment.ADMIN_DASHBOARD_ENABLED?.toLowerCase() === 'true',
+    adminAuthFile:
+      environment.ADMIN_AUTH_FILE?.trim() ||
+      '/run/secrets/gathra-admin-auth.env',
+    adminObserverDirectory:
+      environment.ADMIN_OBSERVER_DIRECTORY?.trim() ||
+      '/run/gathra-admin-observer',
+    adminSessionIdleMinutes,
+    adminSessionAbsoluteMinutes,
+    adminMetricsRetentionDays: parseBoundedIntegerStrict(
+      environment.ADMIN_METRICS_RETENTION_DAYS,
+      30,
+      7,
+      90,
+      'ADMIN_METRICS_RETENTION_DAYS',
     ),
   };
 }

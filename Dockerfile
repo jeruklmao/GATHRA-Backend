@@ -7,6 +7,8 @@ FROM dependencies AS build
 COPY nest-cli.json tsconfig.json tsconfig.build.json ./
 COPY src ./src
 COPY database ./database
+COPY admin-ui ./admin-ui
+COPY scripts/build-admin-ui.mjs ./scripts/build-admin-ui.mjs
 RUN npm run build
 
 FROM node:24-alpine AS runtime

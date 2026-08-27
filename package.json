@@ -8,7 +8,7 @@
     "node": ">=20.11 <25"
   },
   "scripts": {
-    "build": "nest build",
+    "build": "nest build && node scripts/build-admin-ui.mjs",
     "start": "node dist/main.js",
     "start:dev": "nest start --watch",
     "test": "npm run test:unit",

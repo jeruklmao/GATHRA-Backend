@@ -1,0 +1,11 @@
+# Merge these settings into the production Backend service. The host observer
+# directory and auth configuration are read-only; never mount docker.sock.
+services:
+  backend:
+    environment:
+      ADMIN_DASHBOARD_ENABLED: "true"
+      ADMIN_AUTH_FILE: /run/secrets/gathra-admin-auth.env
+      ADMIN_OBSERVER_DIRECTORY: /run/gathra-admin-observer
+    volumes:
+      - /opt/gathra-deploy/admin-auth.env:/run/secrets/gathra-admin-auth.env:ro
+      - /run/gathra-admin-observer:/run/gathra-admin-observer:ro

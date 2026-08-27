@@ -4,6 +4,7 @@ import {
   type NestModule,
 } from '@nestjs/common';
 import { RequestIdMiddleware } from './common/request-id.middleware';
+import { AdminModule } from './admin/admin.module';
 import { FloodModule } from './flood/flood.module';
 import { GeocodingModule } from './geocoding/geocoding.module';
 import { HealthController } from './health/health.controller';
@@ -14,7 +15,7 @@ import { RoutesService } from './routes/routes.service';
 import { ROUTING_PROVIDER } from './routes/routing-provider';
 
 @Module({
-  imports: [GeocodingModule, FloodModule.register(), IotModule],
+  imports: [GeocodingModule, FloodModule.register(), IotModule, AdminModule],
   controllers: [RoutesController, HealthController],
   providers: [
     RoutesService,

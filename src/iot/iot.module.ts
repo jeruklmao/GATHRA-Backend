@@ -30,5 +30,6 @@ import { TelemetryIngestionService } from './services/telemetry-ingestion.servic
       },
     },
   ],
+  exports: [IotMonitoringService],
 })
 export class IotModule {}

@@ -62,6 +62,25 @@ function normalizeException(exception: unknown): ApiException {
 
   if (exception instanceof HttpException) {
     const status = exception.getStatus();
+    if (status === HttpStatus.UNAUTHORIZED) {
+      return ApiException.authenticationRequired();
+    }
+    if (status === HttpStatus.FORBIDDEN) {
+      return new ApiException(
+        status,
+        'CSRF_FAILED',
+        'The request could not be verified.',
+        false,
+      );
+    }
+    if (status === HttpStatus.TOO_MANY_REQUESTS) {
+      return new ApiException(
+        status,
+        'RATE_LIMITED',
+        'Login temporarily unavailable.',
+        true,
+      );
+    }
     if (status === HttpStatus.BAD_REQUEST) {
       return ApiException.validation([
         {

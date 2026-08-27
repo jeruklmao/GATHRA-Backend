@@ -3,6 +3,8 @@ import { HttpStatus } from '@nestjs/common';
 export type ApiErrorCode =
   | 'VALIDATION_ERROR'
   | 'AUTHENTICATION_REQUIRED'
+  | 'CSRF_FAILED'
+  | 'RATE_LIMITED'
   | 'NOT_FOUND'
   | 'METHOD_NOT_ALLOWED'
   | 'NO_ROUTE'
