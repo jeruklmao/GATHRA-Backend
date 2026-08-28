@@ -102,7 +102,8 @@ NestJS exposes five provider-neutral areas:
   simulation, and bearer-authenticated durable sensor administration.
 - `health`: readiness for both selected providers and PostgreSQL.
 - `iot`: Gateway-authenticated raw packet batches, independent Protocol v3
-  decoding, PostgreSQL repositories, and public read-only Node monitoring.
+  decoding, Firmware 2.2 operational heartbeats, PostgreSQL repositories, and
+  public read-only Node monitoring.
 
 ## IoT persistence boundary
 
@@ -120,6 +121,13 @@ comparison. Only its digest is configured server-side. Monitoring endpoints do
 not use that credential and return frontend-oriented measurement/reception
 objects with unavailable values as JSON `null`. A validated exact-origin CORS
 allowlist permits read-only browser access from the future GATHRA website.
+
+Firmware 2.2 heartbeat ingestion is independent of raw telemetry ingestion. It
+transactionally updates one latest status row and appends one compact metrics
+row, while Backend receipt time drives dynamic Gateway freshness. Only Gateway
+metrics have a 30-day cleanup policy; raw Node telemetry is unaffected. The
+Admin Dashboard receives heartbeat notifications over its existing
+session-authenticated SSE channel.
 
 SQL migrations in `database/migrations` execute once under an advisory lock at
 application bootstrap. PostgreSQL is mandatory for Backend readiness. Raw

@@ -3,6 +3,7 @@ import { DatabaseService } from '../../database/database.service';
 import { mapDeployment } from '../../flood/admin/sensor-deployment-admin.controller';
 import { SensorDeploymentService } from '../../flood/sensors/sensor-deployment.service';
 import { IotMonitoringService } from '../../iot/services/iot-monitoring.service';
+import { GatewayHeartbeatService } from '../../iot/services/gateway-heartbeat.service';
 import {
   NODE_HEALTH_FLAG,
   NODE_QUALITY_FLAG,
@@ -15,13 +16,14 @@ export class AdminDashboardService {
   constructor(
     private readonly database: DatabaseService,
     private readonly monitoring: IotMonitoringService,
+    private readonly gatewayHeartbeat: GatewayHeartbeatService,
     private readonly deployments: SensorDeploymentService,
     private readonly observer: AdminObserverService,
     private readonly traffic: AdminTrafficService,
   ) {}
 
   async overview() {
-    const [observer, counts, flood, traffic] = await Promise.all([
+    const [observer, counts, flood, traffic, gateways] = await Promise.all([
       this.observer.snapshot(),
       this.database.query<{
         node_count: string;
@@ -37,6 +39,7 @@ export class AdminDashboardService {
           pg_database_size(current_database())::text AS database_size_bytes`),
       this.deployments.listEffective(),
       this.traffic.overview(),
+      this.gatewayHeartbeat.list(),
     ]);
     const row = counts.rows[0];
     return {
@@ -54,6 +57,7 @@ export class AdminDashboardService {
       },
       flood: flood.map(mapDeployment),
       traffic,
+      gatewayHeartbeat: summarizeGateways(gateways),
     };
   }
 
@@ -182,41 +186,29 @@ export class AdminDashboardService {
   }
 
   async gateways() {
-    const result = await this.database.query<{
-      gateway_id: string;
-      hardware_mac: string;
-      first_seen_at: Date;
-      last_seen_at: Date;
-      latest_node_id: string | null;
-      latest_reception_at: Date | null;
-      telemetry_count: string;
-    }>(`SELECT g.logical_gateway_id AS gateway_id, g.hardware_mac, g.first_seen_at,
-               g.last_seen_at, latest.node_id AS latest_node_id,
-               latest.server_received_at AS latest_reception_at,
-               count(t.id)::text AS telemetry_count
-        FROM iot_gateways g
-        LEFT JOIN iot_telemetry t ON t.gateway_id = g.id
-        LEFT JOIN LATERAL (
-          SELECT node_id, server_received_at FROM iot_telemetry x
-          WHERE x.gateway_id = g.id ORDER BY server_received_at DESC, id DESC LIMIT 1
-        ) latest ON true
-        GROUP BY g.id, latest.node_id, latest.server_received_at
-        ORDER BY g.last_seen_at DESC`);
-    return { gateways: result.rows.map((row) => ({
-      gatewayId: row.gateway_id,
-      hardwareMac: row.hardware_mac,
-      firstSeenAt: row.first_seen_at.toISOString(),
-      lastSeenAt: row.last_seen_at.toISOString(),
-      latestNodeId: row.latest_node_id,
-      latestReceptionAt: row.latest_reception_at?.toISOString() ?? null,
-      telemetryCount: Number(row.telemetry_count),
-      statusBasis: 'activity-derived; no continuous Gateway heartbeat',
-    })) };
+    return { gateways: await this.gatewayHeartbeat.list() };
+  }
+
+  gateway(gatewayId: string) {
+    return this.gatewayHeartbeat.detail(gatewayId);
+  }
+
+  gatewayMetrics(gatewayId: string, range: string) {
+    return this.gatewayHeartbeat.metrics(gatewayId, range);
   }
 
   trafficMetrics(range: DashboardRange) {
     return this.traffic.query(range);
   }
+}
+
+function summarizeGateways(gateways: readonly Record<string, unknown>[]) {
+  const states = { ONLINE: 0, STALE: 0, OFFLINE: 0, HEARTBEAT_UNAVAILABLE: 0 };
+  for (const gateway of gateways) {
+    const state = (gateway.freshness as { state: keyof typeof states }).state;
+    states[state] += 1;
+  }
+  return { counts: states, latest: gateways[0] ?? null };
 }
 
 export function activityStatus(

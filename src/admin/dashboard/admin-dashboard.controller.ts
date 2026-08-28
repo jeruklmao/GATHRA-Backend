@@ -11,7 +11,15 @@ import {
   Sse,
   UseGuards,
 } from '@nestjs/common';
-import { from, interval, Observable, startWith, switchMap } from 'rxjs';
+import {
+  from,
+  interval,
+  map,
+  merge,
+  Observable,
+  startWith,
+  switchMap,
+} from 'rxjs';
 import { ApiCookieAuth, ApiTags } from '@nestjs/swagger';
 import { ApiException } from '../../common/api-error';
 import { mapDeployment } from '../../flood/admin/sensor-deployment-admin.controller';
@@ -22,6 +30,7 @@ import { AdminHostMetricsService } from '../metrics/admin-host-metrics.service';
 import type { DashboardRange } from '../metrics/admin-traffic.service';
 import { AdminObserverService } from '../observer/admin-observer.service';
 import { AdminDashboardService } from './admin-dashboard.service';
+import { GatewayHeartbeatEventsService } from '../../iot/services/gateway-heartbeat-events.service';
 
 @Controller({ path: 'admin/dashboard', version: '1' })
 @UseGuards(AdminSessionGuard)
@@ -33,6 +42,7 @@ export class AdminDashboardController {
     private readonly deployments: SensorDeploymentService,
     private readonly observer: AdminObserverService,
     private readonly hostMetrics: AdminHostMetricsService,
+    private readonly gatewayEvents: GatewayHeartbeatEventsService,
   ) {}
 
   @Get('overview')
@@ -66,6 +76,19 @@ export class AdminDashboardController {
   @Get('gateways')
   gateways() {
     return this.dashboard.gateways();
+  }
+
+  @Get('gateways/:gatewayId')
+  gateway(@Param('gatewayId') gatewayId: string) {
+    return this.dashboard.gateway(gatewayId);
+  }
+
+  @Get('gateways/:gatewayId/metrics')
+  gatewayMetrics(
+    @Param('gatewayId') gatewayId: string,
+    @Query('range') range = '24h',
+  ) {
+    return this.dashboard.gatewayMetrics(gatewayId, range);
   }
 
   @Get('sensor-deployments')
@@ -132,11 +155,15 @@ export class AdminDashboardController {
 
   @Sse('events')
   events(): Observable<MessageEvent> {
-    return interval(5_000).pipe(
+    const snapshots = interval(5_000).pipe(
       startWith(0),
       switchMap(() => from(this.dashboard.overview())),
-      switchMap((data) => from([{ type: 'snapshot', data } satisfies MessageEvent])),
+      map((data) => ({ type: 'snapshot', data }) satisfies MessageEvent),
     );
+    const heartbeats = this.gatewayEvents.stream.pipe(
+      map((data) => ({ type: 'gateway-heartbeat', data }) satisfies MessageEvent),
+    );
+    return merge(snapshots, heartbeats);
   }
 }
 

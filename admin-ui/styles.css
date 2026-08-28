@@ -36,7 +36,7 @@ a{color:inherit}
 .value{font-size:1.45rem;font-weight:750;overflow-wrap:anywhere}
 .status{display:inline-flex;border-radius:99px;padding:3px 8px;font-size:.75rem;font-weight:750;background:#26373b}
 .status.ok,.status.low,.status.online{color:var(--ok)}
-.status.warn,.status.medium,.status.stale,.status.unknown{color:var(--warn)}
+.status.warn,.status.medium,.status.stale,.status.unknown,.status.heartbeat_unavailable{color:var(--warn)}
 .status.bad,.status.high,.status.blocked,.status.offline{color:var(--bad)}
 .table-wrap{width:100%;overflow:auto;border:1px solid var(--line);border-radius:10px}
 .table{border-collapse:collapse;width:100%;min-width:760px;background:var(--panel)}

@@ -7,6 +7,7 @@ import { AppModule } from '../src/app.module';
 import { configureApplication } from '../src/app-bootstrap';
 import { DatabaseService } from '../src/database/database.service';
 import { runMigrations } from '../src/database/migration-runner';
+import { GatewayHeartbeatService } from '../src/iot/services/gateway-heartbeat.service';
 import {
   GEOCODING_PROVIDER,
   type GeocodingProvider,
@@ -124,6 +125,7 @@ describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
         { name: '003_iot_protocol_v3_reference_distance.sql' },
         { name: '004_sensor_flood_hazards.sql' },
         { name: '005_admin_dashboard.sql' },
+        { name: '006_gateway_heartbeat.sql' },
       ]);
     } finally {
       await pool.end();
@@ -426,6 +428,43 @@ describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
     ).toBeUndefined();
   });
 
+  it('authenticates and transactionally persists Firmware 2.2 heartbeat latest state and history', async () => {
+    await request(app.getHttpServer()).post('/api/v1/iot/gateway/heartbeat').send(heartbeat()).expect(401);
+    await request(app.getHttpServer()).post('/api/v1/iot/gateway/heartbeat').set('Authorization', 'Bearer wrong').send(heartbeat()).expect(401);
+    await request(app.getHttpServer()).post('/api/v1/iot/gateway/heartbeat').set('Authorization', AUTHORIZATION).send(heartbeat()).expect(202);
+    await request(app.getHttpServer()).post('/api/v1/iot/gateway/heartbeat').set('Authorization', AUTHORIZATION).send(heartbeat({ uptimeSeconds: 2, bootCount: 13 })).expect(202);
+
+    const rows = await database.query<{ firmware_version: string; uptime_seconds: string; samples: string }>(
+      `SELECT s.firmware_version, s.uptime_seconds::text,
+              (SELECT count(*)::text FROM iot_gateway_metrics m WHERE m.gateway_id=s.gateway_id) samples
+         FROM iot_gateway_status s`,
+    );
+    expect(rows.rows).toEqual([{ firmware_version: '2.2.0', uptime_seconds: '2', samples: '2' }]);
+    const gateway = await database.query<{ count: string }>('SELECT count(*)::text AS count FROM iot_gateways');
+    expect(gateway.rows[0].count).toBe('1');
+  });
+
+  it('rejects relationally inconsistent and conflicting Gateway identities', async () => {
+    const invalid = heartbeat();
+    invalid.queue.depth = invalid.queue.capacity + 1;
+    await request(app.getHttpServer()).post('/api/v1/iot/gateway/heartbeat').set('Authorization', AUTHORIZATION).send(invalid).expect(400);
+    expect((await database.query<{ count: string }>('SELECT count(*)::text AS count FROM iot_gateway_metrics')).rows[0].count).toBe('0');
+
+    await request(app.getHttpServer()).post('/api/v1/iot/gateway/heartbeat').set('Authorization', AUTHORIZATION).send(heartbeat()).expect(202);
+    const conflict = heartbeat();
+    conflict.gateway.mac = '00:11:22:33:44:55';
+    await request(app.getHttpServer()).post('/api/v1/iot/gateway/heartbeat').set('Authorization', AUTHORIZATION).send(conflict).expect(400);
+    expect((await database.query<{ count: string }>('SELECT count(*)::text AS count FROM iot_gateways')).rows[0].count).toBe('1');
+  });
+
+  it('cleans up only Gateway metrics older than 30 days', async () => {
+    await request(app.getHttpServer()).post('/api/v1/iot/gateway/heartbeat').set('Authorization', AUTHORIZATION).send(heartbeat()).expect(202);
+    await database.query(`UPDATE iot_gateway_metrics SET sampled_at=now()-interval '31 days'`);
+    const service = app.get(GatewayHeartbeatService);
+    expect(await service.cleanupNow()).toBe(1);
+    expect((await database.query<{ count: string }>('SELECT count(*)::text AS count FROM iot_gateway_status')).rows[0].count).toBe('1');
+  });
+
   function ingest(body: unknown): Promise<request.Response> {
     return request(app.getHttpServer())
       .post('/api/v1/iot/telemetry/batch')
@@ -445,6 +484,20 @@ function batch(readings: unknown[]): object {
       bootSessionId: 1_234_567_890,
     },
     readings,
+  };
+}
+
+function heartbeat(runtime: { uptimeSeconds?: number; bootCount?: number } = {}) {
+  return {
+    schemaVersion: 1, heartbeatIntervalSeconds: 60,
+    gateway: { gatewayId: 'GTH-GW-AABBCCDDEEFF', mac: 'AA:BB:CC:DD:EE:FF', firmwareVersion: '2.2.0', protocolVersion: 3, buildFlavor: 'production' },
+    runtime: { uptimeSeconds: runtime.uptimeSeconds ?? 12345, resetReason: 'POWER_ON', bootCount: runtime.bootCount ?? 12, freeHeapBytes: 123456, minFreeHeapBytes: 100000, largestFreeHeapBlockBytes: 80000, sketchSizeBytes: 1200000, freeSketchSpaceBytes: 200000, flashSizeBytes: 4194304 },
+    network: { wifiConnected: true, ssid: 'Lab "A"', wifiRssiDbm: -55, localIp: '192.168.1.20', backendConnectivityState: 'HEALTHY', lastBackendSuccessAt: '2026-08-24T22:13:20.000Z', lastBackendErrorAt: null, consecutiveBackendFailures: 0 },
+    time: { timeValid: true, currentUtc: '2026-08-24T22:15:23.000Z', lastNtpSyncAt: '2026-08-24T22:13:20.000Z', ntpAgeSeconds: 123 },
+    lora: { pairedNodeId: 'N1', lastLoRaRxAt: '2026-08-24T22:15:00.000Z', latestRssiDbm: -45.5, latestSnrDb: 10.25, latestFrequencyErrorHz: 1050, receivedPacketCount: 20, validTelemetryCount: 18, invalidPacketCount: 2, crcErrorCount: 1, protocolRejectedPacketCount: 1, unpairedRejectedPacketCount: 0 },
+    ack: { ackCount: 3, ackSuccessCount: 2, ackFailureCount: 1, latencySampleCount: 2, latestRxToAckStartMs: 30.2, latestRxToAckCompleteMs: 642.1, latestAckTxDurationMs: 611.9, minRxToAckStartMs: 30, maxRxToAckStartMs: 40, avgRxToAckStartMs: 35, minRxToAckCompleteMs: 640, maxRxToAckCompleteMs: 660, avgRxToAckCompleteMs: 650, minAckTxDurationMs: 610, maxAckTxDurationMs: 620, avgAckTxDurationMs: 615 },
+    queue: { depth: 3, capacity: 128, oldestRecordAgeSeconds: 90, telemetryUploadSuccessCount: 7, telemetryUploadFailureCount: 2 },
+    commands: { pendingCommandId: 44, pendingCommandType: 'SET_POLL_INTERVAL_MINUTES', pendingCommandState: 'SENT', lastCommandId: 44, lastCommandResult: 'NONE', commandsSentCount: 5, commandResultsReceivedCount: 4 },
   };
 }
 

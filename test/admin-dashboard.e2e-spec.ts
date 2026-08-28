@@ -9,6 +9,7 @@ import { AppModule } from '../src/app.module';
 import { configureApplication } from '../src/app-bootstrap';
 import { DatabaseService } from '../src/database/database.service';
 import { AdminTrafficService } from '../src/admin/metrics/admin-traffic.service';
+import { GatewayHeartbeatService } from '../src/iot/services/gateway-heartbeat.service';
 import {
   GEOCODING_PROVIDER,
   type GeocodingProvider,
@@ -148,6 +149,30 @@ describe('production admin dashboard (PostgreSQL integration)', () => {
       .expect(401);
     const sessions = await database.query<{ count: string }>('SELECT count(*)::text AS count FROM admin_sessions');
     expect(sessions.rows[0].count).toBe('0');
+  });
+
+  it('protects Gateway monitoring and clearly represents a pre-heartbeat Gateway', async () => {
+    await database.query(
+      `INSERT INTO iot_gateways (hardware_mac,logical_gateway_id,firmware_version,first_seen_at,last_seen_at)
+       VALUES ('AA:BB:CC:DD:EE:FF','GTH-GW-AABBCCDDEEFF','2.1.0',now(),now())`,
+    );
+    await request(app.getHttpServer()).get('/api/v1/admin/dashboard/gateways').expect(401);
+    await request(app.getHttpServer()).get('/api/v1/admin/dashboard/events').expect(401);
+    const authenticated = await login();
+    const list = await request(app.getHttpServer())
+      .get('/api/v1/admin/dashboard/gateways')
+      .set('Cookie', authenticated.cookie)
+      .expect(200);
+    expect(list.body.gateways[0]).toMatchObject({
+      gatewayId: 'GTH-GW-AABBCCDDEEFF',
+      heartbeat: null,
+      freshness: { state: 'HEARTBEAT_UNAVAILABLE' },
+    });
+    expect(await app.get(GatewayHeartbeatService).metrics('GTH-GW-AABBCCDDEEFF', '24h')).toEqual({ range: '24h', maximumPoints: 1000, points: [] });
+    await request(app.getHttpServer())
+      .get('/api/v1/admin/dashboard/gateways/GTH-GW-AABBCCDDEEFF/metrics?range=24h')
+      .set('Cookie', authenticated.cookie)
+      .expect(200, { range: '24h', maximumPoints: 1000, points: [] });
   });
 
   it('reuses transactional flood validation and recompute behind session CSRF', async () => {

@@ -104,6 +104,7 @@ URI versioning produces these current v1 endpoints:
 - `GET /api/v1/admin/iot/sensor-deployments/:nodeId` (flood-admin Bearer authentication)
 - `PUT /api/v1/admin/iot/sensor-deployments/:nodeId` (flood-admin Bearer authentication)
 - `POST /api/v1/iot/telemetry/batch` (Gateway Bearer authentication)
+- `POST /api/v1/iot/gateway/heartbeat` (Gateway Bearer authentication; Firmware 2.2 schema 1)
 - `GET /api/v1/iot/gateway/ping` (Gateway Bearer authentication)
 - `GET /api/v1/iot/nodes` (public read-only monitoring)
 - `GET /api/v1/iot/nodes/:nodeId` (public read-only monitoring)

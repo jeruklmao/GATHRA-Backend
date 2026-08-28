@@ -11,7 +11,10 @@ Asia/Jakarta. Distances and thresholds are millimetres. Operational Node status
 uses inclusive boundaries: `ONLINE` when age is at most the expected poll
 interval, `STALE` above poll but at most `staleAfterMinutes`, and `OFFLINE`
 above stale. This does not change flood-classifier semantics. Gateway state is
-activity-derived because Protocol 3 has no continuous Gateway heartbeat.
+activity-derived only for legacy Gateways. Firmware 2.2 heartbeat monitoring
+provides dynamic ONLINE/STALE/OFFLINE state, detailed runtime/network/NTP/LoRa/
+ACK/queue/command diagnostics, and 1h/24h/7d/30d charts. The heartbeat interval
+is displayed read-only because it remains configured on the Gateway itself.
 
 ## Authentication
 
