@@ -14,12 +14,14 @@ diagnostic and is ignored when `timeValid` is false. Metrics older than 30 days
 are removed by a six-hour best-effort cleanup. Cleanup failure never interrupts
 heartbeat or Protocol 3 ingestion.
 
-Status is derived at read time from the reported, locally configured heartbeat
-interval: age at or below two intervals is `ONLINE`, above two through five is
-`STALE`, and above five is `OFFLINE`. A registered pre-2.2 Gateway with no
-heartbeat is `HEARTBEAT_UNAVAILABLE`, not falsely offline. The interval is
-read-only in Backend and remains configurable only on the Gateway local
-dashboard.
+Status is derived at read time from the heartbeat interval: age at or below two
+intervals is `ONLINE`, above two through five is `STALE`, and above five is
+`OFFLINE`. Released Firmware 2.2 payloads omit the locally configured interval,
+so Backend uses the firmware default of 60 seconds. A future payload may report
+the optional 15–3600-second value without changing schema version 1. A
+registered pre-2.2 Gateway with no heartbeat is `HEARTBEAT_UNAVAILABLE`, not
+falsely offline. The setting remains read-only in Backend and configurable only
+on the Gateway local dashboard.
 
 Authenticated dashboard APIs expose Gateway list, detail, and bounded chart
 history under `/api/v1/admin/dashboard/gateways`. Supported chart ranges are 1h,

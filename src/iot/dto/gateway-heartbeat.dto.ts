@@ -7,6 +7,7 @@ import {
   IsInt,
   IsIP,
   IsNumber,
+  IsOptional,
   IsString,
   Matches,
   Max,
@@ -167,7 +168,8 @@ export class GatewayHeartbeatDto {
   @IsInt()
   @Min(15)
   @Max(3600)
-  heartbeatIntervalSeconds!: number;
+  @IsOptional()
+  heartbeatIntervalSeconds = 60;
 
   @ValidateNested()
   @IsDefined()

@@ -434,12 +434,12 @@ describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
     await request(app.getHttpServer()).post('/api/v1/iot/gateway/heartbeat').set('Authorization', AUTHORIZATION).send(heartbeat()).expect(202);
     await request(app.getHttpServer()).post('/api/v1/iot/gateway/heartbeat').set('Authorization', AUTHORIZATION).send(heartbeat({ uptimeSeconds: 2, bootCount: 13 })).expect(202);
 
-    const rows = await database.query<{ firmware_version: string; uptime_seconds: string; samples: string }>(
-      `SELECT s.firmware_version, s.uptime_seconds::text,
+    const rows = await database.query<{ firmware_version: string; heartbeat_interval_seconds: number; uptime_seconds: string; samples: string }>(
+      `SELECT s.firmware_version, s.heartbeat_interval_seconds, s.uptime_seconds::text,
               (SELECT count(*)::text FROM iot_gateway_metrics m WHERE m.gateway_id=s.gateway_id) samples
          FROM iot_gateway_status s`,
     );
-    expect(rows.rows).toEqual([{ firmware_version: '2.2.0', uptime_seconds: '2', samples: '2' }]);
+    expect(rows.rows).toEqual([{ firmware_version: '2.2.0', heartbeat_interval_seconds: 60, uptime_seconds: '2', samples: '2' }]);
     const gateway = await database.query<{ count: string }>('SELECT count(*)::text AS count FROM iot_gateways');
     expect(gateway.rows[0].count).toBe('1');
   });
@@ -489,7 +489,7 @@ function batch(readings: unknown[]): object {
 
 function heartbeat(runtime: { uptimeSeconds?: number; bootCount?: number } = {}) {
   return {
-    schemaVersion: 1, heartbeatIntervalSeconds: 60,
+    schemaVersion: 1,
     gateway: { gatewayId: 'GTH-GW-AABBCCDDEEFF', mac: 'AA:BB:CC:DD:EE:FF', firmwareVersion: '2.2.0', protocolVersion: 3, buildFlavor: 'production' },
     runtime: { uptimeSeconds: runtime.uptimeSeconds ?? 12345, resetReason: 'POWER_ON', bootCount: runtime.bootCount ?? 12, freeHeapBytes: 123456, minFreeHeapBytes: 100000, largestFreeHeapBlockBytes: 80000, sketchSizeBytes: 1200000, freeSketchSpaceBytes: 200000, flashSizeBytes: 4194304 },
     network: { wifiConnected: true, ssid: 'Lab "A"', wifiRssiDbm: -55, localIp: '192.168.1.20', backendConnectivityState: 'HEALTHY', lastBackendSuccessAt: '2026-08-24T22:13:20.000Z', lastBackendErrorAt: null, consecutiveBackendFailures: 0 },

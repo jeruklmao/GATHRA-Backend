@@ -24,6 +24,14 @@ function errors(value: unknown) {
 describe('GatewayHeartbeatDto Firmware 2.2 contract', () => {
   it('accepts the exact populated firmware fixture', () => expect(errors(heartbeatFixture())).toEqual([]));
 
+  it('defaults the interval for released Firmware 2.2 payloads that omit it', () => {
+    const value = heartbeatFixture() as Record<string, unknown>;
+    delete value.heartbeatIntervalSeconds;
+    const instance = plainToInstance(GatewayHeartbeatDto, value);
+    expect(validateSync(instance, { whitelist: true, forbidNonWhitelisted: true })).toEqual([]);
+    expect(instance.heartbeatIntervalSeconds).toBe(60);
+  });
+
   it('accepts disconnected, unsynchronized, unpaired, empty ACK and queue nulls', () => {
     const value = heartbeatFixture();
     Object.assign(value.network, { wifiConnected: false, wifiRssiDbm: null, localIp: null });
