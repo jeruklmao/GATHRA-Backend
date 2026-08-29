@@ -78,7 +78,7 @@ export class AdminDashboardService {
         return {
           ...node,
           protocolVersion: telemetry === null ? null : 3,
-          waterHeightMm: waterHeight(telemetry?.measurement),
+          waterHeightMm: state?.waterHeightMm ?? null,
           quality: telemetry === null ? null : decodeFlags(telemetry.measurement.qualityFlags, NODE_QUALITY_FLAG),
           health: telemetry === null ? null : decodeFlags(telemetry.measurement.healthFlags, NODE_HEALTH_FLAG),
           deployment: state === undefined ? null : mapDeployment(state),
@@ -103,7 +103,7 @@ export class AdminDashboardService {
     return {
       ...node,
       protocolVersion: telemetry === null ? null : 3,
-      waterHeightMm: waterHeight(telemetry?.measurement),
+      waterHeightMm: deployment?.waterHeightMm ?? null,
       quality: telemetry === null ? null : decodeFlags(telemetry.measurement.qualityFlags, NODE_QUALITY_FLAG),
       health: telemetry === null ? null : decodeFlags(telemetry.measurement.healthFlags, NODE_HEALTH_FLAG),
       deployment: deployment === null ? null : mapDeployment(deployment),

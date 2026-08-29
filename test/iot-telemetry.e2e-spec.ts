@@ -126,6 +126,7 @@ describe('IoT raw telemetry persistence (PostgreSQL integration)', () => {
         { name: '004_sensor_flood_hazards.sql' },
         { name: '005_admin_dashboard.sql' },
         { name: '006_gateway_heartbeat.sql' },
+        { name: '007_sensor_reference_override.sql' },
       ]);
     } finally {
       await pool.end();

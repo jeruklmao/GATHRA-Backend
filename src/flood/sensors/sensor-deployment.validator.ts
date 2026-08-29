@@ -141,6 +141,9 @@ export function validateSensorDeployment(
     latitude,
     longitude,
     coveragePolygon,
+    referenceDistanceOverrideMm: nullableReferenceDistance(
+      input.referenceDistanceOverrideMm,
+    ),
     expectedPollIntervalMinutes,
     staleAfterMinutes,
     hysteresisMm,
@@ -162,6 +165,21 @@ export function validateSensorDeployment(
       'unknownMultiplier',
     ),
   };
+}
+
+function nullableReferenceDistance(value: unknown): number | null {
+  if (value === undefined || value === null) return null;
+  if (
+    !Number.isSafeInteger(value) ||
+    (value as number) < 1 ||
+    (value as number) > 4_294_967_295
+  ) {
+    throw new SensorDeploymentValidationError(
+      'referenceDistanceOverrideMm',
+      'referenceDistanceOverrideMm must be null or an integer from 1 through 4294967295',
+    );
+  }
+  return value as number;
 }
 
 function multiplier(value: unknown, field: string): number {

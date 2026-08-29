@@ -1,5 +1,55 @@
 # Sensor-backed flood hazards
 
+## Public current sensor detail
+
+`GET /api/v1/sensors/:nodeId` is an unauthenticated, read-only, non-cacheable
+Android contract for an enabled sensor deployment. It returns only:
+
+- `nodeId` and deployment `position` (`latitude`, `longitude`);
+- authoritative `flood.waterHeightMm`, `effectiveLevel`, `freshness`, and
+  nullable `observedAt` from the same persisted classifier state used by flood
+  hazards and routing;
+- `measurement.acceptedDistanceMm`, normalized nullable `temperatureC`, and
+  nullable `humidityPercent` from the exact telemetry row backing that state;
+- a nullable `gateway` summary with Backend-derived heartbeat `status`,
+  nullable `lastHeartbeatAt`, `radioReceptionStatus`, RSSI/SNR measurements,
+  and sanitized `backendDeliveryStatus`.
+
+Gateway `status` is `ONLINE`, `STALE`, or `OFFLINE` using the existing
+Backend heartbeat 2x/5x interval policy. It is `UNAVAILABLE` when the
+associated Gateway has no Firmware 2.2 heartbeat. `radioReceptionStatus` is
+`RECENT` only when the authoritative sensor observation is `FRESH`, `STALE`
+when that observation has crossed the deployment `staleAfterMinutes` policy,
+and otherwise `UNAVAILABLE`. RSSI and SNR never affect that status and are not
+classified as good or bad. Backend delivery maps `HEALTHY` to `NORMAL`,
+`DEGRADED`/`OFFLINE` to `DEGRADED`, and missing/unknown state to `UNAVAILABLE`.
+
+The response deliberately excludes raw distance, battery, filter/quality/
+health flags, payload/session/sequence data, Gateway identity/network/runtime
+internals, commands, errors, credentials, and reference override configuration.
+No public sensor history endpoint is provided for Android.
+
+## Backend reference-distance override
+
+Each deployment has nullable `referenceDistanceOverrideMm`:
+
+- `NULL` uses the latest Node-reported Protocol 3 `referenceDistanceMm`;
+- a value from 1 through 4294967295 mm is the Backend-authoritative reference.
+
+The classifier selects the effective reference once, then derives water height,
+hysteresis/classified level, effective risk, and routing multiplier through the
+existing state pipeline. A configuration PUT increments the material version
+and atomically reclassifies the latest applicable telemetry, so flood hazards,
+routing, admin status, and public sensor detail change immediately. Clearing
+the field to `NULL` immediately delegates back to the Node reference. If no
+usable accepted distance/effective reference exists, the result remains
+`UNKNOWN`.
+
+This override is Backend-only. It does not write Node NVS, send a LoRa command,
+or change Protocol 3, Node firmware, or Gateway firmware. The Admin Dashboard
+shows Node-reported, Backend override, and effective references and provides
+save/clear controls.
+
 ## Data flow and persistence
 
 Production uses `FLOOD_PROVIDER=sensor` (also the default when

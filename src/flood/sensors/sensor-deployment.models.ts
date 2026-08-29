@@ -24,6 +24,7 @@ export interface SensorDeploymentConfiguration {
   readonly latitude: number;
   readonly longitude: number;
   readonly coveragePolygon: GeoJsonPolygon;
+  readonly referenceDistanceOverrideMm: number | null;
   readonly expectedPollIntervalMinutes: number;
   readonly staleAfterMinutes: number;
   readonly hysteresisMm: number;
@@ -67,6 +68,7 @@ export interface SensorStateRecord {
   readonly observationSource: SensorObservationSource | null;
   readonly validUntil: Date | null;
   readonly referenceDistanceMm: number | null;
+  readonly nodeReferenceDistanceMm: number | null;
   readonly acceptedDistanceMm: number | null;
   readonly waterHeightMm: number | null;
   readonly classifiedLevel: FloodRiskLevel;
@@ -95,6 +97,7 @@ export interface EffectiveSensorState {
   readonly observationSource: SensorObservationSource | null;
   readonly validUntil: Date | null;
   readonly referenceDistanceMm: number | null;
+  readonly nodeReferenceDistanceMm: number | null;
   readonly acceptedDistanceMm: number | null;
   readonly waterHeightMm: number | null;
   readonly classifiedLevel: FloodRiskLevel;

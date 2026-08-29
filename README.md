@@ -403,6 +403,14 @@ validates and persists the complete configuration, increments its material
 version, and recomputes from stored telemetry atomically. Legacy preset tools
 remain simulation-only and process-local.
 
+Deployments also support nullable `referenceDistanceOverrideMm`. `null`
+delegates to the Node-reported reference; a value becomes the authoritative
+Backend reference for the existing water-height classifier and routing state.
+Saving or clearing it recomputes immediately and never changes Node/Gateway
+configuration. The sanitized public current-state contract for Android is
+`GET /api/v1/sensors/:nodeId`; see
+[docs/sensor-flood-hazards.md](docs/sensor-flood-hazards.md).
+
 ## Production admin dashboard
 
 Dashboard architecture, authentication, observer, metrics, safe configuration,

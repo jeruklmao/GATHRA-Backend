@@ -5,6 +5,7 @@ import {
   IsInt,
   IsNumber,
   IsObject,
+  IsOptional,
   Max,
   Min,
 } from 'class-validator';
@@ -60,6 +61,21 @@ export class UpsertSensorDeploymentDto {
   })
   @IsObject()
   coveragePolygon!: GeoJsonPolygon;
+
+  @ApiProperty({
+    description:
+      'Nullable Backend-only authoritative reference distance in millimetres. Null delegates to the Node-reported Protocol 3 reference and never changes Node configuration.',
+    example: null,
+    nullable: true,
+    minimum: 1,
+    maximum: 4294967295,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(4294967295)
+  referenceDistanceOverrideMm!: number | null;
 
   @ApiProperty({
     description: 'Expected normal Node polling interval, in minutes (>= 1).',

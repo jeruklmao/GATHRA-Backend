@@ -5,6 +5,8 @@ import request from 'supertest';
 import { configureApplication } from '../src/app-bootstrap';
 import { DatabaseService } from '../src/database/database.service';
 import { FloodModule } from '../src/flood/flood.module';
+import { FLOOD_HAZARD_PROVIDER, type FloodHazardProvider } from '../src/flood/flood-hazard.provider';
+import { RouteFloodEvaluator } from '../src/flood/geometry/route-flood-evaluator';
 import {
   SENSOR_NOW_FN,
   type SensorNowFn,
@@ -101,6 +103,8 @@ describe('sensor-backed flood hazards (PostgreSQL integration)', () => {
       { lowMultiplier: -0.01 },
       { mediumMultiplier: 1.01 },
       { highMultiplier: Number.POSITIVE_INFINITY },
+      { referenceDistanceOverrideMm: 0 },
+      { referenceDistanceOverrideMm: 4_294_967_296 },
       {
         coveragePolygon: {
           type: 'Polygon',
@@ -272,6 +276,107 @@ describe('sensor-backed flood hazards (PostgreSQL integration)', () => {
     expect(hazard.body.features[0].properties.routingMultiplier).toBe(0.7);
   });
 
+  it('applies and clears a persisted reference override across state, hazards, and public detail', async () => {
+    await ingestTelemetry(
+      packet({ sequence: 10, acceptedDistanceMm: 1_600 }),
+      '2026-08-26T11:50:00.000Z',
+    );
+    const initial = await putDeployment(productionDeployment()).expect(200);
+    expect(initial.body.deployment).toMatchObject({
+      referenceDistanceOverrideMm: null,
+      state: {
+        nodeReferenceDistanceMm: 1_725,
+        referenceDistanceMm: 1_725,
+        waterHeightMm: 125,
+        effectiveLevel: 'MEDIUM',
+      },
+    });
+
+    const overridden = await putDeployment({
+      ...productionDeployment(),
+      referenceDistanceOverrideMm: 1_950,
+    }).expect(200);
+    expect(overridden.body.deployment).toMatchObject({
+      referenceDistanceOverrideMm: 1_950,
+      configVersion: 2,
+      state: {
+        nodeReferenceDistanceMm: 1_725,
+        referenceDistanceMm: 1_950,
+        waterHeightMm: 350,
+        effectiveLevel: 'HIGH',
+        effectiveMultiplier: 0.05,
+      },
+    });
+    expect((await publicHazards()).body.features[0].properties).toMatchObject({
+      riskLevel: 'HIGH',
+      routingMultiplier: 0.05,
+    });
+    const provider = app.get<FloodHazardProvider>(FLOOD_HAZARD_PROVIDER);
+    const evaluator = app.get(RouteFloodEvaluator);
+    const overriddenSnapshot = await provider.getActiveSnapshot({});
+    const overriddenRisk = evaluator.evaluateRoute(
+      [[106.7204, -6.2351], [106.721, -6.234]],
+      200,
+      overriddenSnapshot.hazards,
+      overriddenSnapshot.snapshotId,
+      now,
+    );
+    expect(overriddenRisk).toMatchObject({ level: 'HIGH', score: 0.95 });
+    const publicDetail = await request(app.getHttpServer())
+      .get(`/api/v1/sensors/${NODE_ID}`)
+      .expect(200);
+    expect(publicDetail.body).toMatchObject({
+      nodeId: NODE_ID,
+      position: {
+        latitude: -6.235149042111252,
+        longitude: 106.72040149114301,
+      },
+      flood: {
+        waterHeightMm: 350,
+        effectiveLevel: 'HIGH',
+        freshness: 'FRESH',
+        observedAt: '2026-08-26T11:50:00.000Z',
+      },
+      measurement: {
+        acceptedDistanceMm: 1_600,
+        temperatureC: 27,
+        humidityPercent: 70,
+      },
+      gateway: {
+        status: 'UNAVAILABLE',
+        radioReceptionStatus: 'RECENT',
+        latestRssiDbm: -50,
+        latestSnrDb: 10,
+        backendDeliveryStatus: 'UNAVAILABLE',
+      },
+    });
+
+    const cleared = await putDeployment(productionDeployment()).expect(200);
+    expect(cleared.body.deployment).toMatchObject({
+      referenceDistanceOverrideMm: null,
+      configVersion: 3,
+      state: {
+        referenceDistanceMm: 1_725,
+        waterHeightMm: 125,
+        effectiveLevel: 'MEDIUM',
+        effectiveMultiplier: 0.35,
+      },
+    });
+    expect((await publicHazards()).body.features[0].properties).toMatchObject({
+      riskLevel: 'MEDIUM',
+      routingMultiplier: 0.35,
+    });
+    const clearedSnapshot = await provider.getActiveSnapshot({});
+    const clearedRisk = evaluator.evaluateRoute(
+      [[106.7204, -6.2351], [106.721, -6.234]],
+      200,
+      clearedSnapshot.hazards,
+      clearedSnapshot.snapshotId,
+      now,
+    );
+    expect(clearedRisk).toMatchObject({ level: 'MEDIUM', score: 0.65 });
+  });
+
   it('derives after new telemetry and rejects a delayed lower sequence as current', async () => {
     await putDeployment(productionDeployment()).expect(200);
     const firstSnapshot = (await publicHazards()).body.snapshotId;
@@ -401,6 +506,7 @@ function productionDeployment() {
       type: 'Polygon',
       coordinates: [PRODUCTION_RING],
     },
+    referenceDistanceOverrideMm: null,
     expectedPollIntervalMinutes: 10,
     staleAfterMinutes: 30,
     hysteresisMm: 10,

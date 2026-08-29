@@ -57,7 +57,9 @@ export function deriveSensorState(input: ClassifySensorInput): SensorStateWrite 
     observedAt: observation.observedAt,
     observationSource: observation.source,
     validUntil,
-    referenceDistanceMm: telemetry.referenceDistanceMm,
+    nodeReferenceDistanceMm: telemetry.referenceDistanceMm,
+    referenceDistanceMm:
+      deployment.referenceDistanceOverrideMm ?? telemetry.referenceDistanceMm,
     acceptedDistanceMm: telemetry.acceptedDistanceMm,
     classificationConfigVersion: deployment.configVersion,
   } as const;
@@ -73,7 +75,7 @@ export function deriveSensorState(input: ClassifySensorInput): SensorStateWrite 
     };
   }
 
-  const reasonCodes = telemetryReasonCodes(telemetry);
+  const reasonCodes = telemetryReasonCodes(deployment, telemetry);
   if (reasonCodes.length > 0) {
     return {
       ...common,
@@ -87,7 +89,7 @@ export function deriveSensorState(input: ClassifySensorInput): SensorStateWrite 
 
   const waterHeightMm = Math.max(
     0,
-    (telemetry.referenceDistanceMm as number) -
+    (common.referenceDistanceMm as number) -
       (telemetry.acceptedDistanceMm as number),
   );
   const canUseHysteresis =
@@ -200,6 +202,7 @@ export function evaluateEffectiveSensorState(
     observationSource: state.observationSource,
     validUntil: state.validUntil,
     referenceDistanceMm: state.referenceDistanceMm,
+    nodeReferenceDistanceMm: state.nodeReferenceDistanceMm,
     acceptedDistanceMm: state.acceptedDistanceMm,
     waterHeightMm: state.waterHeightMm,
     classifiedLevel: state.classifiedLevel,
@@ -248,10 +251,14 @@ export function evaluateEffectiveSensorState(
 }
 
 function telemetryReasonCodes(
+  deployment: SensorDeploymentConfiguration,
   telemetry: SensorTelemetryRecord,
 ): SensorReasonCode[] {
   const reasons: SensorReasonCode[] = [];
-  if (telemetry.referenceDistanceMm === null) {
+  if (
+    deployment.referenceDistanceOverrideMm === null &&
+    telemetry.referenceDistanceMm === null
+  ) {
     reasons.push('REFERENCE_DISTANCE_MISSING');
   }
   if (telemetry.acceptedDistanceMm === null) {
@@ -261,7 +268,11 @@ function telemetryReasonCodes(
     reasons.push('FILTER_INVALID');
   }
   if (
-    (telemetry.healthFlags & UNUSABLE_HEALTH_FLAGS) !== 0 ||
+    (telemetry.healthFlags &
+      (deployment.referenceDistanceOverrideMm === null
+        ? UNUSABLE_HEALTH_FLAGS
+        : UNUSABLE_HEALTH_FLAGS & ~NODE_HEALTH_FLAG.CALIBRATION_MISSING)) !==
+      0 ||
     (telemetry.acceptedDistanceMm !== null &&
       (telemetry.qualityFlags & NODE_QUALITY_FLAG.ACCEPTED_DISTANCE_VALID) ===
         0)
@@ -284,6 +295,7 @@ function unknownState(
     observationSource: null,
     validUntil: null,
     referenceDistanceMm: null,
+    nodeReferenceDistanceMm: null,
     acceptedDistanceMm: null,
     waterHeightMm: null,
     classifiedLevel: 'UNKNOWN',

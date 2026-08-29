@@ -19,6 +19,7 @@ interface DeploymentRow extends QueryResultRow {
   latitude: number;
   longitude: number;
   coverage_polygon: GeoJsonPolygon;
+  reference_distance_override_mm: string | null;
   expected_poll_interval_minutes: number;
   stale_after_minutes: number;
   hysteresis_mm: string;
@@ -42,6 +43,7 @@ interface StateRow extends QueryResultRow {
   observation_source: SensorObservationSource | null;
   valid_until: Date | null;
   state_reference_distance_mm: string | null;
+  node_reference_distance_mm: string | null;
   state_accepted_distance_mm: string | null;
   water_height_mm: string | null;
   classified_level: FloodRiskLevel | null;
@@ -76,6 +78,7 @@ const DEPLOYMENT_COLUMNS = `
   d.latitude,
   d.longitude,
   d.coverage_polygon,
+  d.reference_distance_override_mm,
   d.expected_poll_interval_minutes,
   d.stale_after_minutes,
   d.hysteresis_mm,
@@ -99,6 +102,7 @@ const STATE_COLUMNS = `
   s.observation_source,
   s.valid_until,
   s.reference_distance_mm AS state_reference_distance_mm,
+  s.node_reference_distance_mm,
   s.accepted_distance_mm AS state_accepted_distance_mm,
   s.water_height_mm,
   s.classified_level,
@@ -155,6 +159,7 @@ export class SensorDeploymentRepository {
       existing.latitude,
       existing.longitude,
       existing.coverage_polygon,
+      existing.reference_distance_override_mm,
       existing.expected_poll_interval_minutes,
       existing.stale_after_minutes,
       existing.hysteresis_mm,
@@ -171,6 +176,7 @@ export class SensorDeploymentRepository {
       EXCLUDED.latitude,
       EXCLUDED.longitude,
       EXCLUDED.coverage_polygon,
+      EXCLUDED.reference_distance_override_mm,
       EXCLUDED.expected_poll_interval_minutes,
       EXCLUDED.stale_after_minutes,
       EXCLUDED.hysteresis_mm,
@@ -191,6 +197,7 @@ export class SensorDeploymentRepository {
           latitude,
           longitude,
           coverage_polygon,
+          reference_distance_override_mm,
           expected_poll_interval_minutes,
           stale_after_minutes,
           hysteresis_mm,
@@ -204,13 +211,14 @@ export class SensorDeploymentRepository {
           unknown_multiplier
         ) VALUES (
           $1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, $11,
-          $12, $13, $14, $15, $16
+          $12, $13, $14, $15, $16, $17
         )
         ON CONFLICT (node_id) DO UPDATE SET
           enabled = EXCLUDED.enabled,
           latitude = EXCLUDED.latitude,
           longitude = EXCLUDED.longitude,
           coverage_polygon = EXCLUDED.coverage_polygon,
+          reference_distance_override_mm = EXCLUDED.reference_distance_override_mm,
           expected_poll_interval_minutes = EXCLUDED.expected_poll_interval_minutes,
           stale_after_minutes = EXCLUDED.stale_after_minutes,
           hysteresis_mm = EXCLUDED.hysteresis_mm,
@@ -230,6 +238,7 @@ export class SensorDeploymentRepository {
           latitude,
           longitude,
           coverage_polygon,
+          reference_distance_override_mm,
           expected_poll_interval_minutes,
           stale_after_minutes,
           hysteresis_mm,
@@ -251,6 +260,7 @@ export class SensorDeploymentRepository {
         deployment.latitude,
         deployment.longitude,
         JSON.stringify(deployment.coveragePolygon),
+        deployment.referenceDistanceOverrideMm,
         deployment.expectedPollIntervalMinutes,
         deployment.staleAfterMinutes,
         deployment.hysteresisMm,
@@ -363,6 +373,7 @@ export class SensorDeploymentRepository {
           observation_source,
           valid_until,
           reference_distance_mm,
+          node_reference_distance_mm,
           accepted_distance_mm,
           water_height_mm,
           classified_level,
@@ -371,7 +382,7 @@ export class SensorDeploymentRepository {
           reason_codes,
           classification_config_version
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
         )
         ON CONFLICT (node_id) DO UPDATE SET
           telemetry_id = EXCLUDED.telemetry_id,
@@ -379,6 +390,7 @@ export class SensorDeploymentRepository {
           observation_source = EXCLUDED.observation_source,
           valid_until = EXCLUDED.valid_until,
           reference_distance_mm = EXCLUDED.reference_distance_mm,
+          node_reference_distance_mm = EXCLUDED.node_reference_distance_mm,
           accepted_distance_mm = EXCLUDED.accepted_distance_mm,
           water_height_mm = EXCLUDED.water_height_mm,
           classified_level = EXCLUDED.classified_level,
@@ -394,6 +406,7 @@ export class SensorDeploymentRepository {
           observation_source,
           valid_until,
           reference_distance_mm AS state_reference_distance_mm,
+          node_reference_distance_mm,
           accepted_distance_mm AS state_accepted_distance_mm,
           water_height_mm,
           classified_level,
@@ -411,6 +424,7 @@ export class SensorDeploymentRepository {
         state.observationSource,
         state.validUntil,
         state.referenceDistanceMm,
+        state.nodeReferenceDistanceMm,
         state.acceptedDistanceMm,
         state.waterHeightMm,
         state.classifiedLevel,
@@ -442,6 +456,10 @@ function mapDeployment(row: DeploymentRow): SensorDeploymentConfiguration {
     latitude: row.latitude,
     longitude: row.longitude,
     coveragePolygon: row.coverage_polygon,
+    referenceDistanceOverrideMm:
+      row.reference_distance_override_mm === null
+        ? null
+        : safeInteger(row.reference_distance_override_mm, 'reference_distance_override_mm'),
     expectedPollIntervalMinutes: row.expected_poll_interval_minutes,
     staleAfterMinutes: row.stale_after_minutes,
     hysteresisMm: safeInteger(row.hysteresis_mm, 'hysteresis_mm'),
@@ -494,6 +512,10 @@ function mapState(row: StateRow): SensorStateRecord {
             row.state_reference_distance_mm,
             'reference_distance_mm',
           ),
+    nodeReferenceDistanceMm:
+      row.node_reference_distance_mm === null
+        ? null
+        : safeInteger(row.node_reference_distance_mm, 'node_reference_distance_mm'),
     acceptedDistanceMm:
       row.state_accepted_distance_mm === null
         ? null

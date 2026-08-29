@@ -16,10 +16,12 @@ import { IotMonitoringService } from './services/iot-monitoring.service';
 import { TelemetryIngestionService } from './services/telemetry-ingestion.service';
 import { GatewayHeartbeatService } from './services/gateway-heartbeat.service';
 import { GatewayHeartbeatEventsService } from './services/gateway-heartbeat-events.service';
+import { PublicSensorController } from './controllers/public-sensor.controller';
+import { PublicSensorService } from './services/public-sensor.service';
 
 @Module({
   imports: [DatabaseModule, SensorDeploymentModule],
-  controllers: [TelemetryIngestionController, GatewayHeartbeatController, IotMonitoringController],
+  controllers: [TelemetryIngestionController, GatewayHeartbeatController, IotMonitoringController, PublicSensorController],
   providers: [
     IotIngestionRepository,
     IotMonitoringRepository,
@@ -28,6 +30,7 @@ import { GatewayHeartbeatEventsService } from './services/gateway-heartbeat-even
     IotMonitoringService,
     GatewayHeartbeatService,
     GatewayHeartbeatEventsService,
+    PublicSensorService,
     GatewayAuthGuard,
     {
       provide: IOT_GATEWAY_TOKEN_DIGEST,

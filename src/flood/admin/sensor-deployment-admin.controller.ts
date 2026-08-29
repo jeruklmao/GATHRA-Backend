@@ -133,6 +133,7 @@ export function mapDeployment(state: EffectiveSensorState) {
     latitude: deployment.latitude,
     longitude: deployment.longitude,
     coveragePolygon: deployment.coveragePolygon,
+    referenceDistanceOverrideMm: deployment.referenceDistanceOverrideMm,
     expectedPollIntervalMinutes: deployment.expectedPollIntervalMinutes,
     staleAfterMinutes: deployment.staleAfterMinutes,
     hysteresisMm: deployment.hysteresisMm,
@@ -150,6 +151,7 @@ export function mapDeployment(state: EffectiveSensorState) {
     state: {
       latestTelemetryId: state.telemetryId,
       referenceDistanceMm: state.referenceDistanceMm,
+      nodeReferenceDistanceMm: state.nodeReferenceDistanceMm,
       acceptedDistanceMm: state.acceptedDistanceMm,
       waterHeightMm: state.waterHeightMm,
       classifiedLevel: state.classifiedLevel,

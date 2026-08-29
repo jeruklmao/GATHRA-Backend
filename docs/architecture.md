@@ -215,6 +215,14 @@ telemetry IDs, effective levels, and freshness. Read-time freshness changes a
 snapshot once when `validUntil` is crossed without requiring a cron job or new
 packet. See [sensor-flood-hazards.md](sensor-flood-hazards.md).
 
+The classifier also owns the effective reference-distance decision: a nullable
+deployment override takes precedence over the Node-reported Protocol 3 value.
+The same persisted result feeds hazards, routing, admin status, and the
+sanitized public `GET /api/v1/sensors/:nodeId` current-detail contract. The
+public contract adds only deployment position, current user-level measurement,
+and a small derived Gateway summary; it exposes neither administration nor
+Gateway/telemetry internals and provides no Android history surface.
+
 ## Deployment boundary
 
 The repository defines the development Compose topology. The deployed service

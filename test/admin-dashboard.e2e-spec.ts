@@ -88,6 +88,14 @@ describe('production admin dashboard (PostgreSQL integration)', () => {
     expect(page.headers['content-security-policy']).toContain("frame-ancestors 'none'");
     expect(page.headers['x-content-type-options']).toBe('nosniff');
     expect(page.text).toMatch(/\/admin\/assets\/app\.[a-f0-9]{12}\.js/);
+    const assetPath = page.text.match(/\/admin\/assets\/app\.[a-f0-9]{12}\.js/)?.[0];
+    const asset = await request(app.getHttpServer()).get(assetPath!).expect(200);
+    expect(asset.text).toContain('Node reference');
+    expect(asset.text).toContain('Backend override');
+    expect(asset.text).toContain('Effective reference');
+    expect(asset.text).toContain('Reference distance override (mm)');
+    expect(asset.text).toContain('Clear override');
+    expect(asset.text).toContain('does not update the Node');
     await request(app.getHttpServer()).get('/admin/nodes/example').expect(200);
   });
 

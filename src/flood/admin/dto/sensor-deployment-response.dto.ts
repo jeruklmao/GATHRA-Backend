@@ -8,6 +8,9 @@ export class SensorDeploymentStateDto {
   @ApiProperty({ description: 'Protocol 3 calibration reference, in millimetres.', example: 1725, nullable: true })
   referenceDistanceMm!: number | null;
 
+  @ApiProperty({ description: 'Latest Node-reported Protocol 3 calibration reference.', example: 1725, nullable: true })
+  nodeReferenceDistanceMm!: number | null;
+
   @ApiProperty({ description: 'Node-filtered accepted distance, in millimetres.', example: 1625, nullable: true })
   acceptedDistanceMm!: number | null;
 
@@ -74,6 +77,9 @@ export class SensorDeploymentViewDto {
 
   @ApiProperty({ type: GeoJsonPolygonGeometryDto })
   coveragePolygon!: GeoJsonPolygonGeometryDto;
+
+  @ApiProperty({ description: 'Backend-only override; null delegates to the Node reference.', nullable: true, example: null })
+  referenceDistanceOverrideMm!: number | null;
 
   @ApiProperty({ description: 'Minutes.', example: 10 })
   expectedPollIntervalMinutes!: number;

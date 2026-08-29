@@ -109,6 +109,46 @@ describe('sensor flood classifier', () => {
     expect(state).toMatchObject({ waterHeightMm: 0, classifiedLevel: 'LOW' });
   });
 
+  it('uses the Backend override as the single effective reference', () => {
+    const state = deriveSensorState({
+      deployment: deployment({
+        referenceDistanceOverrideMm: 1_800,
+        configVersion: 2,
+      }),
+      telemetry: telemetry({
+        referenceDistanceMm: 1_725,
+        acceptedDistanceMm: 1_600,
+      }),
+      previousState: previousState('LOW'),
+      now,
+    });
+    expect(state).toMatchObject({
+      nodeReferenceDistanceMm: 1_725,
+      referenceDistanceMm: 1_800,
+      waterHeightMm: 200,
+      classifiedLevel: 'MEDIUM',
+    });
+  });
+
+  it('allows an override to replace a missing Node calibration reference', () => {
+    const state = deriveSensorState({
+      deployment: deployment({ referenceDistanceOverrideMm: 1_800 }),
+      telemetry: telemetry({
+        referenceDistanceMm: null,
+        acceptedDistanceMm: 1_600,
+        healthFlags: 1 << 9,
+      }),
+      previousState: null,
+      now,
+    });
+    expect(state).toMatchObject({
+      nodeReferenceDistanceMm: null,
+      referenceDistanceMm: 1_800,
+      waterHeightMm: 200,
+      classificationStatus: 'VALID',
+    });
+  });
+
   it.each([2, 3, 6, 7])(
     'rejects unusable filter state %i conservatively',
     (filterState) => {
@@ -296,6 +336,7 @@ function deployment(
         ],
       ],
     },
+    referenceDistanceOverrideMm: null,
     expectedPollIntervalMinutes: 10,
     staleAfterMinutes: 30,
     hysteresisMm: 10,
@@ -345,6 +386,7 @@ function previousState(
     observationSource: 'GATEWAY',
     validUntil: new Date('2026-08-26T12:15:00.000Z'),
     referenceDistanceMm: 1_725,
+    nodeReferenceDistanceMm: 1_725,
     acceptedDistanceMm: 1_700,
     waterHeightMm: level === 'UNKNOWN' ? null : 25,
     classifiedLevel: level,
