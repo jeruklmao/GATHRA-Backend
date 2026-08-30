@@ -96,6 +96,11 @@ describe('production admin dashboard (PostgreSQL integration)', () => {
     expect(asset.text).toContain('Reference distance override (mm)');
     expect(asset.text).toContain('Clear override');
     expect(asset.text).toContain('does not update the Node');
+    expect(asset.text).toContain('Accepted distance');
+    expect(asset.text).toContain('Authoritative water height');
+    expect(asset.text).toContain('Current calculation: max(0,');
+    expect(asset.text).toContain('water height is clamped to 0 mm');
+    expect(asset.text).toContain('Saved and recomputed atomically.');
     await request(app.getHttpServer()).get('/admin/nodes/example').expect(200);
   });
 
