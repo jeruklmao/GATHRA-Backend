@@ -96,8 +96,10 @@ import merely to validate source changes.
 
 ## Current limitations and narrow priorities
 
-- Flood snapshots have no PostgreSQL/PostGIS persistence, multi-instance
-  consistency, MQTT/sensor ingestion, or real-time push.
+- Sensor deployments, Protocol 3 telemetry, interpreted sensor state, Gateway
+  heartbeat metrics, and admin metrics are PostgreSQL-backed. Coverage geometry
+  uses JSONB rather than PostGIS, and flood updates use polling rather than a
+  public real-time push channel.
 - GraphHopper motorcycle costing is not calibrated against Indonesian access
   rules or field observations.
 - The geocoding corpus is source-derived smoke data, not an independently

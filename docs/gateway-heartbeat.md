@@ -1,44 +1,69 @@
-# Gateway Firmware 2.2 heartbeat
+# Gateway operational heartbeat
 
-Firmware 2.2 sends its schema-version-1 operational heartbeat to
-`POST /api/v1/iot/gateway/heartbeat` using the existing Gateway Bearer
-credential. This is additive to LoRa Protocol 3 telemetry ingestion. Backend
-strictly validates the documented firmware JSON, caps the normalized payload at
-16 KiB, checks cross-field consistency, and binds `gatewayId` to the stable MAC
-identity in `iot_gateways`.
+GATHRA Gateway firmware **2.2.0** sends schema-1 heartbeats to:
 
-`iot_gateway_status` stores one latest snapshot per Gateway.
+```http
+POST /api/v1/iot/gateway/heartbeat
+Authorization: Bearer <gateway-token>
+Content-Type: application/json
+```
+
+The endpoint uses the Gateway ingestion credential, accepts at most 16 KiB,
+validates all fields and cross-field relationships, and returns HTTP 202 after
+persistence.
+
+`heartbeatIntervalSeconds` is optional for schema 1. An omitted value is 60;
+an explicit value must be from 15 through 3600 seconds. The Backend treats the
+field as a read-only report of Gateway-local configuration.
+
+## Stored state and freshness
+
+`iot_gateway_status` stores the latest accepted snapshot for each Gateway.
 `iot_gateway_metrics` stores one compact sample per accepted heartbeat. Backend
-receipt time is authoritative for freshness and chart time; Gateway UTC remains
-diagnostic and is ignored when `timeValid` is false. Metrics older than 30 days
-are removed by a six-hour best-effort cleanup. Cleanup failure never interrupts
-heartbeat or Protocol 3 ingestion.
+receipt time is authoritative for freshness and chart time; Gateway UTC is
+diagnostic.
 
-Status is derived at read time from the heartbeat interval: age at or below two
-intervals is `ONLINE`, above two through five is `STALE`, and above five is
-`OFFLINE`. Released Firmware 2.2 payloads omit the locally configured interval,
-so Backend uses the firmware default of 60 seconds. A future payload may report
-the optional 15–3600-second value without changing schema version 1. A
-registered pre-2.2 Gateway with no heartbeat is `HEARTBEAT_UNAVAILABLE`, not
-falsely offline. The setting remains read-only in Backend and configurable only
-on the Gateway local dashboard.
+Freshness is derived at read time:
 
-Authenticated dashboard APIs expose Gateway list, detail, and bounded chart
-history under `/api/v1/admin/dashboard/gateways`. Supported chart ranges are 1h,
-24h, 7d, and 30d with server-side bucketing to at most roughly 1,000 samples.
-Accepted heartbeats emit an authenticated SSE event on the existing dashboard
-event stream.
+```text
+age <= 2 * interval -> ONLINE
+age <= 5 * interval -> STALE
+age >  5 * interval -> OFFLINE
+no heartbeat        -> HEARTBEAT_UNAVAILABLE
+```
 
-The dashboard shows identity, runtime/heap, network, NTP, LoRa, ACK, durable
-queue, and command observations. ACK values mean RX-to-ACK start, RX-to-ACK
-complete, and ACK transmit duration as observed by the Gateway; they are not
-end-to-end Node acknowledgment round-trip times. Counters and uptime may reset
-after a reboot and are labeled as since-boot values where applicable.
+The public sensor API maps `HEARTBEAT_UNAVAILABLE` to `UNAVAILABLE`. Missing
+heartbeat support is not labeled offline.
 
-At a 60-second interval, one Gateway produces 43,200 rows in 30 days. With the
-compact row and two useful indexes, operational planning should allow roughly
-15–25 MiB per Gateway per 30 days (about 150–250 MiB for ten Gateways; actual
-PostgreSQL size varies with tuple and index overhead).
+Compact metric rows are retained for 30 days. Cleanup runs every six hours and
+does not interrupt heartbeat or telemetry ingestion if it fails.
 
-No Gateway reboot, OTA, Wi-Fi configuration, heartbeat interval control, remote
-shell, or command control is exposed by Backend or the Admin Dashboard.
+## Payload groups
+
+The validated payload contains:
+
+- schema and configured heartbeat interval;
+- Gateway ID, stable MAC, firmware 2.2.0, Protocol 3, and build flavor;
+- uptime, reset reason, persistent boot count, heap, image, and flash metrics;
+- Wi-Fi connection diagnostics and telemetry-Backend connectivity state;
+- trusted-time and NTP diagnostics;
+- paired Node and latest LoRa reception/counters;
+- Gateway-observed ACK counts, latency, and rolling statistics;
+- durable queue depth/capacity/age and upload counters;
+- pending and latest command summaries.
+
+Credentials are not payload fields. Nullable timestamps use RFC 3339 UTC with
+milliseconds. ACK latencies are measured by the Gateway from radio RX-done to
+ACK start/completion; they are not Node round-trip measurements.
+
+`backendConnectivityState` describes durable telemetry delivery only:
+`UNKNOWN` before an operation, `HEALTHY` after success with no later failures,
+`DEGRADED` after one or two consecutive failures, and `OFFLINE` after three.
+Heartbeat outcomes do not feed that field.
+
+## Admin visibility
+
+The authenticated dashboard exposes Gateway list/detail and bounded metric
+charts for 1h, 24h, 7d, and 30d ranges. Accepted heartbeats also emit a
+session-authenticated dashboard SSE event. The Backend does not provide Gateway
+reboot, OTA, Wi-Fi, heartbeat-interval, shell, or Node-command controls.
